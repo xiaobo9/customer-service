@@ -13,7 +13,7 @@
         <!-- for Chatopera Nexus reference if file is available with latest version -->
         <!-- <relativePath/> -->
         <!-- for local reference if file is available with latest version -->
-        <relativePath>../root/pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <build>
         <finalName>contact-center</finalName>
