@@ -69,12 +69,6 @@ public class Constants {
     public static final String SYSTEM_CACHE_CALLOUT_CONFIG = "callout_config";
 
     /**
-     * 分布式存储
-     */
-    public final static String MINIO_BUCKET = "chatopera";
-
-
-    /**
      * Channels
      */
     public static final String CHANNEL_TYPE_WEBIM = "webim";
