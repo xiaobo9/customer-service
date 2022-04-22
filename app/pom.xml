@@ -70,6 +70,25 @@
                     <injectAllReactorProjects>true</injectAllReactorProjects>
                 </configuration>
             </plugin>
+            <plugin>
+                <!-- TODO 结合 google jib 处理一下 sql 语句的打包位置 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <attachClasses>true</attachClasses>
+                    <warSourceExcludes>**/WEB-INF</warSourceExcludes>
+                    <packagingExcludes>**/WEB-INF,**/resources</packagingExcludes>
+                    <webResources>
+                        <resource>
+                            <directory>../config/sql/</directory>
+                            <includes>
+                                <include>**/*.sql</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                </configuration>
+                <version>2.1.1</version>
+            </plugin>
         </plugins>
         <defaultGoal>compile</defaultGoal>
     </build>
