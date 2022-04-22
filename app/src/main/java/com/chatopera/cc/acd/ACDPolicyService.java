@@ -26,7 +26,6 @@ import com.chatopera.cc.model.SessionConfig;
 import com.chatopera.cc.persistence.repository.AgentUserRepository;
 import com.chatopera.cc.persistence.repository.OnlineUserRepository;
 import com.chatopera.cc.persistence.repository.SessionConfigRepository;
-import com.chatopera.cc.util.HashMapUtils;
 import com.chatopera.cc.util.WebIMReport;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -34,10 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 坐席自动分配策略集
@@ -157,7 +153,7 @@ public class ACDPolicyService {
                                 f.getValue().getUsername(),
                                 f.getValue().getAgentno(), f.getValue().getUsers(), f.getValue().getMaxusers(),
                                 f.getValue().getStatus(), f.getValue().isBusy(),
-                                HashMapUtils.concatKeys(f.getValue().getSkills(), "|")));
+                                String.join("|", f.getValue().getSkills().keySet())));
             }
             logger.info(sb.toString());
         } else {
@@ -206,7 +202,7 @@ public class ACDPolicyService {
                             entry.getValue().getAgentno(), entry.getValue().getUsername(), entry.getValue().getStatus(),
                             entry.getValue().getUsers(),
                             entry.getValue().getMaxusers(),
-                            HashMapUtils.concatKeys(entry.getValue().getSkills(), "|"));
+                            String.join("|", entry.getValue().getSkills().keySet()));
                     agentStatuses.add(entry.getValue());
                 } else {
                     logger.info(
@@ -215,7 +211,7 @@ public class ACDPolicyService {
                             entry.getValue().getAgentno(), entry.getValue().getUsername(), entry.getValue().getStatus(),
                             entry.getValue().getUsers(),
                             entry.getValue().getMaxusers(),
-                            HashMapUtils.concatKeys(entry.getValue().getSkills(), "|"));
+                            String.join("|", entry.getValue().getSkills().keySet()));
                 }
             }
             // 如果绑定了技能组，立即返回该技能组的人

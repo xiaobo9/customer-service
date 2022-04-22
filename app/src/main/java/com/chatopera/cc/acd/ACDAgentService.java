@@ -32,7 +32,6 @@ import com.chatopera.cc.proxy.AgentStatusProxy;
 import com.chatopera.cc.proxy.AgentUserProxy;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.Message;
-import com.chatopera.cc.util.HashMapUtils;
 import com.chatopera.cc.util.SerializeUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -174,7 +173,7 @@ public class ACDAgentService {
         }
         logger.info("[assignVisitors] agentStatus id {}, status {}, service {}/{}, skills {}, busy {}",
                 agentStatus.getId(), agentStatus.getStatus(), agentStatus.getUsers(), agentStatus.getMaxusers(),
-                HashMapUtils.concatKeys(agentStatus.getSkills(), "|"), agentStatus.isBusy());
+                String.join("|", agentStatus.getSkills().keySet()), agentStatus.isBusy());
 
         if ((!StringUtils.equals(
                 MainContext.AgentStatusEnum.READY.toString(), agentStatus.getStatus())) || agentStatus.isBusy()) {

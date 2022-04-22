@@ -177,18 +177,6 @@
             <version>1.9.2</version>
         </dependency>
         <dependency>
-            <groupId>org</groupId>
-            <artifactId>jaudiotagger</artifactId>
-            <version>2.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>lt.jave</groupId>
-            <artifactId>jave</artifactId>
-            <version>1.0.2</version>
-        </dependency>
-        <!-- Micrometer Prometheus registry  -->
-        <!-- https://www.callicoder.com/spring-boot-actuator-metrics-monitoring-dashboard-prometheus-grafana/ -->
-        <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
             <version>1.1.1</version>
@@ -235,16 +223,6 @@
             <groupId>org.lionsoul</groupId>
             <artifactId>ip2region</artifactId>
             <version>1.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lmax</groupId>
-            <artifactId>disruptor</artifactId>
-            <version>3.3.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-            <version>3.15</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -297,11 +275,6 @@
             <artifactId>olap4j</artifactId>
             <version>1.2.0</version>
         </dependency>
-        <dependency>
-            <groupId>mondrian</groupId>
-            <artifactId>mondrian</artifactId>
-            <version>3.7.0</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/com.googlecode.aviator/aviator -->
         <dependency>
             <groupId>com.googlecode.aviator</groupId>
@@ -336,6 +309,16 @@
             <groupId>net.coobird</groupId>
             <artifactId>thumbnailator</artifactId>
             <version>0.4.17</version>
+        </dependency>
+        <dependency>
+            <groupId>mondrian</groupId>
+            <artifactId>mondrian</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>lt.jave</groupId>
+            <artifactId>jave</artifactId>
+            <version>1.0.2</version>
         </dependency>
     </dependencies>
     <build>

@@ -24,11 +24,9 @@ import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
 import com.chatopera.cc.persistence.repository.*;
-import com.chatopera.cc.socketio.message.OtherMessageItem;
 import com.chatopera.cc.util.*;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import freemarker.template.TemplateException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +36,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -58,7 +55,6 @@ public class OnlineUserProxy {
     private static ConsultInviteRepository consultInviteRes;
     private static OnlineUserHisRepository onlineUserHisRes;
     private static UserTraceRepository userTraceRes;
-    private static OrgiSkillRelRepository orgiSkillRelRes;
     private static AgentUserContactsRepository agentUserContactsRes;
     private static ContactsRepository contactsRes;
     private static UserProxy userProxy;
@@ -69,7 +65,7 @@ public class OnlineUserProxy {
      * @return
      * @throws Exception
      */
-    public static OnlineUser user(final String orgi, final String id) {
+    public static OnlineUser user(final String id) {
         return getOnlineUserRes().findOne(id);
     }
 
@@ -113,9 +109,7 @@ public class OnlineUserProxy {
         OnlineUser onlineUser = getCache().findOneOnlineUserByUserIdAndOrgi(userid, orgi);
 
         if (onlineUser == null) {
-            logger.info(
-                    "[onlineuser] !!! fail to resolve user {} with both cache and database, maybe this user is first presents.",
-                    userid);
+            logger.info("[onlineuser] !!! fail to resolve user {} with both cache and database, maybe this user is first presents.", userid);
         }
 
         return onlineUser;
@@ -175,11 +169,11 @@ public class OnlineUserProxy {
             return skillGroups;
         }
 
-        List<Organ> regOrganList = new ArrayList<Organ>();
+        List<Organ> regOrganList = new ArrayList<>();
         for (Organ organ : skillGroups) {
-            if (StringUtils.isNotBlank(organ.getArea())) {
-                if (organ.getArea().indexOf(ipdata.getProvince()) >= 0 || organ.getArea().indexOf(
-                        ipdata.getCity()) >= 0) {
+            String area = organ.getArea();
+            if (StringUtils.isNotBlank(area)) {
+                if (area.contains(ipdata.getProvince()) || area.contains(ipdata.getCity())) {
                     regOrganList.add(organ);
                 }
             } else {
@@ -808,101 +802,9 @@ public class OnlineUserProxy {
         return result;
     }
 
-//    public static List<OtherMessageItem> search(String q, String orgi, User user) throws IOException, TemplateException {
-//        List<OtherMessageItem> otherMessageItemList = null;
-//        String param = "";
-//        SessionConfig sessionConfig = ACDServiceRouter.getAcdPolicyService().initSessionConfig(
-//                orgi);
-//        if (StringUtils.isNotBlank(sessionConfig.getOqrsearchurl())) {
-//            Template templet = MainUtils.getTemplate(sessionConfig.getOqrsearchinput());
-//            Map<String, Object> values = new HashMap<String, Object>();
-//            values.put("q", q);
-//            values.put("user", user);
-//            param = MainUtils.getTemplet(templet.getTemplettext(), values);
-//        }
-//        String result = HttpClientUtil.doPost(sessionConfig.getOqrsearchurl(), param), text = null;
-//        if (StringUtils.isNotBlank(result) && StringUtils.isNotBlank(
-//                sessionConfig.getOqrsearchoutput()) && !result.equals("error")) {
-//            Template templet = MainUtils.getTemplate(sessionConfig.getOqrsearchoutput());
-//            @SuppressWarnings("unchecked")
-//            Map<String, Object> jsonData = objectMapper.readValue(result, Map.class);
-//            Map<String, Object> values = new HashMap<String, Object>();
-//            values.put("q", q);
-//            values.put("user", user);
-//            values.put("data", jsonData);
-//            text = MainUtils.getTemplet(templet.getTemplettext(), values);
-//        }
-//        if (StringUtils.isNotBlank(text)) {
-//            JavaType javaType = getCollectionType(ArrayList.class, OtherMessageItem.class);
-//            otherMessageItemList = objectMapper.readValue(text, javaType);
-//        }
-//        return otherMessageItemList;
-//    }
-
-    public static OtherMessageItem suggestdetail(AiConfig aiCofig, String id, String orgi, User user) throws IOException, TemplateException {
-        OtherMessageItem otherMessageItem = null;
-        String param = "";
-        if (StringUtils.isNotBlank(aiCofig.getOqrdetailinput())) {
-            Template templet = MainUtils.getTemplate(aiCofig.getOqrdetailinput());
-            Map<String, Object> values = new HashMap<String, Object>();
-            values.put("id", id);
-            values.put("user", user);
-            param = MainUtils.getTemplet(templet.getTemplettext(), values);
-        }
-        if (StringUtils.isNotBlank(aiCofig.getOqrdetailurl())) {
-            String result = HttpClientUtil.doPost(aiCofig.getOqrdetailurl(), param), text = null;
-            if (StringUtils.isNotBlank(aiCofig.getOqrdetailoutput()) && !result.equals("error")) {
-                Template templet = MainUtils.getTemplate(aiCofig.getOqrdetailoutput());
-                @SuppressWarnings("unchecked")
-                Map<String, Object> jsonData = objectMapper.readValue(result, Map.class);
-                Map<String, Object> values = new HashMap<String, Object>();
-                values.put("id", id);
-                values.put("user", user);
-                values.put("data", jsonData);
-                text = MainUtils.getTemplet(templet.getTemplettext(), values);
-            }
-            if (StringUtils.isNotBlank(text)) {
-                otherMessageItem = objectMapper.readValue(text, OtherMessageItem.class);
-            }
-        }
-        return otherMessageItem;
-    }
-
-//    public static OtherMessageItem detail(String id, String orgi, User user) throws IOException, TemplateException {
-//        OtherMessageItem otherMessageItem = null;
-//        String param = "";
-//        SessionConfig sessionConfig = ACDServiceRouter.getAcdPolicyService().initSessionConfig(
-//                orgi);
-//        if (StringUtils.isNotBlank(sessionConfig.getOqrdetailinput())) {
-//            Template templet = MainUtils.getTemplate(sessionConfig.getOqrdetailinput());
-//            Map<String, Object> values = new HashMap<String, Object>();
-//            values.put("id", id);
-//            values.put("user", user);
-//            param = MainUtils.getTemplet(templet.getTemplettext(), values);
-//        }
-//        if (StringUtils.isNotBlank(sessionConfig.getOqrdetailurl())) {
-//            String result = HttpClientUtil.doPost(sessionConfig.getOqrdetailurl(), param), text = null;
-//            if (StringUtils.isNotBlank(sessionConfig.getOqrdetailoutput()) && !result.equals("error")) {
-//                Template templet = MainUtils.getTemplate(sessionConfig.getOqrdetailoutput());
-//                @SuppressWarnings("unchecked")
-//                Map<String, Object> jsonData = objectMapper.readValue(result, Map.class);
-//                Map<String, Object> values = new HashMap<String, Object>();
-//                values.put("id", id);
-//                values.put("user", user);
-//                values.put("data", jsonData);
-//                text = MainUtils.getTemplet(templet.getTemplettext(), values);
-//            }
-//            if (StringUtils.isNotBlank(text)) {
-//                otherMessageItem = objectMapper.readValue(text, OtherMessageItem.class);
-//            }
-//        }
-//        return otherMessageItem;
-//    }
-
     public static JavaType getCollectionType(Class<?> collectionClass, Class<?>... elementClasses) {
         return objectMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
     }
-
 
     /**
      * 创建Skype联系人的onlineUser记录
@@ -999,13 +901,6 @@ public class OnlineUserProxy {
             organRes = MainContext.getContext().getBean(OrganRepository.class);
         }
         return organRes;
-    }
-
-    private static OrgiSkillRelRepository getOrgiSkillRelRes() {
-        if (orgiSkillRelRes == null) {
-            orgiSkillRelRes = MainContext.getContext().getBean(OrgiSkillRelRepository.class);
-        }
-        return orgiSkillRelRes;
     }
 
     public static UserProxy getUserProxy() {

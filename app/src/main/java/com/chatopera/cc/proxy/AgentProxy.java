@@ -13,7 +13,6 @@ import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.cc.socketio.message.Message;
-import com.chatopera.cc.util.HashMapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -344,7 +343,7 @@ public class AgentProxy {
     public AgentStatus resolveAgentStatusByAgentnoAndOrgi(final String agentno, final String orgi, final HashMap<String, String> skills) {
         logger.info(
                 "[resolveAgentStatusByAgentnoAndOrgi] agentno {}, skills {}", agentno,
-                HashMapUtils.concatKeys(skills, "|"));
+                String.join("|", skills.keySet()));
         AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
 
         if (agentStatus == null) {
