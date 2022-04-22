@@ -207,7 +207,7 @@ public class AgentServiceProxy {
         }
 
         // 客服设置
-        if (agentUser != null && StringUtils.isNotBlank(agentUser.getAppid())) {
+        if (StringUtils.isNotBlank(agentUser.getAppid())) {
             view.addObject("inviteData", OnlineUserProxy.consult(agentUser.getAppid(), orgi));
             // 服务小结
             if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {

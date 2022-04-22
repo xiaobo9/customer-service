@@ -77,9 +77,9 @@ public class ReportController extends Handler{
     public ModelAndView index(ModelMap map , HttpServletRequest request , @Valid String dicid) {
     	if(!StringUtils.isBlank(dicid) && !"0".equals(dicid)){
         	map.put("dataDic", dataDicRes.findByIdAndOrgi(dicid, super.getOrgi(request))) ;
-    		map.put("reportList", reportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", reportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , super.page(request))) ;
     	}else{
-    		map.put("reportList", reportRes.findByOrgi(super.getOrgi(request) , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", reportRes.findByOrgi(super.getOrgi(request) , super.page(request))) ;
     	}
     	map.put("dataDicList", dataDicRes.findByOrgi(super.getOrgi(request))) ;
     	return request(super.createAppsTempletResponse("/apps/business/report/index"));
@@ -321,9 +321,9 @@ public class ReportController extends Handler{
     public ModelAndView pbreportindex(ModelMap map , HttpServletRequest request , @Valid String dicid) {
     	if(!StringUtils.isBlank(dicid) && !"0".equals(dicid)){
         	map.put("dataDic", dataDicRes.findByIdAndOrgi(dicid, super.getOrgi(request))) ;
-    		map.put("reportList", publishedReportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", publishedReportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , super.page(request))) ;
     	}else{
-    		map.put("reportList", publishedReportRes.findByOrgi(super.getOrgi(request) , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", publishedReportRes.findByOrgi(super.getOrgi(request) , super.page(request))) ;
     	}
     	map.put("dataDicList", dataDicRes.findByOrgi(super.getOrgi(request))) ;
     	return request(super.createAppsTempletResponse("/apps/business/report/pbreportindex"));
@@ -333,9 +333,9 @@ public class ReportController extends Handler{
     public ModelAndView pbreportlist(ModelMap map , HttpServletRequest request , @Valid String dicid) {
     	if(!StringUtils.isBlank(dicid) && !"0".equals(dicid)){
         	map.put("dataDic", dataDicRes.findByIdAndOrgi(dicid, super.getOrgi(request))) ;
-    		map.put("reportList", publishedReportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", publishedReportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , super.page(request))) ;
     	}else{
-    		map.put("reportList", publishedReportRes.findByOrgi(super.getOrgi(request) , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", publishedReportRes.findByOrgi(super.getOrgi(request) , super.page(request))) ;
     	}
     	map.put("dataDicList", dataDicRes.findByOrgi(super.getOrgi(request))) ;
     	return request(super.createRequestPageTempletResponse("/apps/business/report/pbreportlist"));

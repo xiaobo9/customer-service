@@ -141,9 +141,9 @@ public class CubeController extends Handler{
     	List<CubeType> cubeTypeList = cubeTypeRes.findByOrgi(super.getOrgi(request)) ; 
     	if(!StringUtils.isBlank(typeid)){
         	map.put("cubeType", cubeTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
-    		map.put("cubeList", cubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", cubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , super.page(request))) ;
     	}else{
-    		map.put("cubeList", cubeRes.getByOrgi(super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", cubeRes.getByOrgi(super.getOrgi(request), super.page(request))) ;
     	}
     	map.put("pubCubeTypeList", cubeTypeList) ;
     	map.put("typeid", typeid);
@@ -156,9 +156,9 @@ public class CubeController extends Handler{
     	//List<CubeType> cubeTypeList = cubeTypeRes.findByOrgi(super.getOrgi(request)) ; 
     	if(!StringUtils.isBlank(typeid)){
         	map.put("cubeType", cubeTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
-    		map.put("cubeList", cubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", cubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , super.page(request))) ;
     	}else{
-    		map.put("cubeList", cubeRes.getByOrgi(super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", cubeRes.getByOrgi(super.getOrgi(request), super.page(request))) ;
     	}
     	//map.put("pubCubeTypeList", cubeTypeList) ;
     	map.put("typeid", typeid);
@@ -455,9 +455,9 @@ public class CubeController extends Handler{
     	List<CubeType> cubeTypeList = cubeTypeRes.findByOrgi(super.getOrgi(request)) ; 
     	if(!StringUtils.isBlank(typeid)){
         	map.put("cubeType", cubeTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
-    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , super.page(request))) ;
     	}else{
-    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), super.page(request))) ;
     	}
     	map.put("pubCubeTypeList", cubeTypeList) ;
     	map.put("typeid", typeid);
@@ -476,9 +476,9 @@ public class CubeController extends Handler{
     public ModelAndView pbcubelist(ModelMap map , HttpServletRequest request , @Valid String typeid) {
     	if(!StringUtils.isBlank(typeid)){
         	map.put("cubeType", cubeTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
-    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , super.page(request))) ;
     	}else{
-    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), super.page(request))) ;
     	}
     	map.put("typeid", typeid);
     	return request(super.createRequestPageTempletResponse("/apps/business/report/cube/pbcubelist"));
@@ -517,9 +517,9 @@ public class CubeController extends Handler{
     	List<CubeType> cubeTypeList = cubeTypeRes.findByOrgi(super.getOrgi(request)) ; 
     	if(!StringUtils.isBlank(typeid)){
         	map.put("cubeType", cubeTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
-    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , super.page(request))) ;
     	}else{
-    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), super.page(request))) ;
     	}
     	map.put("pubCubeTypeList", cubeTypeList) ;
     	map.put("typeid", typeid);
@@ -539,9 +539,9 @@ public class CubeController extends Handler{
     public ModelAndView selpbcubelist(ModelMap map , HttpServletRequest request , @Valid String typeid, @Valid String mid) {
     	if(!StringUtils.isBlank(typeid)){
         	map.put("cubeType", cubeTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
-    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgiAndTypeid(super.getOrgi(request) , typeid , super.page(request))) ;
     	}else{
-    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("cubeList", publishedCubeRes.getByOrgi(super.getOrgi(request), super.page(request))) ;
     	}
     	map.put("typeid", typeid);
     	map.put("mid", mid);

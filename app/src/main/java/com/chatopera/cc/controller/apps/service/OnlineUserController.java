@@ -142,21 +142,14 @@ public class OnlineUserController extends Handler {
                 });
                 AgentService service = agentServiceRes.findByIdAndOrgi(agentservice, orgi);
                 if (service != null) {
-                    map.addAttribute(
-                            "tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
+                    map.addAttribute("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
                 }
-                map.put(
-                        "summaryTags",
-                        tagRes.findByOrgiAndTagtype(orgi, MainContext.ModelType.SUMMARY.toString()));
+                map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, MainContext.ModelType.SUMMARY.toString()));
                 map.put("curAgentService", agentService);
 
 
-                map.put(
-                        "agentUserMessageList",
-                        chatMessageRepository.findByAgentserviceidAndOrgi(agentService.getId(), orgi,
-                                new PageRequest(
-                                        0, 50, Direction.DESC,
-                                        "updatetime")));
+                map.put("agentUserMessageList", chatMessageRepository.findByAgentserviceidAndOrgi(agentService.getId(), orgi,
+                        new PageRequest(0, 50, Direction.DESC, "updatetime")));
             }
 
             if (MainContext.ChannelType.WEIXIN.toString().equals(channel)) {

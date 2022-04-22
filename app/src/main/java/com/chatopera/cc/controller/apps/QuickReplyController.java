@@ -78,9 +78,9 @@ public class QuickReplyController extends Handler {
     	List<com.chatopera.cc.model.QuickType> quickTypeList = quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request) , MainContext.QuickType.PUB.toString()) ;
     	if(!StringUtils.isBlank(typeid)){
         	map.put("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
-    		map.put("quickReplyList", quickReplyRes.getByOrgiAndCate(super.getOrgi(request) , typeid , null , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("quickReplyList", quickReplyRes.getByOrgiAndCate(super.getOrgi(request) , typeid , null , super.page(request))) ;
     	}else{
-    		map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request) , MainContext.QuickType.PUB.toString(), null, new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request) , MainContext.QuickType.PUB.toString(), null, super.page(request))) ;
     	}
     	map.put("pubQuickTypeList", quickTypeList) ;
     	return request(super.createAppsTempletResponse("/apps/setting/quickreply/index"));
@@ -89,9 +89,9 @@ public class QuickReplyController extends Handler {
     @Menu(type = "setting" , subtype = "quickreply" , admin= true)
     public ModelAndView list(ModelMap map , HttpServletRequest request , @Valid String typeid) {
     	if(!StringUtils.isBlank(typeid) && !typeid.equals("0")){
-    		map.put("quickReplyList", quickReplyRes.getByOrgiAndCate(super.getOrgi(request)  , typeid, null, new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("quickReplyList", quickReplyRes.getByOrgiAndCate(super.getOrgi(request)  , typeid, null, super.page(request))) ;
     	}else{
-    		map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request), MainContext.QuickType.PUB.toString() , null , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request), MainContext.QuickType.PUB.toString() , null , super.page(request))) ;
     	}
     	map.put("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
     	return request(super.createRequestPageTempletResponse("/apps/setting/quickreply/replylist"));

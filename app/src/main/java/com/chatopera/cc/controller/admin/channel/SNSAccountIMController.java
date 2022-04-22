@@ -65,7 +65,7 @@ public class SNSAccountIMController extends Handler {
     @Menu(type = "admin", subtype = "im", access = false, admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String execute, @RequestParam(name = "status", required = false) String status) {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
-        map.addAttribute("snsAccountList", snsAccountRes.findBySnstypeAndOrgiAndOrgan(MainContext.ChannelType.WEBIM.toString(), super.getOrgi(request), organs.keySet(), new PageRequest(super.getP(request), super.getPs(request))));
+        map.addAttribute("snsAccountList", snsAccountRes.findBySnstypeAndOrgiAndOrgan(MainContext.ChannelType.WEBIM.toString(), super.getOrgi(request), organs.keySet(), super.page(request)));
 
         map.addAttribute("status", status);
         List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));

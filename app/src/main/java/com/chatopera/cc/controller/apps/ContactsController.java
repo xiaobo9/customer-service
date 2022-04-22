@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -126,7 +125,7 @@ public class ContactsController extends Handler {
             map.put("ckind", ckind);
         }
 
-        map.addAttribute("currentOrgan",currentOrgan);
+        map.addAttribute("currentOrgan", currentOrgan);
 
         Page<Contacts> contacts = contactsRes.findByCreaterAndSharesAndOrgi(
                 logined.getId(),
@@ -137,7 +136,7 @@ public class ContactsController extends Handler {
                 false,
                 boolQueryBuilder,
                 q,
-                new PageRequest(super.getP(request), super.getPs(request)));
+                super.page(request));
 
         map.addAttribute("contactsList", contacts);
 
@@ -174,12 +173,9 @@ public class ContactsController extends Handler {
                 orgi,
                 MainUtils.getStartTime(), null, false,
                 boolQueryBuilder, q,
-                new PageRequest(
-                        super.getP(request),
-                        super.getPs(request)));
+                super.page(request));
 
-        map.addAttribute(
-                "contactsList", contacts);
+        map.addAttribute("contactsList", contacts);
 
         contactsProxy.bindContactsApproachableData(contacts, map, logined);
 
@@ -214,11 +210,8 @@ public class ContactsController extends Handler {
                 orgi,
                 MainUtils.getWeekStartTime(), null, false,
                 boolQueryBuilder, q,
-                new PageRequest(
-                        super.getP(request),
-                        super.getPs(request)));
-        map.addAttribute(
-                "contactsList", contacts);
+                super.page(request));
+        map.addAttribute("contactsList", contacts);
         contactsProxy.bindContactsApproachableData(contacts, map, logined);
 
 
@@ -254,13 +247,10 @@ public class ContactsController extends Handler {
                 logined.getId(),
                 orgi, null, null, false,
                 boolQueryBuilder, q,
-                new PageRequest(
-                        super.getP(request),
-                        super.getPs(request)));
+                super.page(request));
 
 
-        map.addAttribute(
-                "contactsList", contacts);
+        map.addAttribute("contactsList", contacts);
         contactsProxy.bindContactsApproachableData(contacts, map, logined);
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
@@ -541,7 +531,7 @@ public class ContactsController extends Handler {
         boolQueryBuilder.must(termQuery("datastatus", false));        //只导出 数据删除状态 为 未删除的 数据
         Iterable<Contacts> contactsList = contactsRes.findByCreaterAndSharesAndOrgi(
                 logined.getId(), logined.getId(), orgi, null, null,
-                false, boolQueryBuilder, null, new PageRequest(super.getP(request), super.getPs(request)));
+                false, boolQueryBuilder, null, super.page(request));
 
         MetadataTable table = metadataRes.findByTablename("uk_contacts");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
@@ -580,7 +570,7 @@ public class ContactsController extends Handler {
 
         Iterable<Contacts> contactsList = contactsRes.findByCreaterAndSharesAndOrgi(
                 logined.getId(), logined.getId(), orgi, null, null,
-                false, boolQueryBuilder, q, new PageRequest(super.getP(request), super.getPs(request)));
+                false, boolQueryBuilder, q, super.page(request));
         MetadataTable table = metadataRes.findByTablename("uk_contacts");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (Contacts contacts : contactsList) {
@@ -625,7 +615,7 @@ public class ContactsController extends Handler {
         }
         Page<Contacts> contactsList = contactsRes.findByCreaterAndSharesAndOrgi(
                 logined.getId(), logined.getId(), orgi, null, null, false, boolQueryBuilder, q,
-                new PageRequest(super.getP(request), super.getPs(request)));
+                super.page(request));
 
         map.addAttribute("contactsList", contactsList);
 

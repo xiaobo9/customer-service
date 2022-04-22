@@ -151,7 +151,7 @@ public class ChatServiceController extends Handler {
                 Predicate[] p = new Predicate[list.size()];
                 return cb.and(list.toArray(p));
             }
-        }, new PageRequest(super.getP(request), super.getPs(request), Direction.DESC, "createtime"));
+        }, super.page(request, Direction.DESC, "createtime"));
         map.put("agentServiceList", page);
         map.put("username", username);
         map.put("channel", channel);
@@ -406,7 +406,7 @@ public class ChatServiceController extends Handler {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Page<AgentUser> agentUserList = agentUserRes.findByOrgiAndStatusAndSkillIn(
                 super.getOrgi(request), MainContext.AgentUserStatusEnum.INQUENE.toString(), organs.keySet(),
-                new PageRequest(super.getP(request), super.getPs(request), Direction.DESC, "createtime"));
+                super.page(request, Direction.DESC, "createtime"));
         List<String> skillGroups = new ArrayList<String>();
         for (AgentUser agentUser : agentUserList.getContent()) {
             agentUser.setWaittingtime((int) (System.currentTimeMillis() - agentUser.getCreatetime().getTime()));
@@ -561,7 +561,7 @@ public class ChatServiceController extends Handler {
     public ModelAndView user(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
-        Page<User> userList = userProxy.findUserInOrgans(organs.keySet(), new PageRequest(super.getP(request), super.getPs(request),
+        Page<User> userList = userProxy.findUserInOrgans(organs.keySet(), super.page(request,
                 Direction.DESC, "createtime"));
         Map<String, Boolean> onlines = new HashMap<>();
         if (userList != null) {
@@ -585,7 +585,7 @@ public class ChatServiceController extends Handler {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
 
-        Page<LeaveMsg> leaveMsgs = leaveMsgRes.findBySkillAndOrgi(organs.keySet(), super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request),
+        Page<LeaveMsg> leaveMsgs = leaveMsgRes.findBySkillAndOrgi(organs.keySet(), super.getOrgi(request), super.page(request,
                 Direction.DESC, "createtime"));
         logger.info("[leavemsg] current organ {}, find message size {}", currentOrgan.getId(), leaveMsgs.getSize());
         for (final LeaveMsg l : leaveMsgs) {

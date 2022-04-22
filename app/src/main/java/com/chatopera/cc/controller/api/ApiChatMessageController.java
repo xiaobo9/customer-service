@@ -56,7 +56,7 @@ public class ApiChatMessageController extends Handler{
     public ResponseEntity<RestResult> list(HttpServletRequest request , @Valid String serviceid) {
 		ResponseEntity<RestResult> result = null ;
 		if(!StringUtils.isBlank(serviceid)) {
-			result = new ResponseEntity<>(new RestResult(RestResultType.OK , chatMessageRes.findByAgentserviceidAndOrgi(serviceid , super.getUser(request).getOrgi(),new PageRequest(super.getP(request), super.getPs(request) , Sort.Direction.DESC, "createtime"))), HttpStatus.OK) ;
+			result = new ResponseEntity<>(new RestResult(RestResultType.OK , chatMessageRes.findByAgentserviceidAndOrgi(serviceid , super.getUser(request).getOrgi(),super.page(request , Sort.Direction.DESC, "createtime"))), HttpStatus.OK) ;
 		}else {
 			result = new ResponseEntity<>(new RestResult(RestResultType.LACKDATA , RestResultType.LACKDATA.getMessage()), HttpStatus.OK) ;
 		}

@@ -150,7 +150,7 @@ public class AgentSettingsController extends Handler {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
 
-        Page<BlackEntity> blackList = blackListRes.findByOrgiAndSkillIn(super.getOrgi(request), organs.keySet(), new PageRequest(super.getP(request), super.getPs(request), Sort.Direction.DESC, "endtime"));
+        Page<BlackEntity> blackList = blackListRes.findByOrgiAndSkillIn(super.getOrgi(request), organs.keySet(), super.page(request, Sort.Direction.DESC, "endtime"));
 
         map.put("blackList", blackList);
         map.put("tagTypeList", Dict.getInstance().getDic("com.dic.tag.type"));
@@ -191,7 +191,7 @@ public class AgentSettingsController extends Handler {
             map.put("tagType", tagType);
         }
         if (tagType != null && currentOrgan != null) {
-            map.put("tagList", tagRes.findByOrgiAndTagtypeAndSkill(super.getOrgi(request), tagType.getCode(), currentOrgan.getId(), new PageRequest(super.getP(request), super.getPs(request))));
+            map.put("tagList", tagRes.findByOrgiAndTagtypeAndSkill(super.getOrgi(request), tagType.getCode(), currentOrgan.getId(), super.page(request)));
         }
         map.put("tagTypeList", tagList);
         return request(super.createAppsTempletResponse("/apps/setting/agent/tag"));

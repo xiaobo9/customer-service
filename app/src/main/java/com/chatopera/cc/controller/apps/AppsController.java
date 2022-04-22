@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -102,16 +101,11 @@ public class AppsController extends Handler {
                 super.getOrgi(request),
                 MainContext.OnlineUserStatusEnum.ONLINE.toString(),
                 appids,
-                new PageRequest(
-                        super.getP(request),
-                        super.getPs(request),
-                        Sort.Direction.DESC,
-                        "createtime"
-                )
+                super.page(request, Sort.Direction.DESC, "createtime")
         );
 
         final long msec = System.currentTimeMillis();
-        final List<String> contactIds = new ArrayList<String>();
+        final List<String> contactIds = new ArrayList<>();
 
         /**
          * 设置访客状态
@@ -219,7 +213,7 @@ public class AppsController extends Handler {
     public ModelAndView onlineuser(ModelMap map, HttpServletRequest request) {
         Page<OnlineUser> onlineUserList = this.onlineUserRes.findByOrgiAndStatus(
                 super.getOrgi(request), MainContext.OnlineUserStatusEnum.ONLINE.toString(),
-                new PageRequest(super.getP(request), super.getPs(request), Sort.Direction.DESC, "createtime"));
+                super.page(request, Sort.Direction.DESC, "createtime"));
         List<String> ids = new ArrayList<String>();
         for (OnlineUser onlineUser : onlineUserList.getContent()) {
             onlineUser.setBetweentime((int) (System.currentTimeMillis() - onlineUser.getLogintime().getTime()));

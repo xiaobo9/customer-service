@@ -37,7 +37,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -287,21 +286,14 @@ public class AgentAuditController extends Handler {
             }
 
             if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
-                List<AgentServiceSummary> summarizes = this.serviceSummaryRes.findByAgentserviceidAndOrgi(
-                        agentUser.getAgentserviceid(), orgi);
+                List<AgentServiceSummary> summarizes = this.serviceSummaryRes.findByAgentserviceidAndOrgi(agentUser.getAgentserviceid(), orgi);
                 if (summarizes.size() > 0) {
                     view.addObject("summary", summarizes.get(0));
                 }
             }
 
-            view.addObject(
-                    "agentUserMessageList",
-                    this.chatMessageRepository.findByUsessionAndOrgi(agentUser.getUserid(), orgi,
-                            new PageRequest(0, 20, Sort.Direction.DESC,
-                                    "updatetime"
-                            )
-                    )
-            );
+            view.addObject("agentUserMessageList", this.chatMessageRepository.findByUsessionAndOrgi(agentUser.getUserid(), orgi,
+                    super.page(request, Sort.Direction.DESC, "updatetime")));
             AgentService agentService = null;
             if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
                 agentService = this.agentServiceRes.findOne(agentUser.getAgentserviceid());

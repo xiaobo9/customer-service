@@ -24,14 +24,13 @@ import com.chatopera.cc.model.OrganUser;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.model.UserRole;
 import com.chatopera.cc.persistence.repository.*;
-import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.util.Menu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -44,11 +43,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author 程序猿DD
- * @version 1.0.0
- * @blog http://blog.didispace.com
- */
 @Controller
 @RequestMapping("/admin/user")
 public class UsersController extends Handler {
@@ -78,16 +72,9 @@ public class UsersController extends Handler {
     @RequestMapping("/index")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView index(ModelMap map, HttpServletRequest request) throws IOException {
-        User logined = super.getUser(request);
-
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
-        map.addAttribute("userList", userProxy.findUserInOrgans(organs.keySet(), new PageRequest(
-                super.getP(request),
-                super.getPs(request),
-                Sort.Direction.ASC,
-                "createtime"
-        )));
-
+        Page<User> users = userProxy.findUserInOrgans(organs.keySet(), super.page(request, Sort.Direction.ASC, "createtime"));
+        map.addAttribute("userList", users);
 
         return request(super.createAdminTempletResponse("/admin/user/index"));
     }
@@ -106,7 +93,7 @@ public class UsersController extends Handler {
 
     @RequestMapping("/edit")
     @Menu(type = "admin", subtype = "user")
-    public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id) {
+    public ModelAndView edit(@Valid String id) {
         ModelAndView view = request(super.createRequestPageTempletResponse("/admin/user/edit"));
         User user = userRepository.findById(id);
         if (user != null && MainContext.hasModule(Constants.CSKEFU_MODULE_CALLCENTER)) {
@@ -127,7 +114,7 @@ public class UsersController extends Handler {
 
     @RequestMapping("/delete")
     @Menu(type = "admin", subtype = "user")
-    public ModelAndView delete(HttpServletRequest request, @Valid User user) {
+    public ModelAndView delete(@Valid User user) {
         String msg = "admin_user_delete";
         if (user != null) {
             User dbUser = userRepository.getOne(user.getId());

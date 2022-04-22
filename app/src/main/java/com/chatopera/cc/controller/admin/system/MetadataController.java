@@ -79,7 +79,7 @@ public class MetadataController extends Handler {
     @RequestMapping("/index")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request) throws SQLException {
-        map.addAttribute("metadataList", metadataRes.findAll(new PageRequest(super.getP(request), super.getPs(request))));
+        map.addAttribute("metadataList", metadataRes.findAll(super.page(request)));
         return request(super.createAdminTempletResponse("/admin/system/metadata/index"));
     }
 

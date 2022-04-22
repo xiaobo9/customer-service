@@ -53,7 +53,7 @@ public class SystemMessageController extends Handler {
     @RequestMapping("/email/index")
     @Menu(type = "setting", subtype = "email")
     public ModelAndView index(ModelMap map, HttpServletRequest request) throws IOException {
-        Page<SystemMessage> emails = systemMessageRepository.findByMsgtypeAndOrgi("email", super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)));
+        Page<SystemMessage> emails = systemMessageRepository.findByMsgtypeAndOrgi("email", super.getOrgi(request), super.page(request));
         List<Organ> organs = organRes.findByOrgi(super.getOrgi(request));
 
         emails.getContent().stream().forEach(p -> {
@@ -123,7 +123,7 @@ public class SystemMessageController extends Handler {
     @RequestMapping("/sms/index")
     @Menu(type = "setting", subtype = "sms")
     public ModelAndView smsindex(ModelMap map, HttpServletRequest request) throws IOException {
-        map.addAttribute("smsList", systemMessageRepository.findByMsgtypeAndOrgi("sms", super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request))));
+        map.addAttribute("smsList", systemMessageRepository.findByMsgtypeAndOrgi("sms", super.getOrgi(request), super.page(request)));
         return request(super.createAdminTempletResponse("/admin/sms/index"));
     }
 

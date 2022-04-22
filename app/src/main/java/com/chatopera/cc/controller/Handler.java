@@ -30,6 +30,7 @@ import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.repository.StreamingFileRepository;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
@@ -38,6 +39,8 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.SessionAttributes;
@@ -429,46 +432,51 @@ public class Handler {
         return new ModelAndView(data.getTemplet() != null ? data.getTemplet() : data.getPage(), "data", data);
     }
 
+    protected PageRequest page(HttpServletRequest request) {
+        return this.page(request, null);
+    }
+
+    protected PageRequest page(HttpServletRequest request, Sort.Direction direction, String... properties) {
+        return new PageRequest(getP(request), getPs(request), direction, properties);
+    }
+
+    protected PageRequest page(QueryParams params, Sort.Direction direction, String... properties) {
+        return new PageRequest(getP(params), getPs(params), direction, properties);
+    }
+
     public int getP(HttpServletRequest request) {
-        int page = 0;
         String p = request.getParameter("p");
-        if (StringUtils.isNotBlank(p) && p.matches("[\\d]*")) {
-            page = Integer.parseInt(p);
-            if (page > 0) {
-                page = page - 1;
-            }
+        int page = NumberUtils.toInt(p, 0);
+        if (page > 0) {
+            page = page - 1;
         }
         return page;
     }
 
     public int getPs(HttpServletRequest request) {
-        int pagesize = PAGE_SIZE_TW;
         String ps = request.getParameter("ps");
-        if (StringUtils.isNotBlank(ps) && ps.matches("[\\d]*")) {
-            pagesize = Integer.parseInt(ps);
-        }
-        return pagesize;
+        return NumberUtils.toInt(ps, PAGE_SIZE_TW);
     }
 
     public int getP(QueryParams params) {
-        int page = 0;
-        if (params != null && StringUtils.isNotBlank(params.getP()) && params.getP().matches("[\\d]*")) {
-            page = Integer.parseInt(params.getP());
-            if (page > 0) {
-                page = page - 1;
-            }
+        if (params == null) {
+            return 0;
+        }
+        String p = params.getP();
+        int page = NumberUtils.toInt(p, 0);
+        if (page > 0) {
+            page = page - 1;
         }
         return page;
     }
 
     public int getPs(QueryParams params) {
-        int pagesize = PAGE_SIZE_TW;
-        if (params != null && StringUtils.isNotBlank(params.getPs()) && params.getPs().matches("[\\d]*")) {
-            pagesize = Integer.parseInt(params.getPs());
+        if (params == null) {
+            return PAGE_SIZE_TW;
         }
-        return pagesize;
+        String ps = params.getPs();
+        return NumberUtils.toInt(ps, PAGE_SIZE_TW);
     }
-
 
     public int get50Ps(HttpServletRequest request) {
         int pagesize = PAGE_SIZE_FV;

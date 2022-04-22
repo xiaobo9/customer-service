@@ -109,7 +109,7 @@ public class AgentSummaryController extends Handler {
                 Predicate[] p = new Predicate[list.size()];
                 return cb.and(list.toArray(p));
             }
-        }, new PageRequest(super.getP(request), super.getPs(request), Sort.Direction.DESC, "createtime"));
+        }, super.page(request, Sort.Direction.DESC, "createtime"));
         map.addAttribute("summaryList", page);
         map.addAttribute("begin", begin);
         map.addAttribute("end", end);

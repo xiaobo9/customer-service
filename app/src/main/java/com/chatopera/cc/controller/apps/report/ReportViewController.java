@@ -65,9 +65,9 @@ public class ReportViewController extends Handler{
     	Page<PublishedReport> publishedReportList = null ;
     	if(!StringUtils.isBlank(dicid) && !"0".equals(dicid)){
         	map.put("dataDic", dataDicRes.findByIdAndOrgi(dicid, super.getOrgi(request))) ;
-    		map.put("reportList", publishedReportList = publishedReportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", publishedReportList = publishedReportRes.findByOrgiAndDicid(super.getOrgi(request) , dicid , super.page(request))) ;
     	}else{
-    		map.put("reportList", publishedReportList = publishedReportRes.findByOrgi(super.getOrgi(request) , new PageRequest(super.getP(request), super.getPs(request)))) ;
+    		map.put("reportList", publishedReportList = publishedReportRes.findByOrgi(super.getOrgi(request) , super.page(request))) ;
     	}
     	if(publishedReportList!=null && publishedReportList.getContent().size() > 0) {
     		PublishedReport publishedReport = publishedReportList.getContent().get(0);

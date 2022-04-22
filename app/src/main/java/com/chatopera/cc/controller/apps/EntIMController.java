@@ -35,7 +35,6 @@ import com.chatopera.cc.util.StreamingFileUtil;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -182,7 +181,7 @@ public class EntIMController extends Handler {
 
         Page<ChatMessage> chatMessageList = chatMessageRes.findByContextidAndUseridAndOrgi(userid,
                 super.getUser(request).getId(), super.getOrgi(request),
-                new PageRequest(0, 20, Sort.Direction.DESC, "createtime")
+                super.page(request, Sort.Direction.DESC, "createtime")
         );
 
         view.addObject("chatMessageList", chatMessageList);
@@ -220,7 +219,7 @@ public class EntIMController extends Handler {
 
         Page<ChatMessage> chatMessageList = chatMessageRes.findByContextidAndUseridAndOrgiAndCreatetimeLessThan(userid,
                 super.getUser(request).getId(), super.getOrgi(request), createtime,
-                new PageRequest(0, 20, Sort.Direction.DESC, "createtime")
+                super.page(request, Sort.Direction.DESC, "createtime")
         );
         view.addObject("chatMessageList", chatMessageList);
 
@@ -236,7 +235,7 @@ public class EntIMController extends Handler {
         view.addObject("imGroupUserList", imGroupUserRes.findByImgroupAndOrgi(imGroup, super.getOrgi(request)));
         view.addObject("contextid", id);
         view.addObject("chatMessageList", chatMessageRes.findByContextidAndOrgi(id, super.getOrgi(request),
-                new PageRequest(0, 20, Sort.Direction.DESC, "createtime")
+                super.page(request, Sort.Direction.DESC, "createtime")
         ));
         return view;
     }
@@ -246,7 +245,7 @@ public class EntIMController extends Handler {
     public ModelAndView group(HttpServletRequest request, @Valid String id, @Valid Date createtime) {
         ModelAndView view = request(super.createRequestPageTempletResponse("/apps/entim/group/more"));
         view.addObject("chatMessageList", chatMessageRes.findByContextidAndOrgiAndCreatetimeLessThan(id,
-                super.getOrgi(request), createtime, new PageRequest(0, 20, Sort.Direction.DESC, "createtime")
+                super.getOrgi(request), createtime, super.page(request, Sort.Direction.DESC, "createtime")
         ));
         return view;
     }

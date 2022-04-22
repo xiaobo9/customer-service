@@ -27,7 +27,6 @@ import com.chatopera.cc.persistence.repository.OrganRepository;
 import com.chatopera.cc.persistence.repository.OrganUserRepository;
 import com.chatopera.cc.persistence.repository.UserRepository;
 import com.chatopera.cc.persistence.repository.UserRoleRepository;
-import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
@@ -40,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -91,17 +89,12 @@ public class ApiUserController extends Handler {
     public ResponseEntity<RestResult> list(HttpServletRequest request, @Valid String id, @Valid String username) {
         Page<User> userList = null;
         if (StringUtils.isNotBlank(id)) {
-            userList = userRes.findByIdAndOrgi(
-                    id, super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)));
+            userList = userRes.findByIdAndOrgi(id, super.getOrgi(request), super.page(request));
         } else {
             if (StringUtils.isNotBlank(username)) {
-                userList = userRes.findByDatastatusAndOrgiAndUsernameLike(
-                        false, super.getOrgi(request), username, new PageRequest(
-                                super.getP(request),
-                                super.getPs(request)));
+                userList = userRes.findByDatastatusAndOrgiAndUsernameLike(false, super.getOrgi(request), username, super.page(request));
             } else {
-                userList = userRes.findByDatastatusAndOrgi(
-                        false, super.getOrgi(request), new PageRequest(super.getP(request), super.getPs(request)));
+                userList = userRes.findByDatastatusAndOrgi(false, super.getOrgi(request), super.page(request));
             }
         }
         return new ResponseEntity<>(new RestResult(RestResultType.OK, userList), HttpStatus.OK);

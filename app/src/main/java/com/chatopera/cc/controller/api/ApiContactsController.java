@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -86,13 +85,10 @@ public class ApiContactsController extends Handler {
         if (!StringUtils.isBlank(creater)) {
             User user = super.getUser(request);
             contactsList = contactsRepository.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(),
-                                                                            super.getOrgi(request), false, q,
-                                                                            new PageRequest(
-                                                                                    super.getP(request),
-                                                                                    super.getPs(request)));
+                    super.getOrgi(request), false, q, super.page(request));
         } else {
             contactsList = contactsRepository.findByOrgi(super.getOrgi(request), false, q,
-                                                         new PageRequest(super.getP(request), super.getPs(request)));
+                    super.page(request));
         }
         return new ResponseEntity<>(new RestResult(RestResultType.OK, contactsList), HttpStatus.OK);
     }

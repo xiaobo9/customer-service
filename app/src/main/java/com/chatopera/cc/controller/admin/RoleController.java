@@ -88,7 +88,7 @@ public class RoleController extends Handler {
                 map.addAttribute("roleData", roleData = roleList.get(0));
             }
             if (roleData != null) {
-                map.addAttribute("userRoleList", userRoleRes.findByOrgiAndRole(super.getOrgi(), roleData, new PageRequest(super.getP(request), super.getPs(request))));
+                map.addAttribute("userRoleList", userRoleRes.findByOrgiAndRole(super.getOrgi(), roleData, super.page(request)));
             }
         }
         return request(super.createAdminTempletResponse("/admin/role/index"));

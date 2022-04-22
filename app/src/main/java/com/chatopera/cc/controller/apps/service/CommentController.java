@@ -48,7 +48,7 @@ public class CommentController extends Handler{
     public ModelAndView index(ModelMap map , HttpServletRequest request , String userid , String agentservice , @Valid String channel) {
 		Organ currentOrgan = super.getOrgan(request);
 		Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
-		Page<AgentService> agentServiceList = agentServiceRes.findByOrgiAndSatisfactionAndSkillIn(super.getOrgi(request) , true ,organs.keySet(),new PageRequest(super.getP(request), super.getPs(request))) ;
+		Page<AgentService> agentServiceList = agentServiceRes.findByOrgiAndSatisfactionAndSkillIn(super.getOrgi(request) , true ,organs.keySet(),super.page(request)) ;
 		map.addAttribute("serviceList", agentServiceList) ;
 		return request(super.createAppsTempletResponse("/apps/service/comment/index"));
     }

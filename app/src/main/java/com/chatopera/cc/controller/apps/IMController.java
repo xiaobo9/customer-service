@@ -852,7 +852,7 @@ public class IMController extends Handler {
                 }
             }
 
-            PageRequest pageRequest = new PageRequest(0, 20, Direction.DESC, "updatetime");
+            PageRequest pageRequest = super.page(request, Direction.DESC, "updatetime");
             map.addAttribute("chatMessageList", chatMessageRes.findByUsessionAndOrgi(userid, orgi, pageRequest));
         }
         view.addObject("commentList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_COMMENT_DIC));

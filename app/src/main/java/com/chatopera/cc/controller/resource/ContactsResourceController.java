@@ -17,6 +17,7 @@
 package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.util.Menu;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,8 @@ public class ContactsResourceController extends Handler{
 		if(q==null){
 			q = "" ;
 		}
-    	map.addAttribute("contactsList", contactsRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(),super.getUser(request).getId(),super.getOrgi(request), false , q , new PageRequest(0, 10))) ;
+		User user = super.getUser(request);
+		map.addAttribute("contactsList", contactsRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(),super.getOrgi(request), false , q , new PageRequest(0, 10))) ;
         return request(super.createRequestPageTempletResponse("/public/contacts"));
     }
 }

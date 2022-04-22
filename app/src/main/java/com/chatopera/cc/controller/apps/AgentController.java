@@ -414,19 +414,15 @@
                  }
              }
 
-             view.addObject(
-                     "agentUserMessageList",
-                     this.chatMessageRes.findByUsessionAndOrgi(agentUser.getUserid(), orgi,
-                             new PageRequest(0, 20, Direction.DESC,
-                                     "updatetime")));
+             PageRequest pageRequest = super.page(request, Direction.DESC, "updatetime");
+             Page<ChatMessage> messages = this.chatMessageRes.findByUsessionAndOrgi(agentUser.getUserid(), orgi, pageRequest);
+             view.addObject("agentUserMessageList", messages);
              AgentService agentService = null;
              if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
                  agentService = this.agentServiceRes.findOne(agentUser.getAgentserviceid());
                  view.addObject("curAgentService", agentService);
                  if (agentService != null) {
-                     /**
-                      * 获取关联数据
-                      */
+                     // 获取关联数据
                      agentServiceProxy.processRelaData(logined.getId(), orgi, agentService, map);
                  }
              }
