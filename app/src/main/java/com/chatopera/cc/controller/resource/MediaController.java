@@ -63,7 +63,7 @@ public class MediaController extends Handler {
     @Autowired
     private JpaBlobHelper jpaBlobHelper;
 
-    private String TEMPLATE_DATA_PATH = "WEB-INF/data/templates/";
+    private final String TEMPLATE_DATA_PATH = "WEB-INF/data/templates/";
 
     @Autowired
     private AttachmentRepository attachementRes;
@@ -105,7 +105,7 @@ public class MediaController extends Handler {
     @Menu(type = "resouce", subtype = "image", access = true)
     public void url(HttpServletResponse response, @Valid String url) throws IOException {
         byte[] data = new byte[1024];
-        int length = 0;
+        int length;
         OutputStream out = response.getOutputStream();
         if (StringUtils.isNotBlank(url)) {
             InputStream input = new URL(url).openStream();
@@ -117,17 +117,11 @@ public class MediaController extends Handler {
     }
 
     @RequestMapping("/image/upload")
-    @Menu(type = "resouce", subtype = "imageupload", access = false)
-    public ModelAndView upload(ModelMap map,
-                               HttpServletRequest request,
-                               @RequestParam(value = "imgFile", required = false) MultipartFile multipart) throws IOException {
+    @Menu(type = "resouce", subtype = "imageupload")
+    public ModelAndView upload(ModelMap map, @RequestParam(value = "imgFile", required = false) MultipartFile multipart) throws IOException {
         ModelAndView view = request(super.createRequestPageTempletResponse("/public/upload"));
-        UploadStatus notify = null;
+        UploadStatus notify;
         if (multipart != null && multipart.getOriginalFilename().lastIndexOf(".") > 0) {
-            File uploadDir = new File(path, "upload");
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
             String fileid = MainUtils.getUUID();
             StreamingFile sf = new StreamingFile();
             sf.setId(fileid);
@@ -145,7 +139,7 @@ public class MediaController extends Handler {
     }
 
     @RequestMapping("/file")
-    @Menu(type = "resouce", subtype = "file", access = false)
+    @Menu(type = "resouce", subtype = "file")
     public void file(HttpServletResponse response, HttpServletRequest request, @Valid String id) throws IOException, SQLException {
         if (StringUtils.isNotBlank(id)) {
             AttachmentFile attachmentFile = attachementRes.findByIdAndOrgi(id, super.getOrgi(request));
@@ -165,8 +159,8 @@ public class MediaController extends Handler {
     }
 
     @RequestMapping("/template")
-    @Menu(type = "resouce", subtype = "template", access = false)
-    public void template(HttpServletResponse response, HttpServletRequest request, @Valid String filename) throws IOException {
+    @Menu(type = "resouce", subtype = "template")
+    public void template(HttpServletResponse response, @Valid String filename) throws IOException {
         if (StringUtils.isNotBlank(filename)) {
             InputStream is = MediaController.class.getClassLoader().getResourceAsStream(TEMPLATE_DATA_PATH + filename);
             if (is != null) {
@@ -180,7 +174,6 @@ public class MediaController extends Handler {
                 is.close();
             }
         }
-        return;
     }
 
 }

@@ -72,9 +72,7 @@ public class BatchResource extends Resource {
             if (tempFile.exists()) {
                 String fileName = "callout/batch/" + MainUtils.getUUID() + tempFile.getName().substring(tempFile.getName().lastIndexOf("."));
                 File excelFile = new File(path, fileName);
-                if (!excelFile.getParentFile().exists()) {
-                    excelFile.getParentFile().mkdirs();
-                }
+                FileUtils.forceMkdirParent(excelFile);
 
                 event.setTablename(metadataTable.getTablename());
                 event.setDSData(new DSData(null, excelFile, tempFile.getName(), null));

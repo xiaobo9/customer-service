@@ -1,11 +1,11 @@
 package com.chatopera.cc.proxy;
 
-import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.ThumbnailUtils;
 import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.controller.apps.UploadService;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.peer.PeerSyncIM;
@@ -18,7 +18,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,12 +30,6 @@ import java.util.HashMap;
 @Component
 public class AgentProxy {
     private final static Logger logger = LoggerFactory.getLogger(AgentProxy.class);
-
-    @Value("${web.upload-path}")
-    private String webUploadPath;
-
-    @Autowired
-    private ACDPolicyService acdPolicyService;
 
     @Autowired
     private AttachmentRepository attachementRes;
@@ -62,6 +55,9 @@ public class AgentProxy {
     @Autowired
     private AgentUserTaskRepository agentUserTaskRes;
 
+    @Autowired
+    private UploadService uploadService;
+
     /**
      * 设置一个坐席为就绪状态
      * 不牵扯ACD
@@ -84,16 +80,11 @@ public class AgentProxy {
 //        SessionConfig sessionConfig = acdPolicyService.initSessionConfig(agentStatus.getOrgi());
 //        agentStatus.setMaxusers(sessionConfig.getMaxuser());
 
-        /**
-         * 更新当前用户状态
-         */
-        agentStatus.setUsers(
-                cache.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi()));
+        // 更新当前用户状态
+        agentStatus.setUsers(cache.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi()));
         agentStatus.setStatus(MainContext.AgentStatusEnum.READY.toString());
 
-        logger.info(
-                "[ready] set agent {}, status {}", agentStatus.getAgentno(),
-                MainContext.AgentStatusEnum.READY.toString());
+        logger.info("[ready] set agent {}, status {}", agentStatus.getAgentno(), MainContext.AgentStatusEnum.READY);
 
         // 更新数据库
         agentStatusRes.save(agentStatus);
@@ -244,26 +235,16 @@ public class AgentProxy {
      */
     public StreamingFile saveFileIntoMySQLBlob(final User creator, final MultipartFile multipart) throws
             IOException, CSKefuException {
-        /**
-         * 准备文件夹
-         */
-        File uploadDir = new File(webUploadPath, "upload");
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
-        }
 
         String fileid = MainUtils.getUUID();
         StreamingFile sf = new StreamingFile();
 
-        /**
-         * 保存到本地
-         */
-        if (multipart.getContentType() != null && multipart.getContentType().indexOf(
-                Constants.ATTACHMENT_TYPE_IMAGE) >= 0) {
+        // 保存到本地
+        if (multipart.getContentType() != null && multipart.getContentType().contains(Constants.ATTACHMENT_TYPE_IMAGE)) {
             // 图片
             // process thumbnail
-            File original = new File(webUploadPath, "upload/" + fileid + "_original");
-            File thumbnail = new File(webUploadPath, "upload/" + fileid);
+            File original = new File(uploadService.getUploadPath(), fileid + "_original");
+            File thumbnail = new File(uploadService.getUploadPath(), fileid);
             FileCopyUtils.copy(multipart.getBytes(), original);
             ThumbnailUtils.processImage(thumbnail, original);
             sf.setThumbnail(jpaBlobHelper.createBlobWithFile(thumbnail));
@@ -317,18 +298,17 @@ public class AgentProxy {
             attachmentFile.setFiletype(multipart.getContentType());
         }
         File uploadFile = new File(multipart.getOriginalFilename());
-        if (uploadFile.getName() != null && uploadFile.getName().length() > 255) {
+        if (uploadFile.getName().length() > 255) {
             attachmentFile.setTitle(uploadFile.getName().substring(0, 255));
         } else {
             attachmentFile.setTitle(uploadFile.getName());
         }
-        if (StringUtils.isNotBlank(attachmentFile.getFiletype()) && attachmentFile.getFiletype().indexOf(
-                Constants.ATTACHMENT_TYPE_IMAGE) >= 0) {
+        if (StringUtils.isNotBlank(attachmentFile.getFiletype()) && attachmentFile.getFiletype().contains(Constants.ATTACHMENT_TYPE_IMAGE)) {
             attachmentFile.setImage(true);
         }
         attachmentFile.setFileid(fileid);
         attachementRes.save(attachmentFile);
-        FileUtils.writeByteArrayToFile(new File(webUploadPath, "upload/" + fileid), multipart.getBytes());
+        FileUtils.writeByteArrayToFile(new File(uploadService.getUploadPath(), fileid), multipart.getBytes());
         return attachmentFile;
     }
 
@@ -341,8 +321,7 @@ public class AgentProxy {
      * @return
      */
     public AgentStatus resolveAgentStatusByAgentnoAndOrgi(final String agentno, final String orgi, final HashMap<String, String> skills) {
-        logger.info(
-                "[resolveAgentStatusByAgentnoAndOrgi] agentno {}, skills {}", agentno,
+        logger.info("[resolveAgentStatusByAgentnoAndOrgi] agentno {}, skills {}", agentno,
                 String.join("|", skills.keySet()));
         AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
 
@@ -350,9 +329,7 @@ public class AgentProxy {
             agentStatus = agentStatusRes.findOneByAgentnoAndOrgi(agentno, orgi).orElseGet(AgentStatus::new);
         }
 
-        if (skills != null) {
-            agentStatus.setSkills(skills);
-        }
+        agentStatus.setSkills(skills);
 
         return agentStatus;
     }

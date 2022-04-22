@@ -23,24 +23,34 @@ import mondrian.olap.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
+
+
 @Service
 public class DataSourceService {
     @Autowired
     private DruidDataSource dataSource;
 
-    /**
-     * @param xml
-     * @throws Exception
-     */
-    public Connection service(String xml) {
+    public Connection service(String xml) throws SQLException, ClassNotFoundException {
         Connection dataSourceObject = null;
-        StringBuffer strb = new StringBuffer();
+        StringBuilder strb = new StringBuilder();
         Util.PropertyList properties = Util.parseConnectString(strb.append("Provider=mondrian;")
-                .append(
-                        "Catalog=").append(xml).append(";").toString());
+                .append("Catalog=").append(xml).append(";").toString());
         if (properties != null) {
             dataSourceObject = DriverManager.getConnection(properties, null, dataSource);
         }
         return dataSourceObject;
+
+
+//        String url = "jdbc:mondrian:Jdbc=jdbc:odbc:MondrianFoodMart; Catalog=file:/mondrian/demo/FoodMart.xml; JdbcDrivers=sun.jdbc.odbc.JdbcOdbcDriver";
+
+//        Class.forName("mondrian.olap4j.MondrianOlap4jDriver");
+//        StringBuilder urlBuilder = new StringBuilder()
+//                .append("jdbc:mondrian:Jdbc=").append(dataSource.getUrl())
+//                .append(";Catalog=").append(xml);
+//
+//        Connection connection = DriverManager.getConnection(urlBuilder.toString(), dataSource.getUsername(), dataSource.getPassword());
+//        return connection.unwrap(OlapConnection.class);
+
     }
 }

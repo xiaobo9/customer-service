@@ -265,11 +265,6 @@
             <version>3.2.5</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.olap4j</groupId>
-            <artifactId>olap4j</artifactId>
-            <version>1.2.0</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/com.googlecode.aviator/aviator -->
         <dependency>
             <groupId>com.googlecode.aviator</groupId>

@@ -125,7 +125,7 @@ public class SystemConfigController extends Handler {
 
         map.addAttribute(
                 "sysMessageList", systemMessageRes.findByMsgtypeAndOrgi(MainContext.SystemMessageType.EMAIL.toString(),
-                                                                        super.getOrgi(request)));
+                        super.getOrgi(request)));
 
         if (StringUtils.isNotBlank(execute) && execute.equals("false")) {
             map.addAttribute("execute", execute);
@@ -192,8 +192,6 @@ public class SystemConfigController extends Handler {
             @RequestParam(value = "consolelogo", required = false) MultipartFile consolelogo,
             @RequestParam(value = "favlogo", required = false) MultipartFile favlogo,
             @Valid Secret secret) throws SQLException, IOException, NoSuchAlgorithmException {
-    	/*SystemConfig systemConfig = systemConfigRes.findByOrgi(super.getOrgi(request)) ;
-    	config.setOrgi(super.getOrgi(request));*/
         SystemConfig systemConfig = systemConfigRes.findByOrgi(Constants.SYSTEM_ORGI);
         config.setOrgi(Constants.SYSTEM_ORGI);
         String msg = "0";
@@ -209,13 +207,10 @@ public class SystemConfigController extends Handler {
         }
         if (config.isEnablessl()) {
             if (keyfile != null && keyfile.getBytes() != null && keyfile.getBytes().length > 0 && keyfile.getOriginalFilename() != null && keyfile.getOriginalFilename().length() > 0) {
-                FileUtils.writeByteArrayToFile(
-                        new File(path, "ssl/" + keyfile.getOriginalFilename()), keyfile.getBytes());
+                FileUtils.writeByteArrayToFile(new File(path, "ssl/" + keyfile.getOriginalFilename()), keyfile.getBytes());
                 systemConfig.setJksfile(keyfile.getOriginalFilename());
                 File sslFilePath = new File(path, "ssl/https.properties");
-                if (!sslFilePath.getParentFile().exists()) {
-                    sslFilePath.getParentFile().mkdirs();
-                }
+                FileUtils.forceMkdirParent(sslFilePath);
                 Properties prop = new Properties();
                 FileOutputStream oFile = new FileOutputStream(sslFilePath);//true表示追加打开
                 prop.setProperty("key-store-password", MainUtils.encryption(systemConfig.getJkspassword()));
@@ -230,8 +225,7 @@ public class SystemConfigController extends Handler {
             }
         }
 
-        if (loginlogo != null && StringUtils.isNotBlank(
-                loginlogo.getOriginalFilename()) && loginlogo.getOriginalFilename().lastIndexOf(".") > 0) {
+        if (loginlogo != null && StringUtils.isNotBlank(loginlogo.getOriginalFilename()) && loginlogo.getOriginalFilename().lastIndexOf(".") > 0) {
             systemConfig.setLoginlogo(super.saveImageFileWithMultipart(loginlogo));
         }
         if (consolelogo != null && StringUtils.isNotBlank(

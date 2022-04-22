@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -117,7 +116,7 @@ public class CustomerController extends Handler {
             map.put("ekind", ekind);
         }
 
-        map.addAttribute("currentOrgan",currentOrgan);
+        map.addAttribute("currentOrgan", currentOrgan);
 
         map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(logined.getId(),
                 logined.getId(),
@@ -366,16 +365,13 @@ public class CustomerController extends Handler {
         DSDataEvent event = new DSDataEvent();
         String fileName = "customer/" + MainUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
         File excelFile = new File(path, fileName);
-        if (!excelFile.getParentFile().exists()) {
-            excelFile.getParentFile().mkdirs();
-        }
 
         Organ currentOrgan = super.getOrgan(request);
         String organId = currentOrgan != null ? currentOrgan.getId() : null;
 
         MetadataTable table = metadataRes.findByTablename("uk_entcustomer");
         if (table != null) {
-            FileUtils.writeByteArrayToFile(new File(path, fileName), cusfile.getBytes());
+            FileUtils.writeByteArrayToFile(excelFile, cusfile.getBytes());
             event.setDSData(new DSData(table, excelFile, cusfile.getContentType(), super.getUser(request)));
             event.getDSData().setClazz(EntCustomer.class);
             event.getDSData().setProcess(new EntCustomerProcess(entCustomerRes));
@@ -415,7 +411,7 @@ public class CustomerController extends Handler {
 
     @RequestMapping("/expall")
     @Menu(type = "customer", subtype = "customer")
-    public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response ,@Valid String ekind) throws IOException, CSKefuException {
+    public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String ekind) throws IOException, CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         if (!super.esOrganFilter(request, boolQueryBuilder)) {
             // #TODO 提示没有部门

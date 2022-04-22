@@ -683,8 +683,7 @@ public class MainUtils {
      * @return
      */
     public static SystemConfig getSystemConfig() {
-        SystemConfig systemConfig = MainContext.getCache().findOneSystemByIdAndOrgi(
-                "systemConfig", Constants.SYSTEM_ORGI);
+        SystemConfig systemConfig = MainContext.getCache().findOneSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI);
         if (systemConfig == null) {
             SystemConfigRepository systemConfigRes = MainContext.getContext().getBean(SystemConfigRepository.class);
             systemConfig = systemConfigRes.findByOrgi(Constants.SYSTEM_ORGI);

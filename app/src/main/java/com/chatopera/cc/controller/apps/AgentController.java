@@ -883,8 +883,6 @@
      @RequestMapping("/message/image/upload")
      @Menu(type = "im", subtype = "image", access = false)
      public ModelAndView messageimage(
-             ModelMap map,
-             HttpServletRequest request,
              @RequestParam(value = "image", required = false) MultipartFile image,
              @Valid String id,
              @Valid String userid,
@@ -893,10 +891,6 @@
          if (image != null && StringUtils.isNotBlank(fileid)) {
              File tempFile = File.createTempFile(fileid, ".png");
              try {
-                 // 创建临时图片文件
-                 if (!tempFile.getParentFile().exists()) {
-                     tempFile.getParentFile().mkdirs();
-                 }
                  // 写入临时文件
                  FileCopyUtils.copy(image.getBytes(), tempFile);
                  ChatMessage chatMessage = chatMessageRes.findById(id);

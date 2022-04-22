@@ -457,12 +457,9 @@ public class ContactsController extends Handler {
         String fileName = "contacts/" + MainUtils.getUUID() + cusfile.getOriginalFilename().substring(
                 cusfile.getOriginalFilename().lastIndexOf("."));
         File excelFile = new File(path, fileName);
-        if (!excelFile.getParentFile().exists()) {
-            excelFile.getParentFile().mkdirs();
-        }
         MetadataTable table = metadataRes.findByTablename("uk_contacts");
         if (table != null) {
-            FileUtils.writeByteArrayToFile(new File(path, fileName), cusfile.getBytes());
+            FileUtils.writeByteArrayToFile(excelFile, cusfile.getBytes());
             event.setDSData(new DSData(table, excelFile, cusfile.getContentType(), logined));
             event.getDSData().setClazz(Contacts.class);
             event.getDSData().setProcess(new ContactsProcess(contactsRes));
