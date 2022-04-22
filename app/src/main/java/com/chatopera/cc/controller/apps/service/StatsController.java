@@ -90,7 +90,8 @@ public class StatsController extends Handler {
             mapR.put("skill", organs.keySet().stream().map(p -> "'" + p + "'").collect(Collectors.joining(",")));
         }
 
-        ReportData reportData = new CubeService("coment.xml", path, dataSource, mapR).execute("SELECT [comment].[满意度].members on columns , NonEmptyCrossJoin([time].[日期].members , NonEmptyCrossJoin([skill].[技能组].members,[agent].[坐席].members)) on rows  FROM [满意度]");
+        CubeService cubeService = new CubeService("coment.xml", path, dataSource, mapR);
+        ReportData reportData = cubeService.execute("SELECT [comment].[满意度].members on columns , NonEmptyCrossJoin([time].[日期].members , NonEmptyCrossJoin([skill].[技能组].members,[agent].[坐席].members)) on rows  FROM [满意度]");
 
         List<SysDic> dicList = Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_COMMENT_DIC);
         for (Level title : reportData.getCol().getChilderen()) {
@@ -138,7 +139,8 @@ public class StatsController extends Handler {
             mapR.put("skill", organs.keySet().stream().map(p -> "'" + p + "'").collect(Collectors.joining(",")));
         }
         mapR.put("orgi", super.getOrgi(request));
-        ReportData reportData = new CubeService("coment.xml", path, dataSource, mapR).execute("SELECT [comment].[满意度].members on columns , NonEmptyCrossJoin([time].[日期].members , NonEmptyCrossJoin([skill].[技能组].members,[agent].[坐席].members)) on rows  FROM [满意度]");
+        CubeService cubeService = new CubeService("coment.xml", path, dataSource, mapR);
+        ReportData reportData = cubeService.execute("SELECT [comment].[满意度].members on columns , NonEmptyCrossJoin([time].[日期].members , NonEmptyCrossJoin([skill].[技能组].members,[agent].[坐席].members)) on rows  FROM [满意度]");
 
         List<SysDic> dicList = Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_COMMENT_DIC);
         for (Level title : reportData.getCol().getChilderen()) {
