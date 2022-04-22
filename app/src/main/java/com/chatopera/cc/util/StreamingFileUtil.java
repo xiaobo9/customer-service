@@ -18,38 +18,39 @@ package com.chatopera.cc.util;
 
 import com.chatopera.cc.basic.Constants;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 
 public class StreamingFileUtil {
 
-    private static StreamingFileUtil singleton = new StreamingFileUtil();
+    private static final HashMap<String, String> extMap = new HashMap<>();
+    private static final Map<String, Set<String>> extensionsMap = new HashMap<>();
 
-    private final HashMap<String, String> extMap = new HashMap<String, String>();
-
-    private StreamingFileUtil() {
+    static {
         extMap.put(Constants.ATTACHMENT_TYPE_IMAGE, "gif,jpg,jpeg,png,bmp");
         extMap.put(Constants.ATTACHMENT_TYPE_FILE, "pdf,doc,docx,xls,xlsx,ppt,htm,html,txt,zip,rar,gz,bz2,c66");
         extMap.put("flash", "swf,flv");
         extMap.put("media", "swf,flv,mp3,wav,wma,wmv,mid,avi,mpg,asf,rm,rmvb");
+
+        extMap.forEach((key, value) -> extensionsMap.put(key, new HashSet<>(Arrays.asList(value.split(",")))));
     }
 
-    public static StreamingFileUtil getInstance() {
-        return singleton;
+    private StreamingFileUtil() {
     }
 
     /**
      * Validate file format
-     * @param type
-     * @param filename
-     * @return
+     *
+     * @param type     type
+     * @param filename file name
+     * @return message
      */
-    public String validate(final String type, final String filename) {
+    public static String validate(final String type, final String filename) {
         final String ext = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
-        if (!Arrays.<String>asList(extMap.get(type).split(",")).contains(ext)) {
-            return "上传文件扩展名是不允许的扩展名。只允许" + extMap.get(type) + "格式。";
+        Set<String> extensions = extensionsMap.get(type);
+        if (extensions.contains(ext)) {
+            return null;
         }
-        return null;
+        return "上传文件扩展名是不允许的扩展名。只允许" + extMap.get(type) + "格式。";
     }
 
 }

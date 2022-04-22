@@ -23,6 +23,7 @@
  import com.chatopera.cc.basic.Constants;
  import com.chatopera.cc.basic.MainContext;
  import com.chatopera.cc.basic.MainUtils;
+ import com.chatopera.cc.basic.ThumbnailUtils;
  import com.chatopera.cc.cache.Cache;
  import com.chatopera.cc.controller.Handler;
  import com.chatopera.cc.exception.CSKefuException;
@@ -909,7 +910,7 @@
                  // 写入协作文件
                  String fileName = "upload/" + fileid + "_cooperation";
                  File imageFile = new File(webUploadPath, fileName);
-                 MainUtils.scaleImage(imageFile, tempFile, 0.1F);
+                 ThumbnailUtils.scaleImage(imageFile, tempFile, 0.1F);
 
                  // 保存到数据库
                  StreamingFile sf = streamingFileRes.findOne(fileid);

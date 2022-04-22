@@ -4,6 +4,7 @@ import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.ThumbnailUtils;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.*;
@@ -265,7 +266,7 @@ public class AgentProxy {
             File original = new File(webUploadPath, "upload/" + fileid + "_original");
             File thumbnail = new File(webUploadPath, "upload/" + fileid);
             FileCopyUtils.copy(multipart.getBytes(), original);
-            MainUtils.processImage(thumbnail, original);
+            ThumbnailUtils.processImage(thumbnail, original);
             sf.setThumbnail(jpaBlobHelper.createBlobWithFile(thumbnail));
             sf.setFileUrl("/res/image.html?id=" + fileid);
         } else {

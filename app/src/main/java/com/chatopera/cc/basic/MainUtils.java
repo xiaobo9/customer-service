@@ -37,7 +37,6 @@ import com.googlecode.aviator.AviatorEvaluator;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import io.netty.handler.codec.http.HttpHeaders;
-import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.beanutils.ConvertUtils;
@@ -49,8 +48,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
@@ -58,7 +55,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -75,9 +71,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainUtils {
-    private final static Logger logger = LoggerFactory.getLogger(MainUtils.class);
 
-    private static MD5 md5 = new MD5();
+    private static final MD5 md5 = new MD5();
 
     public static SimpleDateFormat timeRangeDateFormat = new SimpleDateFormat("HH:mm");
 
@@ -149,40 +144,11 @@ public class MainUtils {
         }
     }
 
-    public static long ipToLong(String ipAddress) {
-        long result = 0;
-        String[] ipAddressInArray = ipAddress.split("\\.");
-        if (ipAddressInArray != null && ipAddressInArray.length == 4) {
-            for (int i = 3; i >= 0; i--) {
-                long ip = Long.parseLong(ipAddressInArray[3 - i]);
-
-                // left shifting 24,16,8,0 and bitwise OR
-
-                // 1. 192 << 24
-                // 1. 168 << 16
-                // 1. 1 << 8
-                // 1. 2 << 0
-                result |= ip << (i * 8);
-
-            }
-        }
-        return result;
-    }
-
-    public static String longToIp2(long ip) {
-
-        return ((ip >> 24) & 0xFF) + "." + ((ip >> 16) & 0xFF) + "."
-                + ((ip >> 8) & 0xFF) + "." + (ip & 0xFF);
-    }
-
     /***
      * ID编码 ， 发送对话的时候使用
-     * @param id
-     * @param nid
-     * @return
      */
     public static String genNewID(String id, String nid) {
-        StringBuffer strb = new StringBuffer();
+        StringBuilder strb = new StringBuilder();
         if (id != null && nid != null) {
             int length = Math.max(id.length(), nid.length());
             for (int i = 0; i < length; i++) {
@@ -203,26 +169,12 @@ public class MainUtils {
      * @param request
      * @return
      */
-    public static Map<String, Object> getRequestParam(HttpServletRequest request) {
-        Map<String, Object> values = new HashMap<String, Object>();
-        Enumeration<String> enums = request.getParameterNames();
-        while (enums.hasMoreElements()) {
-            String param = enums.nextElement();
-            values.put(param, request.getParameter(param));
-        }
-        return values;
-    }
-
-    /**
-     * @param request
-     * @return
-     */
     public static String getParameter(HttpServletRequest request) {
         Enumeration<String> names = request.getParameterNames();
-        StringBuffer strb = new StringBuffer();
+        StringBuilder strb = new StringBuilder();
         while (names.hasMoreElements()) {
             String name = names.nextElement();
-            if (name.indexOf("password") < 0) {    //不记录 任何包含 password 的参数内容
+            if (!name.contains("password")) {    //不记录 任何包含 password 的参数内容
                 if (strb.length() > 0) {
                     strb.append(",");
                 }
@@ -255,7 +207,7 @@ public class MainUtils {
     public static Date getWeekStartTime() {
         Calendar weekStart = Calendar.getInstance();
         weekStart.set(
-                weekStart.get(Calendar.YEAR), weekStart.get(Calendar.MONDAY), weekStart.get(Calendar.DAY_OF_MONTH), 0,
+                weekStart.get(Calendar.YEAR), weekStart.get(Calendar.MONTH), weekStart.get(Calendar.DAY_OF_MONTH), 0,
                 0, 0);
         weekStart.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
         return weekStart.getTime();
@@ -314,97 +266,6 @@ public class MainUtils {
         Calendar todayEnd = Calendar.getInstance();
         todayEnd.add(Calendar.SECOND, secs * -1);
         return todayEnd.getTime();
-    }
-
-    public static void noCacheResponse(HttpServletResponse response) {
-        response.setDateHeader("Expires", 0);
-        response.setHeader("Buffer", "True");
-        response.setHeader("Cache-Control", "no-cache");
-        response.setHeader("Cache-Control", "no-store");
-        response.setHeader("Expires", "0");
-        response.setHeader("ETag", String.valueOf(System.currentTimeMillis()));
-        response.setHeader("Pragma", "no-cache");
-        response.setHeader("Date", String.valueOf(new Date()));
-        response.setHeader("Last-Modified", String.valueOf(new Date()));
-    }
-
-    public static BrowserClient parseClient(HttpServletRequest request) {
-        BrowserClient client = new BrowserClient();
-        String browserDetails = request.getHeader("User-Agent");
-        String userAgent = browserDetails;
-        String user = userAgent.toLowerCase();
-        String os = "";
-        String browser = "", version = "";
-
-
-        //=================OS=======================
-        if (userAgent.toLowerCase().indexOf("windows") >= 0) {
-            os = "windows";
-        } else if (userAgent.toLowerCase().indexOf("mac") >= 0) {
-            os = "mac";
-        } else if (userAgent.toLowerCase().indexOf("x11") >= 0) {
-            os = "unix";
-        } else if (userAgent.toLowerCase().indexOf("android") >= 0) {
-            os = "android";
-        } else if (userAgent.toLowerCase().indexOf("iphone") >= 0) {
-            os = "iphone";
-        } else {
-            os = "UnKnown";
-        }
-        //===============Browser===========================
-        if (user.contains("qqbrowser")) {
-            browser = "QQBrowser";
-        } else if (user.contains("msie") || user.indexOf("rv:11") > -1) {
-            if (user.indexOf("rv:11") >= 0) {
-                browser = "IE11";
-            } else {
-                String substring = userAgent.substring(userAgent.indexOf("MSIE")).split(";")[0];
-                browser = substring.split(" ")[0].replace("MSIE", "IE") + substring.split(" ")[1];
-            }
-        } else if (user.contains("trident")) {
-            browser = "IE 11";
-        } else if (user.contains("edge")) {
-            browser = "Edge";
-        } else if (user.contains("safari") && user.contains("version")) {
-            browser = (userAgent.substring(userAgent.indexOf("Safari")).split(" ")[0]).split("/")[0];
-            version = (userAgent.substring(userAgent.indexOf("Version")).split(" ")[0]).split("/")[1];
-        } else if (user.contains("opr") || user.contains("opera")) {
-            if (user.contains("opera")) {
-                browser = (userAgent.substring(userAgent.indexOf("Opera")).split(" ")[0]).split(
-                        "/")[0] + "-" + (userAgent.substring(userAgent.indexOf("Version")).split(" ")[0]).split("/")[1];
-            } else if (user.contains("opr")) {
-                browser = ((userAgent.substring(userAgent.indexOf("OPR")).split(" ")[0]).replace("/", "-")).replace(
-                        "OPR", "Opera");
-            }
-        } else if (user.contains("chrome")) {
-            browser = "Chrome";
-        } else if ((user.indexOf("mozilla/7.0") > -1) || (user.indexOf("netscape6") != -1) || (user.indexOf(
-                "mozilla/4.7") != -1) || (user.indexOf("mozilla/4.78") != -1) || (user.indexOf(
-                "mozilla/4.08") != -1) || (user.indexOf("mozilla/3") != -1)) {
-            //browser=(userAgent.substring(userAgent.indexOf("MSIE")).split(" ")[0]).replace("/", "-");
-            browser = "Netscape-?";
-
-        } else if ((user.indexOf("mozilla") > -1)) {
-            //browser=(userAgent.substring(userAgent.indexOf("MSIE")).split(" ")[0]).replace("/", "-");
-            if (browserDetails.indexOf(" ") > 0) {
-                browser = browserDetails.substring(0, browserDetails.indexOf(" "));
-            } else {
-                browser = "Mozilla";
-            }
-
-        } else if (user.contains("firefox")) {
-            browser = (userAgent.substring(userAgent.indexOf("Firefox")).split(" ")[0]).replace("/", "-");
-        } else if (user.contains("rv")) {
-            browser = "ie";
-        } else {
-            browser = "UnKnown";
-        }
-        client.setUseragent(browserDetails);
-        client.setOs(os);
-        client.setBrowser(browser);
-        client.setVersion(version);
-
-        return client;
     }
 
     /**
@@ -719,41 +580,29 @@ public class MainUtils {
      * @return
      */
     public static boolean isInWorkingHours(String timeRanges) {
-        boolean workintTime = true;
         String timeStr = timeRangeDateFormat.format(new Date());
-        if (StringUtils.isNotBlank(timeRanges)) {        //设置了 工作时间段
-            workintTime = false;                    //将 检查结果设置为 False ， 如果当前时间是在 时间范围内，则 置为 True
-            String[] timeRange = timeRanges.split(",");
-            for (String tr : timeRange) {
-                String[] timeGroup = tr.split("~");
-                if (timeGroup.length == 2) {
-                    if (timeGroup[0].compareTo(timeGroup[1]) >= 0) {
-                        if (timeStr.compareTo(timeGroup[0]) >= 0 || timeStr.compareTo(timeGroup[1]) <= 0) {
-                            workintTime = true;
-                        }
-                    } else {
-                        if (timeStr.compareTo(timeGroup[0]) >= 0 && timeStr.compareTo(timeGroup[1]) <= 0) {
-                            workintTime = true;
-                        }
+        if (StringUtils.isBlank(timeRanges)) {
+            return true;
+        }
+
+        //设置了 工作时间段 将 检查结果设置为 False ， 如果当前时间是在 时间范围内，则 置为 True
+        boolean workingTime = false;
+        String[] timeRange = timeRanges.split(",");
+        for (String tr : timeRange) {
+            String[] timeGroup = tr.split("~");
+            if (timeGroup.length == 2) {
+                if (timeGroup[0].compareTo(timeGroup[1]) >= 0) {
+                    if (timeStr.compareTo(timeGroup[0]) >= 0 || timeStr.compareTo(timeGroup[1]) <= 0) {
+                        return true;
+                    }
+                } else {
+                    if (timeStr.compareTo(timeGroup[0]) >= 0 && timeStr.compareTo(timeGroup[1]) <= 0) {
+                        return true;
                     }
                 }
             }
         }
-        return workintTime;
-    }
-
-    public static File processImage(final File destFile, final File imageFile) throws IOException {
-        if (imageFile != null && imageFile.exists()) {
-            Thumbnails.of(imageFile).width(460).keepAspectRatio(true).toFile(destFile);
-        }
-        return destFile;
-    }
-
-    public static File scaleImage(final File destFile, final File imageFile, float quality) throws IOException {
-        if (imageFile != null && imageFile.exists()) {
-            Thumbnails.of(imageFile).scale(1f).outputQuality(quality).toFile(destFile);
-        }
-        return destFile;
+        return workingTime;
     }
 
     public static String processEmoti(String message) {
@@ -1356,46 +1205,9 @@ public class MainUtils {
         return nextFireDate;
     }
 
-    /**
-     * @param dialNum
-     * @param distype
-     * @return
-     */
-    public static String processSecField(String dialNum, String distype) {
-        StringBuilder strb = new StringBuilder(dialNum);
-        if (distype.equals("01")) {
-            if (strb.length() > 4) {
-                strb.replace(strb.length() / 2 - 2, strb.length() / 2 + 2, "****");
-            } else {
-                strb.replace(0, strb.length(), "****");
-            }
-        } else if (distype.equals("02")) {
-            if (strb.length() > 4) {
-                strb.replace(strb.length() - 4, strb.length(), "****");
-            } else {
-                strb.replace(0, strb.length(), "****");
-            }
-        } else if (distype.equals("03")) {
-            if (strb.length() > 4) {
-                strb.replace(0, 4, "****");
-            } else {
-                strb.replace(0, strb.length(), "****");
-            }
-        } else if (distype.equals("04")) {
-            int length = strb.length();
-            strb.setLength(0);
-            for (int i = 0; i < length; i++) {
-                strb.append("*");
-            }
-        }
-        return strb.toString();
-    }
-
-    public static void putMapEntry(
-            Map<String, String[]> map, String name,
-            String value) {
-        String[] newValues = null;
-        String[] oldValues = (String[]) (String[]) map.get(name);
+    public static void putMapEntry(Map<String, String[]> map, String name, String value) {
+        String[] newValues;
+        String[] oldValues = map.get(name);
         if (oldValues == null) {
             newValues = new String[1];
             newValues[0] = value;

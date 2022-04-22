@@ -471,7 +471,7 @@ public class OnlineUserProxy {
                     // 之前有session的访客
                     onlineUser.setOlduser("1");
                 }
-                onlineUser.setMobile(MobileDevice.isMobile(request
+                onlineUser.setMobile(BrowserClient.isMobile(request
                         .getHeader("User-Agent")) ? "1" : "0");
 
                 // onlineUser.setSource(user.getId());
@@ -519,7 +519,7 @@ public class OnlineUserProxy {
                 onlineUser.setSessionid(sessionid);
                 onlineUser.setOptype(optype);
                 onlineUser.setStatus(MainContext.OnlineUserStatusEnum.ONLINE.toString());
-                final BrowserClient client = MainUtils.parseClient(request);
+                final BrowserClient client = BrowserClient.parseClient(request.getHeader(BrowserClient.USER_AGENT));
 
                 // 浏览器信息
                 onlineUser.setOpersystem(client.getOs());
