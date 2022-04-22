@@ -223,7 +223,7 @@ public class ReportCubeService {
                         }
                     }
                 } else {//compare
-                    String value = getDefaultValue(filter, request);
+                    String value = getDefaultValue(filter);
                     String dataname = tablefilterMap.get(filter.getFktableid() + filter.getId()) + "." + tableppyMap.get(filter.getFilterfieldid()).getFieldname();
                     if (!StringUtils.isBlank(value)) {
                         if (!wherecon.toString().contains(dataname)) {
@@ -392,7 +392,7 @@ public class ReportCubeService {
                 } else {
                     filter.setRequestvalue(request.getParameter(filter.getCode()));
 
-                    filter.setRequestvalue(getDefaultValue(filter, request));
+                    filter.setRequestvalue(getDefaultValue(filter));
                 }
             }
             for (ReportFilter filter : model.getFilters()) {
@@ -424,9 +424,10 @@ public class ReportCubeService {
      * @throws TemplateException
      * @throws IOException
      */
-    public static String getDefaultValue(ReportFilter filter, HttpServletRequest request) {
+    public static String getDefaultValue(ReportFilter filter) {
         String value = filter.getDefaultvalue();
-        if (value != null && value.matches("[ ]{0,}[TtMmYy]{1,}[ ]{0,}[+-]{0,1}([\\d]{0,})")) {//处理动态参数的问题 ， Y表示 年 ， 如 Y+1 ， M表示 月 ， 如：M+1 ， T表示 日 ， 如 T+1 ， 例如，Y-1 = 2013 ， M-1 = 8
+        if (value != null && value.matches("[ ]{0,}[TtMmYy]{1,}[ ]{0,}[+-]{0,1}([\\d]{0,})")) {
+            //处理动态参数的问题 ， Y表示 年 ， 如 Y+1 ， M表示 月 ， 如：M+1 ， T表示 日 ， 如 T+1 ， 例如，Y-1 = 2013 ， M-1 = 8
             value = MainUtils.processParam(filter.getFormatstr(), value);
         }
         value = StringUtils.isBlank(filter.getRequestvalue()) ? value : filter.getRequestvalue();
@@ -542,7 +543,7 @@ public class ReportCubeService {
                     }
                     for (ReportFilter f : rfList) {
                         leftjoin.append(" left join ").append((tableMap.get(f.getFktableid()).getTablename())).append(" as ").append(tablefilterMap.get(f.getFktableid() + f.getId())).append(" on ").append(tablefilterMap.get(f.getFktableid() + f.getId())).append(".").append((tableppyMap.get(f.getKeyfield()).getFieldname())).append(" = ").append(tableIndexMap.get(filter.getFktableid())).append(".").append(f.getTableproperty().getFieldname());
-                        wherecon.append(" and ").append(tablefilterMap.get(f.getFktableid() + f.getId())).append(".").append((tableppyMap.get(f.getKeyfield()).getFieldname())).append(" = '").append(getDefaultValue(f, request)).append("' ");
+                        wherecon.append(" and ").append(tablefilterMap.get(f.getFktableid() + f.getId())).append(".").append((tableppyMap.get(f.getKeyfield()).getFieldname())).append(" = '").append(getDefaultValue(f)).append("' ");
                     }
                 }
                 strb.append(columns).append(mainTable).append(leftjoin);
