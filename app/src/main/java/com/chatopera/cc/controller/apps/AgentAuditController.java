@@ -21,8 +21,8 @@ import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.basic.Constants;
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.CSKefuException;
@@ -535,7 +535,7 @@ public class AgentAuditController extends Handler {
                             acdMessageHelper.getSuccessMessage(agentService, agentUser.getChannel(), orgi));
                     outMessage.setMessageType(MainContext.MediaType.TEXT.toString());
                     outMessage.setCalltype(MainContext.CallType.IN.toString());
-                    outMessage.setCreatetime(MainUtils.dateFormate.format(new Date()));
+                    outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                     outMessage.setAgentUser(agentUser);
                     outMessage.setAgentService(agentService);
 

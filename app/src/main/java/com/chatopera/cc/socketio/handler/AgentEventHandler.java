@@ -19,6 +19,7 @@ package com.chatopera.cc.socketio.handler;
 import com.alibaba.fastjson.JSONObject;
 import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.basic.Constants;
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.model.AgentStatus;
@@ -105,11 +106,11 @@ public class AgentEventHandler {
 
             WorkSessionRepository workSessionRepository = MainContext.getContext().getBean(WorkSessionRepository.class);
             int count = workSessionRepository.countByAgentAndDatestrAndOrgi(
-                    userid, MainUtils.simpleDateFormat.format(new Date()), orgi);
+                    userid, DateFormatEnum.DAY.format(new Date()), orgi);
 
             workSessionRepository.save(
                     MainUtils.createWorkSession(userid, MainUtils.getContextID(client.getSessionId().toString()),
-                                                session, orgi, ip, address.getHostName(), admin, count == 0));
+                            session, orgi, ip, address.getHostName(), admin, count == 0));
 
             NettyClients.getInstance().putAgentEventClient(userid, client);
         }
@@ -151,8 +152,8 @@ public class AgentEventHandler {
             payload.put("orgi", orgi);
             payload.put("isAdmin", StringUtils.isNotBlank(admin) && admin.equalsIgnoreCase("true"));
             getBrokerPublisher().send(Constants.WEBIM_SOCKETIO_AGENT_DISCONNECT, payload.toJSONString(),
-                                      false,
-                                      Constants.WEBIM_SOCKETIO_AGENT_OFFLINE_THRESHOLD);
+                    false,
+                    Constants.WEBIM_SOCKETIO_AGENT_OFFLINE_THRESHOLD);
         }
     }
 

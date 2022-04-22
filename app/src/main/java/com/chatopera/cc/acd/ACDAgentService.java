@@ -18,6 +18,7 @@ package com.chatopera.cc.acd;
 
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.Cache;
@@ -120,7 +121,7 @@ public class ACDAgentService {
             outMessage.setMessage(ctx.getMessage());
             outMessage.setMessageType(MainContext.MessageType.MESSAGE.toString());
             outMessage.setCalltype(MainContext.CallType.IN.toString());
-            outMessage.setCreatetime(MainUtils.dateFormate.format(new Date()));
+            outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
             outMessage.setNoagent(ctx.isNoagent());
             if (ctx.getAgentService() != null) {
                 outMessage.setAgentserviceid(ctx.getAgentService().getId());
@@ -267,7 +268,7 @@ public class ACDAgentService {
                     agentUser.getOrgi()));
             outMessage.setMessageType(MainContext.MediaType.TEXT.toString());
             outMessage.setCalltype(MainContext.CallType.IN.toString());
-            outMessage.setCreatetime(MainUtils.dateFormate.format(new Date()));
+            outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
 
             if (StringUtils.isNotBlank(agentUser.getUserid())) {
                 outMessage.setAgentUser(agentUser);
@@ -392,7 +393,7 @@ public class ACDAgentService {
                     outMessage.setMessage(acdMessageHelper.getServiceFinishMessage(agentUser.getChannel(), agentUser.getSkill(), orgi));
                     outMessage.setMessageType(MainContext.AgentUserStatusEnum.END.toString());
                     outMessage.setCalltype(MainContext.CallType.IN.toString());
-                    outMessage.setCreatetime(MainUtils.dateFormate.format(new Date()));
+                    outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                     outMessage.setAgentUser(agentUser);
 
                     // 向访客发送消息

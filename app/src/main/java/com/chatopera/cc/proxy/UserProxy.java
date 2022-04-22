@@ -18,7 +18,6 @@ import com.chatopera.cc.controller.api.request.RestUtils;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.repository.*;
 import com.google.gson.JsonObject;
-import oracle.jdbc.driver.Const;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +84,7 @@ public class UserProxy {
             }
             userRes.save(user);
 
-            if(organ!=null) {
+            if (organ != null) {
                 OrganUser ou = new OrganUser();
                 ou.setUserid(user.getId());
                 ou.setOrgan(organ.getId());

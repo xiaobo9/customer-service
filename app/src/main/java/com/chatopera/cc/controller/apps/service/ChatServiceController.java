@@ -20,8 +20,8 @@ import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.ACDVisitorDispatcher;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.*;
@@ -137,12 +137,12 @@ public class ChatServiceController extends Handler {
                         if (StringUtils.isNotBlank(begin) && begin.matches("[\\d]{4}-[\\d]{2}-[\\d]{2}")) {
                             list.add(cb.greaterThanOrEqualTo(
                                     root.get(servicetimetype).as(Date.class),
-                                    MainUtils.simpleDateFormat.parse(begin)));
+                                    DateFormatEnum.DAY.parse(begin)));
                         }
                         if (StringUtils.isNotBlank(end) && end.matches("[\\d]{4}-[\\d]{2}-[\\d]{2}")) {
                             list.add(cb.lessThanOrEqualTo(
                                     root.get(servicetimetype).as(Date.class),
-                                    MainUtils.dateFormate.parse(end + " 23:59:59")));
+                                    DateFormatEnum.DAY_TIME.parse(end + " 23:59:59")));
                         }
                     } catch (ParseException e) {
                         e.printStackTrace();
@@ -268,7 +268,7 @@ public class ChatServiceController extends Handler {
                                 acdMessageHelper.getSuccessMessage(agentService, agentUser.getChannel(), super.getOrgi(request)));
                         outMessage.setMessageType(MainContext.MediaType.TEXT.toString());
                         outMessage.setCalltype(MainContext.CallType.IN.toString());
-                        outMessage.setCreatetime(MainUtils.dateFormate.format(new Date()));
+                        outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                         outMessage.setAgentUser(agentUser);
                         outMessage.setAgentService(agentService);
 

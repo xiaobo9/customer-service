@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.model;
 
-import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.DateFormatEnum;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -45,7 +45,7 @@ public class AgentReport implements java.io.Serializable {
     private String workresult;
     private String dataid;
 
-    private String datestr = MainUtils.simpleDateFormat.format(new Date());
+    private String datestr = DateFormatEnum.DAY.format(new Date());
     private String hourstr = new SimpleDateFormat("HH").format(new Date());
     private String datehourstr = new SimpleDateFormat("yyyy-MM-dd HH").format(new Date());
 

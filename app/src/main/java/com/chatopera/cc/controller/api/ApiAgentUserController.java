@@ -20,8 +20,8 @@ import com.chatopera.cc.acd.ACDAgentDispatcher;
 import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext.*;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
@@ -225,7 +225,7 @@ public class ApiAgentUserController extends Handler {
                             acdMessageHelper.getSuccessMessage(agentService, agentUser.getChannel(), orgi));
                     outMessage.setMessageType(MediaType.TEXT.toString());
                     outMessage.setCalltype(CallType.IN.toString());
-                    outMessage.setCreatetime(MainUtils.dateFormate.format(new Date()));
+                    outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                     outMessage.setAgentUser(agentUser);
                     outMessage.setAgentService(agentService);
 
@@ -254,8 +254,8 @@ public class ApiAgentUserController extends Handler {
                         // 该登录用户可能是坐席监控或当前坐席，那么，如果是坐席监控，就有必要
                         // 通知前坐席这个事件
                         peerSyncIM.send(ReceiverType.AGENT, ChannelType.WEBIM, agentUser.getAppid(),
-                                        MessageType.TRANSOUT,
-                                        currentAgentno, outMessage, true);
+                                MessageType.TRANSOUT,
+                                currentAgentno, outMessage, true);
                     }
                 }
 

@@ -104,7 +104,7 @@ public class ChatbotEventHandler {
                 tip.setMessage("您正在使用机器人客服！");
                 tip.setMessageType(MainContext.MessageType.MESSAGE.toString());
                 tip.setCalltype(MainContext.CallType.IN.toString());
-                tip.setCreatetime(MainUtils.dateFormate.format(now));
+                tip.setCreatetime(DateFormatEnum.DAY_TIME.format(now));
 
                 client.sendEvent(MainContext.MessageType.STATUS.toString(), tip);
 

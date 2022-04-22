@@ -79,10 +79,6 @@ public class MainUtils {
 
     private static MD5 md5 = new MD5();
 
-    public static SimpleDateFormat dateFormate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    public static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
     public static SimpleDateFormat timeRangeDateFormat = new SimpleDateFormat("HH:mm");
 
     /**
@@ -1301,7 +1297,7 @@ public class MainUtils {
         workSession.setSessionid(session);
         workSession.setOrgi(orgi);
 
-        workSession.setDatestr(MainUtils.simpleDateFormat.format(new Date()));
+        workSession.setDatestr(DateFormatEnum.DAY.format(new Date()));
 
         return workSession;
     }

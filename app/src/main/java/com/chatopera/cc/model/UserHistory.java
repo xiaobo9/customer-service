@@ -16,6 +16,7 @@
  */
 package com.chatopera.cc.model;
 
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Proxy;
@@ -59,7 +60,7 @@ public class UserHistory implements java.io.Serializable {
     private String sessionid;
     private String param;
     private int times;
-    private String createdate = MainUtils.simpleDateFormat.format(new Date());
+    private String createdate = DateFormatEnum.DAY.format(new Date());
     private String model;
 
     @Id

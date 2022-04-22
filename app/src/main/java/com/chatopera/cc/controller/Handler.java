@@ -17,6 +17,7 @@
 package com.chatopera.cc.controller;
 
 import com.chatopera.cc.basic.Constants;
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.Viewport;
 import com.chatopera.cc.basic.auth.AuthToken;
@@ -25,7 +26,6 @@ import com.chatopera.cc.controller.api.QueryParams;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.Organ;
 import com.chatopera.cc.model.StreamingFile;
-import com.chatopera.cc.model.SystemConfig;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.repository.StreamingFileRepository;
@@ -108,6 +108,7 @@ public class Handler {
 
     /**
      * 获得登录账号的当前导航的组织机构
+     *
      * @param request
      * @return
      */
@@ -222,7 +223,7 @@ public class Handler {
                 try {
 
                     rangeQuery = QueryBuilders.rangeQuery("calltime").from(
-                            MainUtils.dateFormate.parse(request.getParameter("callbegin")).getTime());
+                            DateFormatEnum.DAY_TIME.parse(request.getParameter("callbegin")).getTime());
                 } catch (ParseException e) {
 
                     e.printStackTrace();
@@ -234,9 +235,9 @@ public class Handler {
 
                     if (rangeQuery == null) {
                         rangeQuery = QueryBuilders.rangeQuery("calltime").to(
-                                MainUtils.dateFormate.parse(request.getParameter("callend")).getTime());
+                                DateFormatEnum.DAY_TIME.parse(request.getParameter("callend")).getTime());
                     } else {
-                        rangeQuery.to(MainUtils.dateFormate.parse(request.getParameter("callend")).getTime());
+                        rangeQuery.to(DateFormatEnum.DAY_TIME.parse(request.getParameter("callend")).getTime());
                     }
                 } catch (ParseException e) {
 
@@ -255,7 +256,7 @@ public class Handler {
                 try {
 
                     rangeQuery = QueryBuilders.rangeQuery("aptime").from(
-                            MainUtils.dateFormate.parse(request.getParameter("apbegin")).getTime());
+                            DateFormatEnum.DAY_TIME.parse(request.getParameter("apbegin")).getTime());
                 } catch (ParseException e) {
 
                     e.printStackTrace();
@@ -267,9 +268,9 @@ public class Handler {
 
                     if (rangeQuery == null) {
                         rangeQuery = QueryBuilders.rangeQuery("aptime").to(
-                                MainUtils.dateFormate.parse(request.getParameter("apend")).getTime());
+                                DateFormatEnum.DAY_TIME.parse(request.getParameter("apend")).getTime());
                     } else {
-                        rangeQuery.to(MainUtils.dateFormate.parse(request.getParameter("apend")).getTime());
+                        rangeQuery.to(DateFormatEnum.DAY_TIME.parse(request.getParameter("apend")).getTime());
                     }
                 } catch (ParseException e) {
 

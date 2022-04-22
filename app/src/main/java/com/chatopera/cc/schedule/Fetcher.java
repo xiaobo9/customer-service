@@ -16,8 +16,8 @@
  */
 package com.chatopera.cc.schedule;
 
+import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.resource.OutputTextFormat;
 import com.chatopera.cc.basic.resource.Resource;
 import com.chatopera.cc.cache.Cache;
@@ -120,7 +120,7 @@ public class Fetcher implements Runnable {
             }
             this.job.getReport().setOrgi(this.job.getOrgi());
             this.job.getReport().setDataid(this.job.getId());
-            this.job.getReport().setTitle(this.job.getName() + "_" + MainUtils.dateFormate.format(new Date()));
+            this.job.getReport().setTitle(this.job.getName() + "_" + DateFormatEnum.DAY_TIME.format(new Date()));
 
             this.job.getReport().setUserid(this.job.getCreater());
             this.job.getReport().setUsername(this.job.getUsername());
@@ -171,8 +171,8 @@ public class Fetcher implements Runnable {
     }
 
 
-    private static Cache getCache(){
-        if(cache == null)
+    private static Cache getCache() {
+        if (cache == null)
             cache = MainContext.getContext().getBean(Cache.class);
         return cache;
     }
