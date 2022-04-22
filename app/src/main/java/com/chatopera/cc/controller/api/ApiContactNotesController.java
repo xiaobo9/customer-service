@@ -16,7 +16,6 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
@@ -30,6 +29,7 @@ import com.chatopera.cc.persistence.repository.UserRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.json.GsonTools;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang.StringUtils;
@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +86,7 @@ public class ApiContactNotesController extends Handler {
     private JsonObject creater(final String creater) {
         JsonObject data = new JsonObject();
         // 增加创建人
-        User u = userRes.findById(creater);
+        User u = userRes.findById(creater).orElse(null);
         if (u != null) {
             data.addProperty("creater", u.getId());
             data.addProperty("creatername", u.getUname());
@@ -101,7 +100,7 @@ public class ApiContactNotesController extends Handler {
                 JsonArray y = new JsonArray();
 
                 for (final OrganUser organ : organs) {
-                    Organ o = organRes.findOne(organ.getOrgan());
+                    Organ o = organRes.findById(organ.getOrgan()).orElse(null);
                     if (o != null) {
                         JsonObject x = new JsonObject();
                         x.addProperty("createrorgan", o.getName());
@@ -124,11 +123,11 @@ public class ApiContactNotesController extends Handler {
      * @return
      */
     private JsonObject detail(final JsonObject j) throws GsonTools.JsonObjectExtensionConflictException {
-        logger.info("[contact note] detail {}] {}", j.toString());
+        logger.info("[contact note] detail {}", j);
         JsonObject resp = new JsonObject();
         // TODO 增加权限检查
         if (j.has("id") && StringUtils.isNotBlank(j.get("id").getAsString())) {
-            ContactNotes cn = contactNotesRes.findOne(j.get("id").getAsString());
+            ContactNotes cn = contactNotesRes.findById(j.get("id").getAsString()).orElse(null);
             if (cn != null) {
                 JsonObject data = new JsonObject();
                 data.addProperty("contactid", cn.getContactid());
@@ -203,6 +202,7 @@ public class ApiContactNotesController extends Handler {
      * @param payload
      * @return
      */
+    // FIXME
     private String validateCreatePayload(JsonObject payload) {
         if (!payload.has("category")) {
             return "参数传递不合法，没有[category]。";
@@ -212,12 +212,14 @@ public class ApiContactNotesController extends Handler {
             return "参数传递不合法，没有[content]。";
         }
 
-        if ((!payload.has("contactid")) || StringUtils.isBlank(payload.get("contactid").getAsString())) {
+        JsonElement contactid = payload.get("contactid");
+        if (contactid == null || StringUtils.isBlank(contactid.getAsString())) {
             return "参数传递不合法，没有[contactid]。";
         } else {
-            Contacts c = contactsRes.findOne(payload.get("contactid").getAsString());
-            if (c == null)
+            Contacts c = contactsRes.findById(contactid.getAsString()).orElse(null);
+            if (c == null) {
                 return "参数不合法，不存在该联系人。";
+            }
         }
 
         return null;
@@ -256,7 +258,7 @@ public class ApiContactNotesController extends Handler {
             return resp;
         }
         final String cid = j.get("contactid").getAsString();
-        Contacts c = contactsRes.findOne(cid);
+        Contacts c = contactsRes.findById(cid).orElse(null);
 
         if (c == null) {
             resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_FAIL_4);

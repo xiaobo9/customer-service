@@ -31,7 +31,7 @@ public class UserDataExchangeImpl implements DataExchangeInterface {
     private UserRepository userRes;
 
     public String getDataByIdAndOrgi(String id, String orgi) {
-        User user = userRes.findById(id);
+        User user = userRes.findById(id).orElse(null);
         return user != null ? user.getUsername() : id;
     }
 

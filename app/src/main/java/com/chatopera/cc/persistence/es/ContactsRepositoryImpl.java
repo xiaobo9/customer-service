@@ -20,11 +20,7 @@ import com.chatopera.cc.model.Contacts;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.repository.UserRepository;
 import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
-import org.elasticsearch.index.query.QueryStringQueryBuilder.Operator;
-import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,13 +161,13 @@ public class ContactsRepositoryImpl implements ContactsEsCommonRepository {
             entCustomerList = elasticsearchTemplate.queryForPage(searchQueryBuilder.build(), Contacts.class);
         }
         if (entCustomerList.getContent().size() > 0) {
-            List<String> ids = new ArrayList<String>();
+            List<String> ids = new ArrayList<>();
             for (Contacts contacts : entCustomerList.getContent()) {
                 if (contacts.getCreater() != null && ids.size() < 1024) {
                     ids.add(contacts.getCreater());
                 }
             }
-            List<User> users = userRes.findAll(ids);
+            List<User> users = userRes.findAllById(ids);
             for (Contacts contacts : entCustomerList.getContent()) {
                 for (User user : users) {
                     if (user.getId().equals(contacts.getCreater())) {

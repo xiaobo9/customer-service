@@ -17,6 +17,7 @@
 package com.chatopera.cc.acd.middleware.visitor;
 
 import com.chatopera.cc.acd.basic.ACDComposeContext;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.Organ;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.repository.OrganRepository;
@@ -57,7 +58,7 @@ public class ACDVisBindingMw implements Middleware<ACDComposeContext> {
         if (StringUtils.isNotBlank(ctx.getOrganid())) {
             logger.info("[apply] bind skill {}", ctx.getOrganid());
             // 绑定技能组
-            Organ organ = organRes.findOne(ctx.getOrganid());
+            Organ organ = organRes.findById(ctx.getOrganid()).orElse(null);
             if (organ != null) {
                 ctx.getAgentUser().setSkill(organ.getId());
                 ctx.setOrgan(organ);
@@ -73,7 +74,7 @@ public class ACDVisBindingMw implements Middleware<ACDComposeContext> {
             // 绑定坐席有可能是因为前端展示了技能组和坐席
             // 也有可能是坐席发送了邀请，该访客接收邀请
             ctx.getAgentUser().setAgentno(ctx.getAgentno());
-            User agent = userRes.findOne(ctx.getAgentno());
+            User agent = userRes.findById(ctx.getAgentno()).orElseThrow(EntityNotFoundException::new);
             ctx.setAgent(agent);
             ctx.getAgentUser().setAgentname(agent.getUname());
         } else {

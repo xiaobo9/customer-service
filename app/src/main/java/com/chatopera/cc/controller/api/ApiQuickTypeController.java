@@ -17,6 +17,7 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.QuickType;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
 import com.chatopera.cc.persistence.repository.QuickTypeRepository;
@@ -52,15 +53,17 @@ public class ApiQuickTypeController extends Handler {
 
     /**
      * 返回快捷回复分类列表
+     *
      * @param request
-     * @param quicktype	搜索pub,pri
+     * @param quicktype 搜索pub,pri
      * @return
      */
     @RequestMapping(method = RequestMethod.GET)
     @Menu(type = "apps", subtype = "quicktype", access = true)
     public ResponseEntity<RestResult> list(HttpServletRequest request, @Valid String id, @Valid String quicktype) {
         if (StringUtils.isNotBlank(id)) {
-            return new ResponseEntity<>(new RestResult(RestResultType.OK, quickTypeRepository.findOne(id)), HttpStatus.OK);
+            QuickType quickType = quickTypeRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            return new ResponseEntity<>(new RestResult(RestResultType.OK, quickType), HttpStatus.OK);
         }
         List<QuickType> quickTypeList = quickTypeRepository.findByOrgiAndQuicktype(getOrgi(request), quicktype);
         return new ResponseEntity<>(new RestResult(RestResultType.OK, quickTypeList), HttpStatus.OK);
@@ -68,6 +71,7 @@ public class ApiQuickTypeController extends Handler {
 
     /**
      * 新增或修改快捷回复分类
+     *
      * @param request
      * @param user
      * @return
@@ -89,6 +93,7 @@ public class ApiQuickTypeController extends Handler {
 
     /**
      * 删除分类，并且删除分类下的快捷回复
+     *
      * @param request
      * @param id
      * @return
@@ -98,7 +103,7 @@ public class ApiQuickTypeController extends Handler {
     public ResponseEntity<RestResult> delete(HttpServletRequest request, @Valid String id) {
         RestResult result = new RestResult(RestResultType.OK);
         if (!StringUtils.isBlank(id)) {
-            QuickType quickType = quickTypeRepository.findOne(id);
+            QuickType quickType = quickTypeRepository.findById(id).orElse(null);
             if (quickType != null) {
                 quickReplyRepository.deleteByCate(quickType.getId(), quickType.getOrgi());
                 quickTypeRepository.delete(quickType);

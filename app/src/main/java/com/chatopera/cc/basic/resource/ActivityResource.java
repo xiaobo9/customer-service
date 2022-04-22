@@ -90,7 +90,7 @@ public class ActivityResource extends Resource {
                     }
                 } else {    //业务表
                     if (!StringUtils.isBlank(formFilter.getTableid())) {
-                        metadataTable = metadataRes.findById(formFilter.getTableid());
+                        metadataTable = metadataRes.findById(formFilter.getTableid()).orElse(null);
                     }
                 }
             }

@@ -25,10 +25,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.session.config.annotation.web.http.EnableSpringHttpSession;
 import org.springframework.session.data.redis.RedisFlushMode;
 import org.springframework.session.data.redis.RedisOperationsSessionRepository;
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
-
 
 /**
  * maxInactiveIntervalInSeconds: 设置 Session 失效时间，
@@ -39,7 +38,8 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  */
 
 @Configuration
-@EnableRedisHttpSession()
+//@EnableRedisHttpSession()
+@EnableSpringHttpSession
 public class WebServerSessionConfigure {
 
     /**
@@ -97,6 +97,7 @@ public class WebServerSessionConfigure {
 
     /**
      * 存储AuthToken
+     *
      * @return
      */
     @Bean

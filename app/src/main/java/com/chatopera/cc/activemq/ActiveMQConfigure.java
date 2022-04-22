@@ -8,7 +8,7 @@
  * publish, or display any part, in any form, or by any means. Reverse engineering, disassembly,
  * or decompilation of this software, unless required by law for interoperability, is prohibited.
  */
-package com.chatopera.cc.config;
+package com.chatopera.cc.activemq;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

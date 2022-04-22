@@ -15,6 +15,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.api.request.RestUtils;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.repository.*;
 import com.google.gson.JsonObject;
@@ -99,8 +100,8 @@ public class UserProxy {
     }
 
 
-    public User findOne(final String id) {
-        return userRes.findOne(id);
+    public User findById(final String id) {
+        return userRes.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
     public List<String> findUserIdsInOrgan(final String organ) {
@@ -146,11 +147,10 @@ public class UserProxy {
         for (final OrganUser z : x) {
             y.add(z.getUserid());
         }
-        return userRes.findAll(y);
+        return userRes.findAllById(y);
     }
 
-    public Page<User> findUserInOrgans(final Collection<String> organs,
-                                       Pageable pageRequest) {
+    public Page<User> findUserInOrgans(final Collection<String> organs, Pageable pageRequest) {
         List<OrganUser> x = organUserRes.findByOrganIn(organs);
         if (x.size() == 0) return null;
         Set<String> y = new HashSet<>();
@@ -169,8 +169,10 @@ public class UserProxy {
      */
     public HashMap<String, String> getSkillsMapByAgentno(final String agentno) {
 
-        final User user = userRes.findOne(agentno);
-        if (user == null) return new HashMap<>();
+        final User user = userRes.findById(agentno).orElse(null);
+        if (user == null) {
+            return new HashMap<>();
+        }
 
         attachOrgansPropertiesForUser(user);
         return user.getSkills();
@@ -429,9 +431,9 @@ public class UserProxy {
 
         // 检查作为呼叫中心坐席的信息
         if (MainContext.hasModule(Constants.CSKEFU_MODULE_CALLCENTER) && user.isCallcenter()) {
-            final PbxHost pbxHost = pbxHostRes.findOne(user.getPbxhostId());
+            final PbxHost pbxHost = pbxHostRes.findById(user.getPbxhostId()).orElse(null);
             if (pbxHost != null) {
-                Extension extension = extensionRes.findOne(user.getExtensionId());
+                Extension extension = extensionRes.findById(user.getExtensionId()).orElse(null);
                 if (extension != null) {
                     if (StringUtils.isNotBlank(extension.getAgentno())) {
                         // 呼叫中心该分机已经绑定
@@ -559,7 +561,7 @@ public class UserProxy {
 
         for (final OrganUser organ : organs) {
             // 添加直属部门到organs
-            final Organ o = organRes.findOne(organ.getOrgan());
+            final Organ o = organRes.findById(organ.getOrgan()).orElseThrow(EntityNotFoundException::new);
             user.getOrgans().put(organ.getOrgan(), o);
             if (o.isSkill()) {
                 skills.put(o.getId(), o.getName());

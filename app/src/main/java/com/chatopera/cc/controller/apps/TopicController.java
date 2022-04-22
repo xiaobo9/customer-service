@@ -21,6 +21,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.TopicRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
@@ -118,7 +119,7 @@ public class TopicController extends Handler {
     public ModelAndView knowledgeadd(ModelMap map, HttpServletRequest request, @Valid String type, @Valid String aiid) {
         map.put("type", type);
         map.put("aiid", aiid);
-        return request(super.createRequestPageTempletResponse("/apps/business/topic/add"));
+        return request(super.pageTplResponse("/apps/business/topic/add"));
     }
 
     @RequestMapping("/topic/save")
@@ -143,7 +144,7 @@ public class TopicController extends Handler {
                 topicItemList.add(topicItem);
             }
             if (topicItemList.size() > 0) {
-                topicItemRes.save(topicItemList);
+                topicItemRes.saveAll(topicItemList);
             }
             /**
              * 重新缓存
@@ -151,7 +152,7 @@ public class TopicController extends Handler {
              */
             OnlineUserProxy.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
+        return request(super.pageTplResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
     }
 
     @RequestMapping("/topic/edit")
@@ -159,17 +160,17 @@ public class TopicController extends Handler {
     public ModelAndView knowledgeedit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String type, @Valid String aiid) {
         map.put("type", type);
         if (!StringUtils.isBlank(id)) {
-            map.put("topic", topicRes.findOne(id));
+            map.put("topic", topicRes.findById(id).orElse(null));
         }
         List<KnowledgeType> knowledgeTypeList = knowledgeTypeRes.findByOrgi(super.getOrgi(request));
         map.put("knowledgeTypeList", knowledgeTypeList);
-        return request(super.createRequestPageTempletResponse("/apps/business/topic/edit"));
+        return request(super.pageTplResponse("/apps/business/topic/edit"));
     }
 
     @RequestMapping("/topic/update")
     @Menu(type = "xiaoe", subtype = "knowledgeupdate")
     public ModelAndView knowledgeupdate(HttpServletRequest request, @Valid Topic topic, @Valid String type, @Valid String aiid) {
-        Topic temp = topicRes.findOne(topic.getId());
+        Topic temp = topicRes.findById(topic.getId()).orElseThrow(EntityNotFoundException::new);
         if (!StringUtils.isBlank(topic.getTitle())) {
             if (!StringUtils.isBlank(type)) {
                 topic.setCate(type);
@@ -181,7 +182,7 @@ public class TopicController extends Handler {
             topic.setOrgi(super.getOrgi(request));
 
             topicRes.save(topic);
-            topicItemRes.delete(topicItemRes.findByTopicid(topic.getId()));
+            topicItemRes.deleteAll(topicItemRes.findByTopicid(topic.getId()));
             List<TopicItem> topicItemList = new ArrayList<TopicItem>();
             for (String item : topic.getSilimar()) {
                 TopicItem topicItem = new TopicItem();
@@ -193,7 +194,7 @@ public class TopicController extends Handler {
                 topicItemList.add(topicItem);
             }
             if (topicItemList.size() > 0) {
-                topicItemRes.save(topicItemList);
+                topicItemRes.saveAll(topicItemList);
             }
 
             /**
@@ -202,23 +203,20 @@ public class TopicController extends Handler {
              */
             OnlineUserProxy.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
+        return request(super.pageTplResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
     }
 
     @RequestMapping("/topic/delete")
     @Menu(type = "xiaoe", subtype = "knowledgedelete")
     public ModelAndView knowledgedelete(HttpServletRequest request, @Valid String id, @Valid String type, @Valid String aiid) {
         if (!StringUtils.isBlank(id)) {
-            topicRes.delete(topicRes.findOne(id));
-            /**
-             * 重新缓存
-             *
-             */
-            topicItemRes.delete(topicItemRes.findByTopicid(id));
+            topicRes.delete(topicRes.findById(id).orElseThrow(EntityNotFoundException::new));
+            // 重新缓存
+            topicItemRes.deleteAll(topicItemRes.findByTopicid(id));
 
             OnlineUserProxy.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
+        return request(super.pageTplResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
     }
 
     @RequestMapping("/topic/type/add")
@@ -233,7 +231,7 @@ public class TopicController extends Handler {
             map.put("type", type);
         }
 
-        return request(super.createRequestPageTempletResponse("/apps/business/topic/addtype"));
+        return request(super.pageTplResponse("/apps/business/topic/addtype"));
     }
 
     @RequestMapping("/topic/type/save")
@@ -256,22 +254,22 @@ public class TopicController extends Handler {
             knowledgeTypeRes.save(type);
             OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
         } else {
-            return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html?aiid=" + aiid + "&msg=k_type_exist"));
+            return request(super.pageTplResponse("redirect:/apps/topic.html?aiid=" + aiid + "&msg=k_type_exist"));
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html?aiid=" + aiid));
+        return request(super.pageTplResponse("redirect:/apps/topic.html?aiid=" + aiid));
     }
 
     @RequestMapping("/topic/type/edit")
     @Menu(type = "xiaoe", subtype = "knowledgetypeedit")
     public ModelAndView knowledgetypeedit(ModelMap map, HttpServletRequest request, @Valid String type, @Valid String aiid) {
-        map.put("knowledgeType", knowledgeTypeRes.findOne(type));
+        map.put("knowledgeType", knowledgeTypeRes.findById(type).orElseThrow(EntityNotFoundException::new));
         map.addAttribute("areaList", areaRepository.findByOrgi(super.getOrgi(request)));
 
         map.put("aiid", aiid);
 
         List<KnowledgeType> knowledgeTypeList = knowledgeTypeRes.findByOrgi(super.getOrgi(request));
         map.put("knowledgeTypeList", knowledgeTypeList);
-        return request(super.createRequestPageTempletResponse("/apps/business/topic/edittype"));
+        return request(super.pageTplResponse("/apps/business/topic/edittype"));
     }
 
     @RequestMapping("/topic/type/update")
@@ -293,9 +291,9 @@ public class TopicController extends Handler {
             knowledgeTypeRes.save(temp);
             OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
         } else {
-            return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html?aiid=" + aiid + "&msg=k_type_exist&type=" + type.getId()));
+            return request(super.pageTplResponse("redirect:/apps/topic.html?aiid=" + aiid + "&msg=k_type_exist&type=" + type.getId()));
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html?aiid=" + aiid + "type=" + type.getId()));
+        return request(super.pageTplResponse("redirect:/apps/topic.html?aiid=" + aiid + "type=" + type.getId()));
     }
 
     @RequestMapping("/topic/type/delete")
@@ -305,13 +303,13 @@ public class TopicController extends Handler {
         String msg = null;
         if (page.getTotalElements() == 0) {
             if (!StringUtils.isBlank(id)) {
-                knowledgeTypeRes.delete(id);
+                knowledgeTypeRes.deleteById(id);
                 OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
             }
         } else {
             msg = "notempty";
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html" + (msg != null ? "?msg=notempty" : "")));
+        return request(super.pageTplResponse("redirect:/apps/topic.html" + (msg != null ? "?msg=notempty" : "")));
     }
 
     @RequestMapping("/topic/area")
@@ -325,8 +323,8 @@ public class TopicController extends Handler {
         }
         map.addAttribute("cacheList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_AREA_DIC));
 
-        map.put("knowledgeType", knowledgeTypeRes.findOne(id));
-        return request(super.createRequestPageTempletResponse("/apps/business/topic/area"));
+        map.put("knowledgeType", knowledgeTypeRes.findById(id).orElseThrow(EntityNotFoundException::new));
+        return request(super.pageTplResponse("/apps/business/topic/area"));
     }
 
 
@@ -339,7 +337,7 @@ public class TopicController extends Handler {
             knowledgeTypeRes.save(temp);
             OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html?type=" + type.getId()));
+        return request(super.pageTplResponse("redirect:/apps/topic.html?type=" + type.getId()));
     }
 
 
@@ -347,7 +345,7 @@ public class TopicController extends Handler {
     @Menu(type = "xiaoe", subtype = "knowledge")
     public ModelAndView imp(ModelMap map, HttpServletRequest request, @Valid String type, @Valid String aiid) {
         map.addAttribute("type", type);
-        return request(super.createRequestPageTempletResponse("/apps/business/topic/imp"));
+        return request(super.pageTplResponse("/apps/business/topic/imp"));
     }
 
     @RequestMapping("/topic/impsave")
@@ -373,30 +371,30 @@ public class TopicController extends Handler {
             new ExcelImportProecess(event).process();        //启动导入任务
         }
 
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html?type=" + type));
+        return request(super.pageTplResponse("redirect:/apps/topic.html?type=" + type));
     }
 
     @RequestMapping("/topic/batdelete")
     @Menu(type = "xiaoe", subtype = "knowledge")
     public ModelAndView batdelete(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids, @Valid String type, @Valid String aiid) throws IOException {
         if (ids != null && ids.length > 0) {
-            Iterable<Topic> topicList = topicRes.findAll(Arrays.asList(ids));
-            topicRes.delete(topicList);
+            Iterable<Topic> topicList = topicRes.findAllById(Arrays.asList(ids));
+            topicRes.deleteAll(topicList);
             for (Topic topic : topicList) {
-                topicItemRes.delete(topicItemRes.findByTopicid(topic.getId()));
+                topicItemRes.deleteAll(topicItemRes.findByTopicid(topic.getId()));
             }
         }
 
-        return request(super.createRequestPageTempletResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
+        return request(super.pageTplResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
     }
 
     @RequestMapping("/topic/expids")
     @Menu(type = "xiaoe", subtype = "knowledge")
     public void expids(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids, @Valid String aiid) throws IOException {
         if (ids != null && ids.length > 0) {
-            Iterable<Topic> topicList = topicRes.findAll(Arrays.asList(ids));
+            Iterable<Topic> topicList = topicRes.findAllById(Arrays.asList(ids));
             MetadataTable table = metadataRes.findByTablename("uk_xiaoe_topic");
-            List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> values = new ArrayList<>();
             for (Topic topic : topicList) {
                 values.add(MainUtils.transBean2Map(topic));
             }
@@ -408,7 +406,6 @@ public class TopicController extends Handler {
             }
         }
 
-        return;
     }
 
     @RequestMapping("/topic/expall")

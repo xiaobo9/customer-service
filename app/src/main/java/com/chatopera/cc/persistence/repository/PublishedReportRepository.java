@@ -31,8 +31,6 @@ public interface PublishedReportRepository extends JpaRepository<PublishedReport
 
 	Page<PublishedReport> findByOrgi(String orgi, Pageable pageRequest);
 
-	PublishedReport findById(String id);
-	
 	List<PublishedReport> findByCode(String code);
 
 	

@@ -31,8 +31,6 @@ public interface PublishedCubeRepository extends JpaRepository<PublishedCube, St
 
 	List<PublishedCube> findByIdAndOrgi(String id, String orgi);
 	
-	List<PublishedCube> findById(String id);
-	
 	Page<PublishedCube> getByOrgi(String orgi, Pageable pageRequest);
 	
 }

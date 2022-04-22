@@ -343,8 +343,7 @@ public class ACDAgentService {
                     service.setSessiontimes(System.currentTimeMillis() - service.getServicetime().getTime());
                 }
 
-                final AgentUserTask agentUserTask = agentUserTaskRes.findOne(
-                        agentUser.getId());
+                final AgentUserTask agentUserTask = agentUserTaskRes.findById(agentUser.getId()).orElse(null);
                 if (agentUserTask != null) {
                     service.setAgentreplyinterval(agentUserTask.getAgentreplyinterval());
                     service.setAgentreplytime(agentUserTask.getAgentreplytime());
@@ -565,7 +564,7 @@ public class ACDAgentService {
             agentService.setOwner(agentUser.getOwner());
             agentService.setTimes(0);
 
-            final User agent = userRes.findOne(agentService.getAgentno());
+            final User agent = userRes.findById(agentService.getAgentno()).orElse(null);
             agentUser.setAgentname(agent.getUname());
             agentUser.setAgentno(agentService.getAgentno());
 

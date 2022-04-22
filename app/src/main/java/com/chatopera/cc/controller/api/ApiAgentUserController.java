@@ -26,6 +26,7 @@ import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
 import com.chatopera.cc.exception.CSKefuException;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.repository.AgentServiceRepository;
@@ -141,7 +142,7 @@ public class ApiAgentUserController extends Handler {
      * @return
      */
     private JsonObject transout(final HttpServletRequest request, final JsonObject payload) {
-        logger.info("[transout] payload ", payload.toString());
+        logger.info("[transout] payload {}", payload);
         final String orgi = super.getOrgi(request);
         final User logined = super.getUser(request);
         JsonObject resp = new JsonObject();
@@ -159,24 +160,22 @@ public class ApiAgentUserController extends Handler {
         if (StringUtils.isNotBlank(agentUserId) &&
                 StringUtils.isNotBlank(transAgentId) &&
                 StringUtils.isNotBlank(agentServiceId)) {
-            final User targetAgent = userRes.findOne(transAgentId);
+            final User targetAgent = userRes.findById(transAgentId).orElseThrow(EntityNotFoundException::new);
             final AgentService agentService = agentServiceRes.findByIdAndOrgi(agentServiceId, orgi);
 
             /**
              * 更新AgentUser
              */
-            final AgentUser agentUser = agentUserProxy.findOne(agentUserId).orElseGet(null);
+            AgentUser agentUser = agentUserProxy.findById(agentUserId).orElse(null);
             if (agentUser != null) {
-                final AgentUserAudit agentAudits = cache.findOneAgentUserAuditByOrgiAndId(orgi, agentUserId).orElseGet(
-                        null);
+                AgentUserAudit agentAudits = cache.findOneAgentUserAuditByOrgiAndId(orgi, agentUserId).orElse(null);
 
                 // 当前服务于访客的坐席
                 final String currentAgentno = agentUser.getAgentno();
                 // 当前访客的ID
                 final String userId = agentUser.getUserid();
 
-                logger.info(
-                        "[transout] agentuserid {} \n target agent id {}, \n current agent id {}, onlineuserid {}",
+                logger.info("[transout] agentuserid {} \n target agent id {}, \n current agent id {}, onlineuserid {}",
                         agentUserId, transAgentId, currentAgentno, userId);
 
 

@@ -18,7 +18,6 @@ package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.model.OrgiSkillRel;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.repository.OrganRepository;
 import com.chatopera.cc.persistence.repository.OrgiSkillRelRepository;
@@ -35,7 +34,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -60,7 +58,7 @@ public class UsersResourceController extends Handler {
             q = "";
         }
         map.addAttribute("usersList", getUsers(request, q));
-        return request(super.createRequestPageTempletResponse("/public/users"));
+        return request(super.pageTplResponse("/public/users"));
     }
 
     @RequestMapping("/bpm/users")
@@ -70,7 +68,7 @@ public class UsersResourceController extends Handler {
             q = "";
         }
         map.addAttribute("usersList", getUsers(request, q));
-        return request(super.createRequestPageTempletResponse("/public/bpmusers"));
+        return request(super.pageTplResponse("/public/bpmusers"));
     }
 
     @RequestMapping("/bpm/organ")
@@ -79,7 +77,7 @@ public class UsersResourceController extends Handler {
         map.addAttribute("organList", getOrgans(request));
         map.addAttribute("usersList", getUsers(request));
         map.addAttribute("ids", ids);
-        return request(super.createRequestPageTempletResponse("/public/organ"));
+        return request(super.pageTplResponse("/public/organ"));
     }
 
     private List<User> getUsers(HttpServletRequest request) {

@@ -67,7 +67,7 @@ public class AdminController extends Handler {
 
     @RequestMapping("/admin")
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("redirect:/"));
+        ModelAndView view = request(super.pageTplResponse("redirect:/"));
         User user = super.getUser(request);
         view.addObject("agentStatusReport", acdWorkMonitor.getAgentReport(user.getOrgi()));
         view.addObject("agentStatus", cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), user.getOrgi()));
@@ -133,7 +133,7 @@ public class AdminController extends Handler {
         } else {
             request.getSession().setAttribute(Constants.CSKEFU_SYSTEM_INFOACQ, "true");
         }
-        return request(super.createRequestPageTempletResponse("redirect:/"));
+        return request(super.pageTplResponse("redirect:/"));
     }
 
     @RequestMapping("/admin/auth/event")
@@ -144,7 +144,7 @@ public class AdminController extends Handler {
         if (StringUtils.isNotBlank(iconstr) && StringUtils.isNotBlank(icontext)) {
             map.addAttribute("iconstr", iconstr.replaceAll(icontext, "&#x" + MainUtils.string2HexString(icontext) + ";"));
         }
-        return request(super.createRequestPageTempletResponse("/admin/system/auth/exchange"));
+        return request(super.pageTplResponse("/admin/system/auth/exchange"));
     }
 
     @RequestMapping("/admin/auth/save")
@@ -175,7 +175,7 @@ public class AdminController extends Handler {
                 sysDicRes.save(dic);
             }
         }
-        return request(super.createRequestPageTempletResponse("/public/success"));
+        return request(super.pageTplResponse("/public/success"));
     }
 
 }

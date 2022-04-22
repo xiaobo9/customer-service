@@ -122,7 +122,7 @@ public class AppsController extends Handler {
          * 获得在线访客与联系人的关联信息
          */
         if (contactIds.size() > 0) {
-            final Iterable<Contacts> contacts = contactsRes.findAll(contactIds);
+            final Iterable<Contacts> contacts = contactsRes.findAllById(contactIds);
             for (final OnlineUser onlineUser : onlineUserList.getContent()) {
                 if (StringUtils.isNotBlank(onlineUser.getContactsid())) {
                     for (final Contacts contact : contacts) {
@@ -222,7 +222,7 @@ public class AppsController extends Handler {
             }
         }
         if (ids.size() > 0) {
-            Iterable<Contacts> contactsList = contactsRes.findAll(ids);
+            Iterable<Contacts> contactsList = contactsRes.findAllById(ids);
             for (OnlineUser onlineUser : onlineUserList.getContent()) {
                 if (StringUtils.isNotBlank(onlineUser.getContactsid())) {
                     for (Contacts contacts : contactsList) {
@@ -244,7 +244,7 @@ public class AppsController extends Handler {
     public ModelAndView profile(ModelMap map, HttpServletRequest request, @Valid String index) {
         map.addAttribute("userData", super.getUser(request));
         map.addAttribute("index", index);
-        return request(super.createRequestPageTempletResponse("/apps/desktop/profile"));
+        return request(super.pageTplResponse("/apps/desktop/profile"));
     }
 
     @RequestMapping({"/apps/profile/save"})
@@ -260,9 +260,9 @@ public class AppsController extends Handler {
             if (StringUtils.isNotBlank(msg) && (!StringUtils.equals(msg, "edit_user_success"))) {
                 // 处理异常返回
                 if (StringUtils.isBlank(index)) {
-                    return request(super.createRequestPageTempletResponse("redirect:/apps/content.html?msg=" + msg));
+                    return request(super.pageTplResponse("redirect:/apps/content.html?msg=" + msg));
                 }
-                return request(super.createRequestPageTempletResponse("redirect:/apps/tenant/index.html?msg=" + msg));
+                return request(super.pageTplResponse("redirect:/apps/tenant/index.html?msg=" + msg));
             }
 
             // 执行更新
@@ -300,17 +300,17 @@ public class AppsController extends Handler {
                 if (!(agentStatus == null && cache.getInservAgentUsersSizeByAgentnoAndOrgi(
                         super.getUser(request).getId(), super.getOrgi(request)) == 0)) {
                     if (StringUtils.isBlank(index)) {
-                        return request(super.createRequestPageTempletResponse("redirect:/apps/content.html?msg=t1"));
+                        return request(super.pageTplResponse("redirect:/apps/content.html?msg=t1"));
                     }
-                    return request(super.createRequestPageTempletResponse("redirect:/apps/tenant/index.html?msg=t1"));
+                    return request(super.pageTplResponse("redirect:/apps/tenant/index.html?msg=t1"));
                 }
             }
 
         }
         if (StringUtils.isBlank(index)) {
-            return request(super.createRequestPageTempletResponse("redirect:/apps/content.html"));
+            return request(super.pageTplResponse("redirect:/apps/content.html"));
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/tenant/index.html"));
+        return request(super.pageTplResponse("redirect:/apps/tenant/index.html"));
     }
 
     /**

@@ -309,12 +309,11 @@ public class CallCenterUtils {
                     "owneruserList", getUserProxy().findByOrganAndOrgiAndDatastatus(ownerdept, user.getOrgi(), false));
 
         }
-        map.addAttribute(
-                "skillGroups", organRes.findAll(CallCenterUtils.getAuthOrgan(userRoleRes, callOutRoleRes, user)));
-        map.put(
-                "taskList", MainContext.getContext().getBean(UKefuCallOutTaskRepository.class).findByActidAndOrgi(
-                        actid,
-                        user.getOrgi()));
+        List<String> authOrgan = CallCenterUtils.getAuthOrgan(userRoleRes, callOutRoleRes, user);
+        map.addAttribute("skillGroups", organRes.findAllById(authOrgan));
+        map.put("taskList", MainContext.getContext().getBean(UKefuCallOutTaskRepository.class).findByActidAndOrgi(
+                actid,
+                user.getOrgi()));
         map.put(
                 "allUserList",
                 MainContext.getContext().getBean(UserRepository.class).findByOrgiAndDatastatus(user.getOrgi(), false));

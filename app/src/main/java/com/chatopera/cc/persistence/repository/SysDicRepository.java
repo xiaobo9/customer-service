@@ -25,9 +25,6 @@ import java.util.List;
 
 public interface SysDicRepository extends JpaRepository<SysDic, String>{
 	
-	
-	SysDic findById(String id);
-	
 	SysDic findByCode(String code);
 
 	Page<SysDic> findAll(Pageable paramPageable);

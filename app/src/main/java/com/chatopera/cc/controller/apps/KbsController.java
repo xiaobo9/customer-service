@@ -83,14 +83,14 @@ public class KbsController extends Handler {
 		if(!StringUtils.isBlank(typeid) && !typeid.equals("0")){
 			map.addAttribute("kbsType", kbsTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
 		}
-		return request(super.createRequestPageTempletResponse("/apps/business/kbs/typelist"));
+		return request(super.pageTplResponse("/apps/business/kbs/typelist"));
 	}
 	
 	@RequestMapping({"/addtype"})
 	@Menu(type="apps", subtype="kbs")
 	public ModelAndView addtype(ModelMap map , HttpServletRequest request ){
 		map.addAttribute("kbsTypeResList", kbsTypeRes.findByOrgi(super.getOrgi(request))) ;
-		return request(super.createRequestPageTempletResponse("/apps/business/kbs/addtype"));
+		return request(super.pageTplResponse("/apps/business/kbs/addtype"));
 	}
 	 
     @RequestMapping("/type/save")
@@ -103,7 +103,7 @@ public class KbsController extends Handler {
     		kbsType.setCreatetime(new Date());
     		kbsTypeRes.save(kbsType) ;
     	}
-    	return request(super.createRequestPageTempletResponse("redirect:/apps/kbs/list.html"));
+    	return request(super.pageTplResponse("redirect:/apps/kbs/list.html"));
     }
     
     @RequestMapping({"/add"})
@@ -114,7 +114,7 @@ public class KbsController extends Handler {
     	if(!StringUtils.isBlank(typeid) && !typeid.equals("0")){
 			map.addAttribute("kbsType", kbsTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
 		}
-		return request(super.createRequestPageTempletResponse("/apps/business/kbs/add"));
+		return request(super.pageTplResponse("/apps/business/kbs/add"));
 	}
     
     @RequestMapping("/save")
@@ -122,7 +122,7 @@ public class KbsController extends Handler {
     public ModelAndView save(HttpServletRequest request ,
 							 final @Valid KbsTopic topic ,
 							 @RequestParam(value = "files", required = false) MultipartFile[] files) throws IOException {
-    	ModelAndView view = request(super.createRequestPageTempletResponse("redirect:/apps/kbs/index.html")); 
+    	ModelAndView view = request(super.pageTplResponse("redirect:/apps/kbs/index.html"));
     	topic.setOrgi(super.getOrgi(request));
     	topic.setCreater(super.getUser(request).getId());
     	topic.setUsername(super.getUser(request).getUsername());

@@ -27,7 +27,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -101,6 +100,6 @@ public class ReportViewController extends Handler{
     		
     	}
     	map.put("dataDicList", dataDicRes.findByOrgi(super.getOrgi(request))) ;
-    	return request(super.createRequestPageTempletResponse("/apps/business/view/index"));
+    	return request(super.pageTplResponse("/apps/business/view/index"));
     }
 }

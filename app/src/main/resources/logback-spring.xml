@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
-    <!-- 设置Spring Boot 框架日志级别 -->
-    <logger name="org.springframework" level="WARN"/>
-    <logger name="org.hibernate" level="WARN"/>
 
     <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
     <springProperty scope="context" name="logPath" source="server.log.path"/>
@@ -86,7 +83,11 @@
 	        <onMismatch>DENY</onMismatch>  
 	    </filter>  
     </appender>
-    
+
+    <!-- 设置Spring Boot 框架日志级别 -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.apache" level="info"/>
 
     <!-- 日志输出级别 -->
     <root level="${LOG_LEVEL}">

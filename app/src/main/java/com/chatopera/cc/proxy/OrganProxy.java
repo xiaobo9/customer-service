@@ -8,7 +8,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -86,7 +85,7 @@ public class OrganProxy {
     }
 
     public List<Organ> findOrganInIds(Collection<String> organIds) {
-        return organRes.findAll(organIds);
+        return organRes.findAllById(organIds);
     }
 
     private void processChild(Map<String, Organ> organs, String organId, String orgi) {
@@ -94,7 +93,7 @@ public class OrganProxy {
         if (organ != null) {
             organs.put(organId, organ);
             List<Organ> childOrgans = organRes.findByOrgiAndParent(orgi, organId);
-            childOrgans.stream().forEach(o -> processChild(organs, o.getId(), orgi));
+            childOrgans.forEach(o -> processChild(organs, o.getId(), orgi));
         }
     }
 

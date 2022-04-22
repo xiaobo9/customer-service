@@ -17,6 +17,7 @@
 package com.chatopera.cc.controller.apps.report;
 
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.CubeLevel;
 import com.chatopera.cc.model.CubeMetadata;
 import com.chatopera.cc.model.Dimension;
@@ -38,87 +39,87 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/apps/report/dimension")
-public class DimensionController extends Handler{
-	
-	@Autowired
-	private DimensionRepository dimensionRes;
-	
-	@Autowired
-	private CubeLevelRepository cubeLevelRes;
-	
-	@Autowired
-	private CubeMetadataRepository cubeMetadataRes;
-	
-	@Autowired
-	private TablePropertiesRepository tablePropertiesRes;
-	
-	@RequestMapping("/add")
-    @Menu(type = "report" , subtype = "dimension")
-    public ModelAndView dimensionadd(ModelMap map , HttpServletRequest request , @Valid String cubeid) {
-    	map.addAttribute("cubeid", cubeid);
-    	map.addAttribute("fkfieldList",cubeMetadataRes.findByCubeidAndMtype(cubeid,"0"));
-    	map.addAttribute("fktableList",cubeMetadataRes.findByCubeidAndMtypeNot(cubeid,"0"));
-        return request(super.createRequestPageTempletResponse("/apps/business/report/cube/dimension/add"));
+public class DimensionController extends Handler {
+
+    @Autowired
+    private DimensionRepository dimensionRes;
+
+    @Autowired
+    private CubeLevelRepository cubeLevelRes;
+
+    @Autowired
+    private CubeMetadataRepository cubeMetadataRes;
+
+    @Autowired
+    private TablePropertiesRepository tablePropertiesRes;
+
+    @RequestMapping("/add")
+    @Menu(type = "report", subtype = "dimension")
+    public ModelAndView dimensionadd(ModelMap map, @Valid String cubeid) {
+        map.addAttribute("cubeid", cubeid);
+        map.addAttribute("fkfieldList", cubeMetadataRes.findByCubeidAndMtype(cubeid, "0"));
+        map.addAttribute("fktableList", cubeMetadataRes.findByCubeidAndMtypeNot(cubeid, "0"));
+        return request(super.pageTplResponse("/apps/business/report/cube/dimension/add"));
     }
-    
+
     @RequestMapping("/save")
-    @Menu(type = "report" , subtype = "dimension" )
-    public ModelAndView dimensionsave(ModelMap map , HttpServletRequest request , @Valid Dimension dimension) {
-    	if(!StringUtils.isBlank(dimension.getName())){
-    		dimension.setOrgi(super.getOrgi(request));
-    		dimension.setCreater(super.getUser(request).getId());
-			dimensionRes.save(dimension) ;
-    	}
-        return request(super.createRequestPageTempletResponse("redirect:/apps/report/cube/detail.html?id="+dimension.getCubeid()+"&dimensionId="+dimension.getId()));
+    @Menu(type = "report", subtype = "dimension")
+    public ModelAndView dimensionsave(HttpServletRequest request, @Valid Dimension dimension) {
+        if (!StringUtils.isBlank(dimension.getName())) {
+            dimension.setOrgi(super.getOrgi(request));
+            dimension.setCreater(super.getUser(request).getId());
+            dimensionRes.save(dimension);
+        }
+        return request(super.pageTplResponse("redirect:/apps/report/cube/detail.html?id=" + dimension.getCubeid() + "&dimensionId=" + dimension.getId()));
     }
-    
+
     @RequestMapping("/delete")
-    @Menu(type = "report" , subtype = "dimension" )
-    public ModelAndView quickreplydelete(ModelMap map , HttpServletRequest request , @Valid String id) {
-    	Dimension dimension = dimensionRes.findOne(id) ;
-    	if(dimension!=null){
-    		dimensionRes.delete(dimension);
-    		List<CubeLevel> cubeLevelList = cubeLevelRes.findByOrgiAndDimid(super.getOrgi(request), id);
-    		if(!cubeLevelList.isEmpty()) {
-    			cubeLevelRes.delete(cubeLevelList);
-    		}
-    	}
-    	return request(super.createRequestPageTempletResponse("redirect:/apps/report/cube/detail.html?id="+dimension.getCubeid()));
+    @Menu(type = "report", subtype = "dimension")
+    public ModelAndView quickreplydelete(HttpServletRequest request, @Valid String id) {
+        Dimension dimension = dimensionRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        dimensionRes.delete(dimension);
+        List<CubeLevel> cubeLevelList = cubeLevelRes.findByOrgiAndDimid(super.getOrgi(request), id);
+        if (!cubeLevelList.isEmpty()) {
+            cubeLevelRes.deleteAll(cubeLevelList);
+        }
+        return request(super.pageTplResponse("redirect:/apps/report/cube/detail.html?id=" + dimension.getCubeid()));
     }
+
     @RequestMapping("/edit")
-    @Menu(type = "report" , subtype = "dimension" , admin= true)
-    public ModelAndView quickreplyedit(ModelMap map , HttpServletRequest request , @Valid String id) {
-    	Dimension dimension = dimensionRes.findOne(id) ; 
-    	map.put("dimension", dimension) ;
-    	String cubeid = dimension.getCubeid();
-    	map.addAttribute("cubeid", cubeid);
-    	map.addAttribute("fkfieldList",cubeMetadataRes.findByCubeidAndMtype(cubeid,"0"));
-    	List<CubeMetadata> fktableList = cubeMetadataRes.findByCubeidAndMtypeNot(cubeid,"0");
-    	map.addAttribute("fktableList",fktableList);
-    	map.put("fktableidList", tablePropertiesRes.findByDbtableid(dimension.getFktable()));
-        return request(super.createRequestPageTempletResponse("/apps/business/report/cube/dimension/edit"));
+    @Menu(type = "report", subtype = "dimension", admin = true)
+    public ModelAndView quickreplyedit(ModelMap map, @Valid String id) {
+        Dimension dimension = dimensionRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        map.put("dimension", dimension);
+        String cubeid = dimension.getCubeid();
+        map.addAttribute("cubeid", cubeid);
+        map.addAttribute("fkfieldList", cubeMetadataRes.findByCubeidAndMtype(cubeid, "0"));
+        List<CubeMetadata> fktableList = cubeMetadataRes.findByCubeidAndMtypeNot(cubeid, "0");
+        map.addAttribute("fktableList", fktableList);
+        map.put("fktableidList", tablePropertiesRes.findByDbtableid(dimension.getFktable()));
+        return request(super.pageTplResponse("/apps/business/report/cube/dimension/edit"));
     }
-    
+
     @RequestMapping("/update")
-    @Menu(type = "report" , subtype = "dimension" , admin= true)
-    public ModelAndView quickreplyupdate(ModelMap map , HttpServletRequest request , @Valid Dimension dimension) {
-    	if(!StringUtils.isBlank(dimension.getId())){
-    		Dimension temp = dimensionRes.findOne(dimension.getId()) ;
-    		dimension.setOrgi(super.getOrgi(request));
-    		dimension.setCreater(super.getUser(request).getId());
-    		if(temp!=null){
-    			dimension.setCreatetime(temp.getCreatetime());
-    		}
-    		dimensionRes.save(dimension) ;
-    	}
-    	return request(super.createRequestPageTempletResponse("redirect:/apps/report/cube/detail.html?id="+dimension.getCubeid()+"&dimensionId="+dimension.getId()));
+    @Menu(type = "report", subtype = "dimension", admin = true)
+    public ModelAndView quickreplyupdate(HttpServletRequest request, @Valid Dimension dimension) {
+        if (!StringUtils.isBlank(dimension.getId())) {
+            Dimension temp = dimensionRes.findById(dimension.getId()).orElse(null);
+            dimension.setOrgi(super.getOrgi(request));
+            dimension.setCreater(super.getUser(request).getId());
+            if (temp != null) {
+                dimension.setCreatetime(temp.getCreatetime());
+            }
+            dimensionRes.save(dimension);
+        }
+        return request(super.pageTplResponse("redirect:/apps/report/cube/detail.html?id=" + dimension.getCubeid() + "&dimensionId=" + dimension.getId()));
     }
+
     @RequestMapping("/fktableid")
-    @Menu(type = "report" , subtype = "dimension" , admin= true)
-    public ModelAndView fktableid(ModelMap map , HttpServletRequest request , @Valid String tableid) {
-    	if(!StringUtils.isBlank(tableid)){
-    		map.put("fktableidList", tablePropertiesRes.findByDbtableid(tableid));
-    	}
-    	return request(super.createRequestPageTempletResponse("/apps/business/report/cube/dimension/fktableiddiv"));
+    @Menu(type = "report", subtype = "dimension", admin = true)
+    public ModelAndView fktableid(ModelMap map, @Valid String tableid) {
+        if (!StringUtils.isBlank(tableid)) {
+            map.put("fktableidList", tablePropertiesRes.findByDbtableid(tableid));
+        }
+        return request(super.pageTplResponse("/apps/business/report/cube/dimension/fktableiddiv"));
     }
 }

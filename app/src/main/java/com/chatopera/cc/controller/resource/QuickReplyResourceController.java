@@ -17,7 +17,6 @@
 package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.util.Menu;
 import freemarker.template.TemplateException;
 import org.springframework.stereotype.Controller;
@@ -39,6 +38,6 @@ public class QuickReplyResourceController extends Handler{
 			q = "" ;
 		}
 //    	map.addAttribute("quickReplyList", OnlineUserProxy.search(q, super.getOrgi(request), super.getUser(request))) ;
-        return request(super.createRequestPageTempletResponse("/public/quickreply"));
+        return request(super.pageTplResponse("/public/quickreply"));
     }
 }

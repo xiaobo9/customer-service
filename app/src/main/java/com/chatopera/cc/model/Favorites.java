@@ -43,7 +43,7 @@ public class Favorites implements java.io.Serializable{
 	private String title ;
 	private String model ;
 	
-	@Field(type = FieldType.String, store = true)  
+	@Field(type = FieldType.Keyword, store = true)
     @Parent(type = "uk_workorders")  
 	private String orderid ;
 	

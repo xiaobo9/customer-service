@@ -60,7 +60,7 @@ public class JobController extends Handler {
 			map.put("taskinfo",taskInfo);
 		}
 		map.put("job", detail);
-		return request(super.createRequestPageTempletResponse("/apps/business/job/setting"));
+		return request(super.pageTplResponse("/apps/business/job/setting"));
 	}
 
 	@RequestMapping({"/save"})
@@ -86,6 +86,6 @@ public class JobController extends Handler {
 			}
 			jobRes.save(detail) ;
 		}
-		return request(super.createRequestPageTempletResponse("/public/success"));
+		return request(super.pageTplResponse("/public/success"));
 	}
 }

@@ -24,6 +24,7 @@ import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.repository.*;
@@ -48,7 +49,6 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.persistence.criteria.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.nio.charset.CharacterCodingException;
 import java.text.ParseException;
 import java.util.*;
 
@@ -210,7 +210,7 @@ public class ChatServiceController extends Handler {
                     usersids.add(o);
                 }
             }
-            List<User> userList = userRes.findAll(usersids);
+            List<User> userList = userRes.findAllById(usersids);
             for (User user : userList) {
                 user.setAgentStatus(cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
                 userProxy.attachOrgansPropertiesForUser(user);
@@ -224,18 +224,17 @@ public class ChatServiceController extends Handler {
             map.addAttribute("currentorgan", currentOrgan);
         }
 
-        return request(super.createRequestPageTempletResponse("/apps/service/current/transfer"));
+        return request(super.pageTplResponse("/apps/service/current/transfer"));
     }
 
     @RequestMapping(value = "/transfer/save")
     @Menu(type = "apps", subtype = "transfersave")
-    public ModelAndView transfersave(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String agentno, @Valid String memo) throws CharacterCodingException {
+    public ModelAndView transfersave(HttpServletRequest request, @Valid String id, @Valid String agentno, @Valid String memo) {
         if (StringUtils.isNotBlank(id)) {
             AgentService agentService = agentServiceRes.findByIdAndOrgi(id, super.getOrgi(request));
-            final User targetAgent = userRes.findOne(agentno);
+            final User targetAgent = userRes.findById(agentno).orElseThrow(EntityNotFoundException::new);
             AgentUser agentUser = null;
-            Optional<AgentUser> agentUserOpt = cache.findOneAgentUserByUserIdAndOrgi(
-                    agentService.getUserid(), super.getOrgi(request));
+            Optional<AgentUser> agentUserOpt = cache.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), super.getOrgi(request));
             if (agentUserOpt.isPresent()) {
                 agentUser = agentUserOpt.get();
             }
@@ -317,7 +316,7 @@ public class ChatServiceController extends Handler {
             }
         }
 
-        return request(super.createRequestPageTempletResponse("redirect:/service/current/index.html"));
+        return request(super.pageTplResponse("redirect:/service/current/index.html"));
     }
 
     @RequestMapping("/current/end")
@@ -336,7 +335,7 @@ public class ChatServiceController extends Handler {
                 agentServiceRes.save(agentService);
             }
         }
-        return request(super.createRequestPageTempletResponse("redirect:/service/current/index.html"));
+        return request(super.pageTplResponse("redirect:/service/current/index.html"));
     }
 
     /**
@@ -395,7 +394,7 @@ public class ChatServiceController extends Handler {
                 }
             }
         }
-        return request(super.createRequestPageTempletResponse("redirect:/service/current/index.html"));
+        return request(super.pageTplResponse("redirect:/service/current/index.html"));
     }
 
 
@@ -415,7 +414,7 @@ public class ChatServiceController extends Handler {
             }
         }
         if (skillGroups.size() > 0) {
-            List<Organ> organList = organRes.findAll(skillGroups);
+            List<Organ> organList = organRes.findAllById(skillGroups);
             for (AgentUser agentUser : agentUserList.getContent()) {
                 if (StringUtils.isNotBlank(agentUser.getSkill())) {
                     for (Organ organ : organList) {
@@ -458,7 +457,7 @@ public class ChatServiceController extends Handler {
                     }
                 }
             }
-            List<User> userList = userRes.findAll(usersids);
+            List<User> userList = userRes.findAllById(usersids);
             for (User user : userList) {
                 user.setAgentStatus(cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
                 userProxy.attachOrgansPropertiesForUser(user);
@@ -469,7 +468,7 @@ public class ChatServiceController extends Handler {
             map.addAttribute("skillGroups", skillGroups);
             map.addAttribute("currentorgan", currentOrgan);
         }
-        return request(super.createRequestPageTempletResponse("/apps/service/quene/transfer"));
+        return request(super.pageTplResponse("/apps/service/quene/transfer"));
     }
 
     @RequestMapping("/quene/transfer/save")
@@ -484,7 +483,7 @@ public class ChatServiceController extends Handler {
                     agentUser, false, MainContext.ChatInitiatorType.USER.toString());
             acdVisitorDispatcher.enqueue(ctx);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/service/quene/index.html"));
+        return request(super.pageTplResponse("redirect:/service/quene/index.html"));
     }
 
     @RequestMapping("/quene/invite")
@@ -496,7 +495,7 @@ public class ChatServiceController extends Handler {
         if (agentUser != null && agentUser.getStatus().equals(MainContext.AgentUserStatusEnum.INQUENE.toString())) {
             acdAgentService.assignVisitorAsInvite(logined.getId(), agentUser, orgi);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/service/quene/index.html"));
+        return request(super.pageTplResponse("redirect:/service/quene/index.html"));
     }
 
     /**
@@ -546,7 +545,7 @@ public class ChatServiceController extends Handler {
         agentStatusProxy.broadcastAgentsStatus(
                 super.getOrgi(request), "agent", "offline", super.getUser(request).getId());
 
-        return request(super.createRequestPageTempletResponse("redirect:/service/agent/index.html"));
+        return request(super.pageTplResponse("redirect:/service/agent/index.html"));
     }
 
     /**
@@ -600,8 +599,8 @@ public class ChatServiceController extends Handler {
     @Menu(type = "service", subtype = "leavemsg", admin = true)
     public ModelAndView leavemsg(ModelMap map, HttpServletRequest request, @Valid String id) {
         if (StringUtils.isNotBlank(id)) {
-            leaveMsgRes.delete(id);
+            leaveMsgRes.deleteById(id);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/service/leavemsg/index.html"));
+        return request(super.pageTplResponse("redirect:/service/leavemsg/index.html"));
     }
 }

@@ -21,6 +21,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.CSKefuException;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.es.EntCustomerRepository;
@@ -265,7 +266,7 @@ public class CustomerController extends Handler {
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String ekind) {
         map.addAttribute("ekind", ekind);
-        return request(super.createRequestPageTempletResponse("/apps/business/customer/add"));
+        return request(super.pageTplResponse("/apps/business/customer/add"));
     }
 
     @RequestMapping("/save")
@@ -299,42 +300,43 @@ public class CustomerController extends Handler {
 
             contactsRes.save(customerGroupForm.getContacts());
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/customer/index.html?ekind=" + customerGroupForm.getEntcustomer().getEkind() + "&msg=" + msg));
+        return request(super.pageTplResponse("redirect:/apps/customer/index.html?ekind=" + customerGroupForm.getEntcustomer().getEkind() + "&msg=" + msg));
     }
 
     @RequestMapping("/delete")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView delete(HttpServletRequest request, @Valid EntCustomer entCustomer, @Valid String p, @Valid String ekind) {
         if (entCustomer != null) {
-            entCustomer = entCustomerRes.findOne(entCustomer.getId());
+            entCustomer = entCustomerRes.findById(entCustomer.getId()).orElseThrow(EntityNotFoundException::new);
             entCustomer.setDatastatus(true);                            //客户和联系人都是 逻辑删除
             entCustomerRes.save(entCustomer);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/customer/index.html?p=" + p + "&ekind=" + ekind));
+        return request(super.pageTplResponse("redirect:/apps/customer/index.html?p=" + p + "&ekind=" + ekind));
     }
 
     @RequestMapping("/edit")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String ekind) {
-        map.addAttribute("entCustomer", entCustomerRes.findOne(id));
+        map.addAttribute("entCustomer", entCustomerRes.findById(id).orElseThrow(EntityNotFoundException::new));
         map.addAttribute("ekindId", ekind);
-        return request(super.createRequestPageTempletResponse("/apps/business/customer/edit"));
+        return request(super.pageTplResponse("/apps/business/customer/edit"));
     }
 
     @RequestMapping("/update")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView update(HttpServletRequest request, @Valid CustomerGroupForm customerGroupForm, @Valid String ekindId) {
         final User logined = super.getUser(request);
-        EntCustomer customer = entCustomerRes.findOne(customerGroupForm.getEntcustomer().getId());
+        EntCustomer entcustomer = customerGroupForm.getEntcustomer();
+        EntCustomer customer = entCustomerRes.findById(entcustomer.getId()).orElseThrow(EntityNotFoundException::new);
         String msg = "";
 
-        List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(request, customerGroupForm.getEntcustomer(), customer, "id", "orgi", "creater", "createtime", "updatetime");    //记录 数据变更 历史
+        List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(request, entcustomer, customer, "id", "orgi", "creater", "createtime", "updatetime");    //记录 数据变更 历史
         if (events.size() > 0) {
             msg = "edit_entcustomer_success";
             String modifyid = MainUtils.getUUID();
             Date modifytime = new Date();
             for (PropertiesEvent event : events) {
-                event.setDataid(customerGroupForm.getEntcustomer().getId());
+                event.setDataid(entcustomer.getId());
                 event.setCreater(super.getUser(request).getId());
                 event.setOrgi(super.getOrgi(request));
                 event.setModifyid(modifyid);
@@ -342,21 +344,21 @@ public class CustomerController extends Handler {
                 propertiesEventRes.save(event);
             }
         }
-        customerGroupForm.getEntcustomer().setOrgan(customer.getOrgan());
-        customerGroupForm.getEntcustomer().setCreater(customer.getCreater());
-        customerGroupForm.getEntcustomer().setCreatetime(customer.getCreatetime());
-        customerGroupForm.getEntcustomer().setOrgi(logined.getOrgi());
-        customerGroupForm.getEntcustomer().setPinyin(PinYinTools.getInstance().getFirstPinYin(customerGroupForm.getEntcustomer().getName()));
-        entCustomerRes.save(customerGroupForm.getEntcustomer());
+        entcustomer.setOrgan(customer.getOrgan());
+        entcustomer.setCreater(customer.getCreater());
+        entcustomer.setCreatetime(customer.getCreatetime());
+        entcustomer.setOrgi(logined.getOrgi());
+        entcustomer.setPinyin(PinYinTools.getInstance().getFirstPinYin(entcustomer.getName()));
+        entCustomerRes.save(entcustomer);
 
-        return request(super.createRequestPageTempletResponse("redirect:/apps/customer/index.html?ekind=" + ekindId + "&msg=" + msg));
+        return request(super.pageTplResponse("redirect:/apps/customer/index.html?ekind=" + ekindId + "&msg=" + msg));
     }
 
     @RequestMapping("/imp")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView imp(ModelMap map, HttpServletRequest request, @Valid String ekind) {
         map.addAttribute("ekind", ekind);
-        return request(super.createRequestPageTempletResponse("/apps/business/customer/imp"));
+        return request(super.pageTplResponse("/apps/business/customer/imp"));
     }
 
     @RequestMapping("/impsave")
@@ -386,14 +388,14 @@ public class CustomerController extends Handler {
             new ExcelImportProecess(event).process();        //启动导入任务
         }
 
-        return request(super.createRequestPageTempletResponse("redirect:/apps/customer/index.html"));
+        return request(super.pageTplResponse("redirect:/apps/customer/index.html"));
     }
 
     @RequestMapping("/expids")
     @Menu(type = "customer", subtype = "customer")
     public void expids(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids) throws IOException {
         if (ids != null && ids.length > 0) {
-            Iterable<EntCustomer> entCustomerList = entCustomerRes.findAll(Arrays.asList(ids));
+            Iterable<EntCustomer> entCustomerList = entCustomerRes.findAllById(Arrays.asList(ids));
             MetadataTable table = metadataRes.findByTablename("uk_entcustomer");
             List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
             for (EntCustomer customer : entCustomerList) {

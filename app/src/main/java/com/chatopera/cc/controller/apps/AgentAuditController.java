@@ -206,7 +206,7 @@ public class AgentAuditController extends Handler {
     @RequestMapping("/query")
     @Menu(type = "apps", subtype = "cca")
     public ModelAndView query(HttpServletRequest request, String skill, String agentno) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/cca/chatusers"));
+        ModelAndView view = request(super.pageTplResponse("/apps/cca/chatusers"));
 
         final String orgi = super.getOrgi(request);
         final User logined = super.getUser(request);
@@ -239,7 +239,7 @@ public class AgentAuditController extends Handler {
     @RequestMapping("/agentusers")
     @Menu(type = "apps", subtype = "cca")
     public ModelAndView agentusers(HttpServletRequest request, String userid) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/cca/agentusers"));
+        ModelAndView view = request(super.pageTplResponse("/apps/cca/agentusers"));
         User logined = super.getUser(request);
         final String orgi = super.getOrgi(request);
         Sort defaultSort = new Sort(Sort.Direction.DESC, "status");
@@ -265,7 +265,7 @@ public class AgentAuditController extends Handler {
         if (channel.equals("phone")) {
             mainagentuser = "/apps/cca/mainagentuser_callout";
         }
-        ModelAndView view = request(super.createRequestPageTempletResponse(mainagentuser));
+        ModelAndView view = request(super.pageTplResponse(mainagentuser));
         final User logined = super.getUser(request);
         final String orgi = logined.getOrgi();
         AgentUser agentUser = agentUserRepository.findByIdAndOrgi(id, orgi);
@@ -296,7 +296,7 @@ public class AgentAuditController extends Handler {
                     super.page(request, Sort.Direction.DESC, "updatetime")));
             AgentService agentService = null;
             if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
-                agentService = this.agentServiceRes.findOne(agentUser.getAgentserviceid());
+                agentService = this.agentServiceRes.findById(agentUser.getAgentserviceid()).orElse(null);
                 view.addObject("curAgentService", agentService);
                 if (agentService != null) {
                     /**
@@ -306,7 +306,7 @@ public class AgentAuditController extends Handler {
                 }
             }
             if (MainContext.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
-                OnlineUser onlineUser = onlineUserRes.findOne(agentUser.getUserid());
+                OnlineUser onlineUser = onlineUserRes.findById(agentUser.getUserid()).orElse(null);
                 if (onlineUser != null) {
                     if (onlineUser.getLogintime() != null) {
                         if (MainContext.OnlineUserStatusEnum.OFFLINE.toString().equals(onlineUser.getStatus())) {
@@ -395,7 +395,7 @@ public class AgentAuditController extends Handler {
                 }
             }
 
-            final List<User> userList = userRes.findAll(userids);
+            final List<User> userList = userRes.findAllById(userids);
             for (final User o : userList) {
                 o.setAgentStatus(agentStatusMap.get(o.getId()));
                 // find user's skills
@@ -412,7 +412,7 @@ public class AgentAuditController extends Handler {
             map.addAttribute("currentorgan", currentOrgan);
         }
 
-        return request(super.createRequestPageTempletResponse("/apps/cca/transfer"));
+        return request(super.pageTplResponse("/apps/cca/transfer"));
     }
 
 
@@ -445,7 +445,7 @@ public class AgentAuditController extends Handler {
                 }
             }
 
-            final List<User> userList = userRes.findAll(userids);
+            final List<User> userList = userRes.findAllById(userids);
             for (final User o : userList) {
                 o.setAgentStatus(agentStatusMap.get(o.getId()));
                 // find user's skills
@@ -454,7 +454,7 @@ public class AgentAuditController extends Handler {
             map.addAttribute("userList", userList);
             map.addAttribute("currentorgan", organ);
         }
-        return request(super.createRequestPageTempletResponse("/apps/cca/transferagentlist"));
+        return request(super.pageTplResponse("/apps/cca/transferagentlist"));
     }
 
     /**
@@ -487,7 +487,7 @@ public class AgentAuditController extends Handler {
         if (StringUtils.isNotBlank(userid) &&
                 StringUtils.isNotBlank(agentuserid) &&
                 StringUtils.isNotBlank(agentno)) {
-            final User targetAgent = userRes.findOne(agentno);
+            final User targetAgent = userRes.findById(agentno).orElseThrow(() -> new RuntimeException("not found"));
             final AgentService agentService = agentServiceRes.findByIdAndOrgi(agentserviceid, super.getOrgi(request));
             /**
              * 更新AgentUser
@@ -567,7 +567,7 @@ public class AgentAuditController extends Handler {
                 agentServiceRes.save(agentService);
             }
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/cca/index.html"));
+        return request(super.pageTplResponse("redirect:/apps/cca/index.html"));
 
     }
 
@@ -604,7 +604,7 @@ public class AgentAuditController extends Handler {
             }
         }
 
-        return request(super.createRequestPageTempletResponse("redirect:/apps/cca/index.html"));
+        return request(super.pageTplResponse("redirect:/apps/cca/index.html"));
     }
 
     @RequestMapping({"/blacklist/add"})
@@ -615,7 +615,7 @@ public class AgentAuditController extends Handler {
         map.addAttribute("agentserviceid", agentserviceid);
         map.addAttribute("userid", userid);
         map.addAttribute("agentUser", agentUserRes.findByIdAndOrgi(userid, super.getOrgi(request)));
-        return request(super.createRequestPageTempletResponse("/apps/cca/blacklistadd"));
+        return request(super.pageTplResponse("/apps/cca/blacklistadd"));
     }
 
     @RequestMapping({"/blacklist/save"})

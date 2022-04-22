@@ -18,19 +18,17 @@ package com.chatopera.cc.controller.apps;
 
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.util.Menu;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -74,11 +72,8 @@ public class AgentSettingsController extends Handler {
     @Autowired
     private Cache cache;
 
-    @Value("${web.upload-path}")
-    private String path;
-
     @RequestMapping("/agent/index")
-    @Menu(type = "setting", subtype = "sessionconfig", admin = false)
+    @Menu(type = "setting", subtype = "sessionconfig")
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
         SessionConfig sessionConfig = null;
         Organ currentOrgan = super.getOrgan(request);
@@ -114,12 +109,12 @@ public class AgentSettingsController extends Handler {
     }
 
     @RequestMapping("/agent/sessionconfig/save")
-    @Menu(type = "setting", subtype = "sessionconfig", admin = false)
+    @Menu(type = "setting", subtype = "sessionconfig")
     public ModelAndView sessionconfig(ModelMap map, HttpServletRequest request, @Valid SessionConfig sessionConfig) {
         Organ currentOrgan = super.getOrgan(request);
         String orgi = super.getOrgi(request);
         SessionConfig tempSessionConfig = sessionConfigRes.findByOrgiAndSkill(orgi, currentOrgan.getId());
-        
+
         if (tempSessionConfig == null) {
             tempSessionConfig = sessionConfig;
             tempSessionConfig.setCreater(super.getUser(request).getId());
@@ -129,9 +124,7 @@ public class AgentSettingsController extends Handler {
         tempSessionConfig.setOrgi(super.getOrgi(request));
         // 强制开启满意度问卷
         tempSessionConfig.setSatisfaction(true);
-        if (currentOrgan != null) {
-            tempSessionConfig.setSkill(currentOrgan.getId());
-        }
+        tempSessionConfig.setSkill(currentOrgan.getId());
 
         sessionConfigRes.save(tempSessionConfig);
 
@@ -141,11 +134,11 @@ public class AgentSettingsController extends Handler {
         acdPolicyService.initSessionConfigList();
         map.put("sessionConfig", tempSessionConfig);
 
-        return request(super.createRequestPageTempletResponse("redirect:/setting/agent/index.html"));
+        return request(super.pageTplResponse("redirect:/setting/agent/index.html"));
     }
 
     @RequestMapping("/blacklist")
-    @Menu(type = "setting", subtype = "blacklist", admin = false)
+    @Menu(type = "setting", subtype = "blacklist")
     public ModelAndView blacklist(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
@@ -158,8 +151,8 @@ public class AgentSettingsController extends Handler {
     }
 
     @RequestMapping("/blacklist/delete")
-    @Menu(type = "setting", subtype = "tag", admin = false)
-    public ModelAndView blacklistdelete(ModelMap map, HttpServletRequest request, @Valid String id) {
+    @Menu(type = "setting", subtype = "tag")
+    public ModelAndView blacklistdelete(HttpServletRequest request, @Valid String id) {
         if (!StringUtils.isBlank(id)) {
             BlackEntity tempBlackEntity = blackListRes.findByIdAndOrgi(id, super.getOrgi(request));
             if (tempBlackEntity != null) {
@@ -167,11 +160,11 @@ public class AgentSettingsController extends Handler {
                 cache.deleteSystembyIdAndOrgi(tempBlackEntity.getUserid(), Constants.SYSTEM_ORGI);
             }
         }
-        return request(super.createRequestPageTempletResponse("redirect:/setting/blacklist.html"));
+        return request(super.pageTplResponse("redirect:/setting/blacklist.html"));
     }
 
     @RequestMapping("/tag")
-    @Menu(type = "setting", subtype = "tag", admin = false)
+    @Menu(type = "setting", subtype = "tag")
     public ModelAndView tag(ModelMap map, HttpServletRequest request, @Valid String code) {
         Organ currentOrgan = super.getOrgan(request);
 
@@ -198,29 +191,26 @@ public class AgentSettingsController extends Handler {
     }
 
     @RequestMapping("/tag/add")
-    @Menu(type = "setting", subtype = "tag", admin = false)
-    public ModelAndView tagadd(ModelMap map, HttpServletRequest request, @Valid String tagtype) {
+    @Menu(type = "setting", subtype = "tag")
+    public ModelAndView tagadd(ModelMap map, @Valid String tagtype) {
         map.addAttribute("tagtype", tagtype);
-        return request(super.createRequestPageTempletResponse("/apps/setting/agent/tagadd"));
+        return request(super.pageTplResponse("/apps/setting/agent/tagadd"));
     }
 
     @RequestMapping("/tag/edit")
-    @Menu(type = "setting", subtype = "tag", admin = false)
-    public ModelAndView tagedit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String tagtype) {
-        map.put("tag", tagRes.findOne(id));
+    @Menu(type = "setting", subtype = "tag")
+    public ModelAndView tagedit(ModelMap map, @Valid String id, @Valid String tagtype) {
+        map.put("tag", tagRes.findById(id).orElseThrow(EntityNotFoundException::new));
         map.addAttribute("tagtype", tagtype);
-        return request(super.createRequestPageTempletResponse("/apps/setting/agent/tagedit"));
+        return request(super.pageTplResponse("/apps/setting/agent/tagedit"));
     }
 
     @RequestMapping("/tag/update")
-    @Menu(type = "setting", subtype = "tag", admin = false)
-    public ModelAndView tagupdate(ModelMap map, HttpServletRequest request, @Valid Tag tag, @Valid String tagtype) {
+    @Menu(type = "setting", subtype = "tag")
+    public ModelAndView tagupdate(HttpServletRequest request, @Valid Tag tag, @Valid String tagtype) {
         Organ currentOrgan = super.getOrgan(request);
-        Tag temptag = null;
 
-        if (currentOrgan != null) {
-            temptag = tagRes.findByOrgiAndTagAndSkill(super.getOrgi(request), tag.getTag(), currentOrgan.getId());
-        }
+        Tag temptag = tagRes.findByOrgiAndTagAndSkill(super.getOrgi(request), tag.getTag(), currentOrgan.getId());
 
         if (temptag == null || tag.getId().equals(temptag.getId())) {
             tag.setOrgi(super.getOrgi(request));
@@ -228,12 +218,12 @@ public class AgentSettingsController extends Handler {
             tag.setSkill(currentOrgan.getId());
             tagRes.save(tag);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/setting/tag.html?code=" + tagtype));
+        return request(super.pageTplResponse("redirect:/setting/tag.html?code=" + tagtype));
     }
 
     @RequestMapping("/tag/save")
-    @Menu(type = "setting", subtype = "tag", admin = false)
-    public ModelAndView tagsave(ModelMap map, HttpServletRequest request, @Valid Tag tag, @Valid String tagtype) {
+    @Menu(type = "setting", subtype = "tag")
+    public ModelAndView tagsave(HttpServletRequest request, @Valid Tag tag, @Valid String tagtype) {
         Organ currentOrgan = super.getOrgan(request);
 
         if (currentOrgan != null && tagRes.findByOrgiAndTagAndSkill(super.getOrgi(request), tag.getTag(), currentOrgan.getId()) == null) {
@@ -242,27 +232,27 @@ public class AgentSettingsController extends Handler {
             tag.setSkill(currentOrgan.getId());
             tagRes.save(tag);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/setting/tag.html?code=" + tagtype));
+        return request(super.pageTplResponse("redirect:/setting/tag.html?code=" + tagtype));
     }
 
     @RequestMapping("/tag/delete")
-    @Menu(type = "setting", subtype = "tag", admin = false)
-    public ModelAndView tagdelete(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String tagtype) {
-        tagRes.delete(id);
-        return request(super.createRequestPageTempletResponse("redirect:/setting/tag.html?code=" + tagtype));
+    @Menu(type = "setting", subtype = "tag")
+    public ModelAndView tagdelete(@Valid String id, @Valid String tagtype) {
+        tagRes.deleteById(id);
+        return request(super.pageTplResponse("redirect:/setting/tag.html?code=" + tagtype));
     }
 
 
     @RequestMapping("/acd")
-    @Menu(type = "setting", subtype = "acd", admin = false)
-    public ModelAndView acd(ModelMap map, HttpServletRequest request) {
+    @Menu(type = "setting", subtype = "acd")
+    public ModelAndView acd(ModelMap map) {
         map.put("tagTypeList", Dict.getInstance().getDic("com.dic.tag.type"));
         return request(super.createAppsTempletResponse("/apps/setting/agent/acd"));
     }
 
 
     @RequestMapping("/adv")
-    @Menu(type = "setting", subtype = "adv", admin = false)
+    @Menu(type = "setting", subtype = "adv")
     public ModelAndView adv(ModelMap map, HttpServletRequest request, @Valid String adpos) {
         Organ currentOrgan = super.getOrgan(request);
 
@@ -292,15 +282,15 @@ public class AgentSettingsController extends Handler {
     }
 
     @RequestMapping("/adv/add")
-    @Menu(type = "setting", subtype = "adv", admin = false)
-    public ModelAndView advadd(ModelMap map, HttpServletRequest request, @Valid String adpos) {
+    @Menu(type = "setting", subtype = "adv")
+    public ModelAndView advadd(ModelMap map, @Valid String adpos) {
         map.addAttribute("adpos", adpos);
-        return request(super.createRequestPageTempletResponse("/apps/setting/agent/adadd"));
+        return request(super.pageTplResponse("/apps/setting/agent/adadd"));
     }
 
     @RequestMapping("/adv/save")
     @Menu(type = "setting", subtype = "adv", admin = false)
-    public ModelAndView advsave(ModelMap map, HttpServletRequest request, @Valid AdType adv, @Valid String advtype, @RequestParam(value = "imgfile", required = false) MultipartFile imgfile) throws IOException {
+    public ModelAndView advsave(HttpServletRequest request, @Valid AdType adv, @RequestParam(value = "imgfile", required = false) MultipartFile imgfile) throws IOException {
         Organ currentOrgan = super.getOrgan(request);
         if (currentOrgan != null) {
             adv.setSkill(currentOrgan.getId());
@@ -319,7 +309,7 @@ public class AgentSettingsController extends Handler {
 
         MainUtils.initAdv(super.getOrgi(request), adv.getSkill());
 
-        return request(super.createRequestPageTempletResponse("redirect:/setting/adv.html?adpos=" + adv.getAdpos()));
+        return request(super.pageTplResponse("redirect:/setting/adv.html?adpos=" + adv.getAdpos()));
     }
 
     @RequestMapping("/adv/edit")
@@ -327,12 +317,12 @@ public class AgentSettingsController extends Handler {
     public ModelAndView advedit(ModelMap map, HttpServletRequest request, @Valid String adpos, @Valid String id) {
         map.addAttribute("adpos", adpos);
         map.put("ad", adTypeRes.findByIdAndOrgi(id, super.getOrgi(request)));
-        return request(super.createRequestPageTempletResponse("/apps/setting/agent/adedit"));
+        return request(super.pageTplResponse("/apps/setting/agent/adedit"));
     }
 
     @RequestMapping("/adv/update")
     @Menu(type = "setting", subtype = "adv", admin = false)
-    public ModelAndView advupdate(ModelMap map, HttpServletRequest request, @Valid AdType ad, @Valid String adpos, @RequestParam(value = "imgfile", required = false) MultipartFile imgfile) throws IOException {
+    public ModelAndView advupdate(HttpServletRequest request, @Valid AdType ad, @Valid String adpos, @RequestParam(value = "imgfile", required = false) MultipartFile imgfile) throws IOException {
         String orgi = super.getOrgi(request);
         Organ currentOrgan = super.getOrgan(request);
         AdType tempad = null;
@@ -356,18 +346,18 @@ public class AgentSettingsController extends Handler {
             adTypeRes.save(ad);
             MainUtils.initAdv(orgi, tempad.getSkill());
         }
-        return request(super.createRequestPageTempletResponse("redirect:/setting/adv.html?adpos=" + adpos));
+        return request(super.pageTplResponse("redirect:/setting/adv.html?adpos=" + adpos));
     }
 
     @RequestMapping("/adv/delete")
     @Menu(type = "setting", subtype = "adv", admin = false)
-    public ModelAndView advdelete(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String adpos) {
+    public ModelAndView advdelete(HttpServletRequest request, @Valid String id, @Valid String adpos) {
         String orgi = super.getOrgi(request);
         AdType adType = adTypeRes.findByIdAndOrgi(id, orgi);
         if (adType != null) {
-            adTypeRes.delete(id);
+            adTypeRes.deleteById(id);
             MainUtils.initAdv(orgi, adType.getSkill());
         }
-        return request(super.createRequestPageTempletResponse("redirect:/setting/adv.html?adpos=" + adpos));
+        return request(super.pageTplResponse("redirect:/setting/adv.html?adpos=" + adpos));
     }
 }

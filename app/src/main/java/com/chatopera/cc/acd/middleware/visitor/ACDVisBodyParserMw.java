@@ -134,11 +134,10 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
              */
             switch (MainContext.AgentUserStatusEnum.toValue(ctx.getAgentService().getStatus())) {
                 case INSERVICE:
-                    ctx.setMessage(
-                            acdMessageHelper.getSuccessMessage(
-                                    ctx.getAgentService(),
-                                    ctx.getChannel(),
-                                    ctx.getOrgi()));
+                    ctx.setMessage(acdMessageHelper.getSuccessMessage(
+                            ctx.getAgentService(),
+                            ctx.getChannel(),
+                            ctx.getOrgi()));
 
                     // TODO 判断 INSERVICE 时，agentService 对应的  agentUser
                     logger.info(
@@ -150,22 +149,8 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
                             ctx.getAgentService().getQueneindex());
 
                     if (StringUtils.isNotBlank(ctx.getAgentService().getAgentuserid())) {
-                        agentUserProxy.findOne(ctx.getAgentService().getAgentuserid()).ifPresent(p -> {
-                            ctx.setAgentUser(p);
-                        });
+                        agentUserProxy.findById(ctx.getAgentService().getAgentuserid()).ifPresent(ctx::setAgentUser);
                     }
-
-                    // TODO 如果是 INSERVICE 那么  agentService.getAgentuserid 就一定不能为空？
-//                            // TODO 此处需要考虑 agentService.getAgentuserid 为空的情况
-//                            // 那么什么情况下，agentService.getAgentuserid为空？
-//                            if (StringUtils.isNotBlank(agentService.getAgentuserid())) {
-//                                logger.info("[handle] set Agent User with agentUser Id {}", agentService.getAgentuserid());
-//                                getAgentUserProxy().findOne(agentService.getAgentuserid()).ifPresent(p -> {
-//                                    outMessage.setChannelMessage(p);
-//                                });
-//                            } else {
-//                                logger.info("[handle] agent user id is null.");
-//                            }
 
                     agentStatusProxy.broadcastAgentsStatus(
                             ctx.getOrgi(), "user", MainContext.AgentUserStatusEnum.INSERVICE.toString(),
@@ -207,8 +192,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
             ctx.setChannelMessage(ctx.getAgentUser());
         }
 
-        logger.info(
-                "[apply] message text: {}, noagent {}", ctx.getMessage(), ctx.isNoagent());
+        logger.info("[apply] message text: {}, noagent {}", ctx.getMessage(), ctx.isNoagent());
     }
 
 

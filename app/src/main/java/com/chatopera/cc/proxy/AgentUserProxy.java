@@ -20,6 +20,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.exception.CSKefuException;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.es.ContactsRepository;
@@ -123,7 +124,7 @@ public class AgentUserProxy {
             String channel = StringUtils.split(channels, ",")[0];
 
             // 查找联系人
-            final Contacts contact = contactsRes.findOne(contactid);
+            final Contacts contact = contactsRes.findById(contactid).orElseThrow(EntityNotFoundException::new);
 
             // 查找 OnlineUser
             onlineUser = onlineUserRes.findOneByContactidAndOrigAndChannel(
@@ -459,12 +460,7 @@ public class AgentUserProxy {
     public AgentUser resolveAgentUser(final String userid, final String agentuserid, final String orgi) throws CSKefuException {
         Optional<AgentUser> opt = cache.findOneAgentUserByUserIdAndOrgi(userid, orgi);
         if (!opt.isPresent()) {
-            AgentUser au = agentUserRes.findOne(agentuserid);
-            if (au == null) {
-                throw new CSKefuException("Invalid transfer request, agent user not exist.");
-            } else {
-                return au;
-            }
+            return agentUserRes.findById(agentuserid).orElseThrow(()->new EntityNotFoundException("Invalid transfer request, agent user not exist."));
 
         }
         return opt.get();
@@ -490,8 +486,8 @@ public class AgentUserProxy {
      * @param id
      * @return
      */
-    public Optional<AgentUser> findOne(final String id) {
-        return Optional.ofNullable(agentUserRes.findOne(id));
+    public Optional<AgentUser> findById(final String id) {
+        return agentUserRes.findById(id);
     }
 
     /**

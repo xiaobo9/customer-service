@@ -29,8 +29,6 @@ import java.util.List;
 
 public interface StatusEventRepository extends JpaRepository<StatusEvent, String> {
 
-    StatusEvent findById(String id);
-
     StatusEvent findByIdOrBridgeid(String id, String bridgeid);
 
     Page<StatusEvent> findByAni(String ani, Pageable page);

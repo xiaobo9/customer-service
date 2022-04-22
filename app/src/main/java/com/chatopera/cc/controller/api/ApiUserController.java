@@ -185,7 +185,7 @@ public class ApiUserController extends Handler {
             return resp;
         }
 
-        final User previous = userRes.findById(updated.getId());
+        final User previous = userRes.findById(updated.getId()).orElse(null);
         if (previous != null) {
             String msg = userProxy.validUserUpdate(updated, previous);
             if (StringUtils.equals(msg, "edit_user_success")) {
@@ -255,11 +255,11 @@ public class ApiUserController extends Handler {
         final JsonObject resp = new JsonObject();
         if (payload.has("organ")) {
             List<OrganUser> organUsers = organUserRes.findByOrgan(payload.get("organ").getAsString());
-            List<String> userids = organUsers.stream().map(p -> p.getUserid()).collect(Collectors.toList());
-            List<User> users = userRes.findAll(userids);
+            List<String> userids = organUsers.stream().map(OrganUser::getUserid).collect(Collectors.toList());
+            List<User> users = userRes.findAllById(userids);
 
             JsonArray data = new JsonArray();
-            users.stream().forEach(u -> {
+            users.forEach(u -> {
                 JsonObject obj = new JsonObject();
                 obj.addProperty("id", u.getId());
                 obj.addProperty("uname", u.getUname());
@@ -289,7 +289,7 @@ public class ApiUserController extends Handler {
         if (payload.has("id")) {
             String id = payload.get("id").getAsString();
             if (StringUtils.isNotBlank(id)) {
-                User user = userRes.findById(id);
+                User user = userRes.findById(id).orElse(null);
                 if (user == null) {
                     // 用户不存在
                     resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_SUCC);
@@ -301,10 +301,10 @@ public class ApiUserController extends Handler {
                 if (!user.isSuperadmin()) {
                     // 删除用户的时候，同时删除用户对应的权限
                     List<UserRole> userRoles = userRoleRes.findByOrgiAndUser(user.getOrgi(), user);
-                    userRoleRes.delete(userRoles);
+                    userRoleRes.deleteAll(userRoles);
                     // 删除用户对应的组织机构关系
                     List<OrganUser> organUsers = organUserRes.findByUserid(id);
-                    organUserRes.delete(organUsers);
+                    organUserRes.deleteAll(organUsers);
                     // 删除用户
                     userRes.delete(user);
                     resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_SUCC);

@@ -155,7 +155,7 @@ public class AgentServiceProxy {
                 view.addObject("weiXinUser", weiXinUser);
             }
         } else if (MainContext.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
-            OnlineUser onlineUser = onlineUserRes.findOne(agentUser.getUserid());
+            OnlineUser onlineUser = onlineUserRes.findById(agentUser.getUserid()).orElse(null);
             if (onlineUser != null) {
                 if (StringUtils.equals(
                         MainContext.OnlineUserStatusEnum.OFFLINE.toString(), onlineUser.getStatus())) {
@@ -168,7 +168,7 @@ public class AgentServiceProxy {
             }
         } else if (MainContext.ChannelType.PHONE.toString().equals(agentUser.getChannel())) {
             if (agentService != null && StringUtils.isNotBlank(agentService.getOwner())) {
-                StatusEvent statusEvent = statusEventRes.findById(agentService.getOwner());
+                StatusEvent statusEvent = statusEventRes.findById(agentService.getOwner()).orElse(null);
                 if (statusEvent != null) {
                     if (StringUtils.isNotBlank(statusEvent.getHostid())) {
                         pbxHostRes.findById(statusEvent.getHostid()).ifPresent(p -> {
@@ -222,13 +222,13 @@ public class AgentServiceProxy {
             view.addObject(
                     "agentUserMessageList",
                     chatMessageRepository.findByUsessionAndOrgi(agentUser.getUserid(), logined.getOrgi(),
-                            new PageRequest(0, 20, Sort.Direction.DESC,
+                            PageRequest.of(0, 20, Sort.Direction.DESC,
                                     "updatetime")));
 
             // 坐席服务记录
             AgentService agentService = null;
             if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
-                agentService = agentServiceRes.findOne(agentUser.getAgentserviceid());
+                agentService = agentServiceRes.findById(agentUser.getAgentserviceid()).orElse(null);
                 view.addObject("curAgentService", agentService);
                 /**
                  * 获取关联数据

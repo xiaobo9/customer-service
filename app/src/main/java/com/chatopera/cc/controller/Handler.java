@@ -31,11 +31,7 @@ import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.repository.StreamingFileRepository;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
-import org.elasticsearch.index.query.QueryStringQueryBuilder.Operator;
-import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -420,7 +416,7 @@ public class Handler {
         return new Viewport("/apps/entim/include/tpl", page);
     }
 
-    public Viewport createRequestPageTempletResponse(final String page) {
+    public Viewport pageTplResponse(final String page) {
         return new Viewport(page);
     }
 
@@ -433,15 +429,15 @@ public class Handler {
     }
 
     protected PageRequest page(HttpServletRequest request) {
-        return this.page(request, null);
+        return PageRequest.of(getP(request), getPs(request));
     }
 
     protected PageRequest page(HttpServletRequest request, Sort.Direction direction, String... properties) {
-        return new PageRequest(getP(request), getPs(request), direction, properties);
+        return PageRequest.of(getP(request), getPs(request), direction, properties);
     }
 
     protected PageRequest page(QueryParams params, Sort.Direction direction, String... properties) {
-        return new PageRequest(getP(params), getPs(params), direction, properties);
+        return PageRequest.of(getP(params), getPs(params), direction, properties);
     }
 
     public int getP(HttpServletRequest request) {

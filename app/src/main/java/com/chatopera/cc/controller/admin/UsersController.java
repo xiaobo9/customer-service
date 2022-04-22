@@ -27,8 +27,6 @@ import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.util.Menu;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -46,7 +44,6 @@ import java.util.Map;
 @Controller
 @RequestMapping("/admin/user")
 public class UsersController extends Handler {
-    private final static Logger logger = LoggerFactory.getLogger(UsersController.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -82,7 +79,7 @@ public class UsersController extends Handler {
     @RequestMapping("/add")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView add(ModelMap map, HttpServletRequest request) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/admin/user/add"));
+        ModelAndView view = request(super.pageTplResponse("/admin/user/add"));
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         map.addAttribute("currentOrgan", currentOrgan);
@@ -94,8 +91,8 @@ public class UsersController extends Handler {
     @RequestMapping("/edit")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView edit(@Valid String id) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/admin/user/edit"));
-        User user = userRepository.findById(id);
+        ModelAndView view = request(super.pageTplResponse("/admin/user/edit"));
+        User user = userRepository.findById(id).orElse(null);
         if (user != null && MainContext.hasModule(Constants.CSKEFU_MODULE_CALLCENTER)) {
             // 加载呼叫中心信息
             extensionRes.findByAgentnoAndOrgi(user.getId(), user.getOrgi()).ifPresent(p -> {
@@ -123,17 +120,17 @@ public class UsersController extends Handler {
             } else {
                 // 删除用户的时候，同时删除用户对应的权限数据
                 List<UserRole> userRole = userRoleRes.findByOrgiAndUser(super.getOrgi(), user);
-                userRoleRes.delete(userRole);
+                userRoleRes.deleteAll(userRole);
                 // 删除用户对应的组织机构关系
                 List<OrganUser> organUsers = organUserRes.findByUserid(user.getId());
-                organUserRes.delete(organUsers);
+                organUserRes.deleteAll(organUsers);
 
                 userRepository.delete(dbUser);
             }
         } else {
             msg = "admin_user_not_exist";
         }
-        return request(super.createRequestPageTempletResponse("redirect:/admin/user/index.html?msg=" + msg));
+        return request(super.pageTplResponse("redirect:/admin/user/index.html?msg=" + msg));
     }
 
 }

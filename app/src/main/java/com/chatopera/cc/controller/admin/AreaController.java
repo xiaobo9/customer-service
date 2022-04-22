@@ -69,7 +69,7 @@ public class AreaController extends Handler{
 	    	map.addAttribute("areaList", sysDicRepository.findByDicid(sysDic.getId())) ;
     	}
     	map.addAttribute("cacheList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_AREA_DIC)) ;
-        return request(super.createRequestPageTempletResponse("/admin/area/add"));
+        return request(super.pageTplResponse("/admin/area/add"));
     }
     
     @RequestMapping("/save")
@@ -83,7 +83,7 @@ public class AreaController extends Handler{
     		areaRepository.save(area) ;
     		MainUtils.initSystemArea();
     	}
-    	return request(super.createRequestPageTempletResponse("redirect:/admin/area/index.html"));
+    	return request(super.pageTplResponse("redirect:/admin/area/index.html"));
     }
     
     @RequestMapping("/edit")
@@ -97,7 +97,7 @@ public class AreaController extends Handler{
 	    	map.addAttribute("areaList", sysDicRepository.findByDicid(sysDic.getId())) ;
     	}
     	map.addAttribute("cacheList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_AREA_DIC)) ;
-        return request(super.createRequestPageTempletResponse("/admin/area/edit"));
+        return request(super.pageTplResponse("/admin/area/edit"));
     }
     
     @RequestMapping("/update")
@@ -111,7 +111,7 @@ public class AreaController extends Handler{
     		areaRepository.save(area) ;
     		MainUtils.initSystemArea();
     	}
-    	return request(super.createRequestPageTempletResponse("redirect:/admin/area/index.html"));
+    	return request(super.pageTplResponse("redirect:/admin/area/index.html"));
     }
     
     @RequestMapping("/delete")
@@ -122,6 +122,6 @@ public class AreaController extends Handler{
     		areaRepository.delete(areaType);
     		MainUtils.initSystemArea();
     	}
-    	return request(super.createRequestPageTempletResponse("redirect:/admin/area/index.html"));
+    	return request(super.pageTplResponse("redirect:/admin/area/index.html"));
     }
 }

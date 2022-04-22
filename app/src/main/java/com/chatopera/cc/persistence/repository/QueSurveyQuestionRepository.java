@@ -31,8 +31,6 @@ public interface QueSurveyQuestionRepository extends JpaRepository<QueSurveyQues
   
   QueSurveyQuestion findByOrgiAndId(String orgi, String id);
   
-  QueSurveyQuestion findById(String id);
-  
   List<QueSurveyQuestion> findByOrgiAndProcessid(String orgi, String processid);
   
 }

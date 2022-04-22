@@ -74,7 +74,7 @@ public class MediaController extends Handler {
                       @Valid String id,
                       @RequestParam(value = "original", required = false) boolean original,
                       @RequestParam(value = "cooperation", required = false) boolean cooperation) throws IOException, SQLException {
-        StreamingFile sf = streamingFileRes.findOne(id);
+        StreamingFile sf = streamingFileRes.findById(id).orElse(null);
         if (sf != null) {
             response.setHeader("Content-Type", sf.getMime());
             response.setContentType(sf.getMime());
@@ -119,7 +119,7 @@ public class MediaController extends Handler {
     @RequestMapping("/image/upload")
     @Menu(type = "resouce", subtype = "imageupload")
     public ModelAndView upload(ModelMap map, @RequestParam(value = "imgFile", required = false) MultipartFile multipart) throws IOException {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/public/upload"));
+        ModelAndView view = request(super.pageTplResponse("/public/upload"));
         UploadStatus notify;
         if (multipart != null && multipart.getOriginalFilename().lastIndexOf(".") > 0) {
             String fileid = MainUtils.getUUID();
@@ -144,7 +144,7 @@ public class MediaController extends Handler {
         if (StringUtils.isNotBlank(id)) {
             AttachmentFile attachmentFile = attachementRes.findByIdAndOrgi(id, super.getOrgi(request));
             if (attachmentFile != null && attachmentFile.getFileid() != null) {
-                StreamingFile sf = streamingFileRes.findOne(attachmentFile.getFileid());
+                StreamingFile sf = streamingFileRes.findById(attachmentFile.getFileid()).orElse(null);
                 if (sf != null) {
                     response.setContentType(attachmentFile.getFiletype());
                     response.setHeader("Content-Disposition", "attachment;filename=" + java.net.URLEncoder.encode(attachmentFile.getTitle(), "UTF-8"));

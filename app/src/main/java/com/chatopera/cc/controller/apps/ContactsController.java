@@ -19,6 +19,7 @@ package com.chatopera.cc.controller.apps;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.CSKefuException;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.repository.*;
@@ -259,11 +260,11 @@ public class ContactsController extends Handler {
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView delete(HttpServletRequest request, @Valid Contacts contacts, @Valid String p, @Valid String ckind) {
         if (contacts != null) {
-            contacts = contactsRes.findOne(contacts.getId());
+            contacts = contactsRes.findById(contacts.getId()).orElseThrow(EntityNotFoundException::new);
             contacts.setDatastatus(true);                            //客户和联系人都是 逻辑删除
             contactsRes.save(contacts);
         }
-        return request(super.createRequestPageTempletResponse(
+        return request(super.pageTplResponse(
                 "redirect:/apps/contacts/index.html?p=" + p + "&ckind=" + ckind));
     }
 
@@ -271,7 +272,7 @@ public class ContactsController extends Handler {
     @Menu(type = "contacts", subtype = "add")
     public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String ckind) {
         map.addAttribute("ckind", ckind);
-        return request(super.createRequestPageTempletResponse("/apps/business/contacts/add"));
+        return request(super.pageTplResponse("/apps/business/contacts/add"));
     }
 
 
@@ -307,20 +308,20 @@ public class ContactsController extends Handler {
             contactsRes.save(contacts);
             msg = "new_contacts_success";
 
-            return request(super.createRequestPageTempletResponse(
+            return request(super.pageTplResponse(
                     "redirect:/apps/contacts/index.html?ckind=" + contacts.getCkind() + "&msg=" + msg));
         }
         msg = "new_contacts_fail";
-        return request(super.createRequestPageTempletResponse(
+        return request(super.pageTplResponse(
                 "redirect:/apps/contacts/index.html?ckind=" + contacts.getCkind() + "&msg=" + msg));
     }
 
     @RequestMapping("/edit")
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String ckind) {
-        map.addAttribute("contacts", contactsRes.findOne(id));
+        map.addAttribute("contacts", contactsRes.findById(id).orElseThrow(EntityNotFoundException::new));
         map.addAttribute("ckindId", ckind);
-        return request(super.createRequestPageTempletResponse("/apps/business/contacts/edit"));
+        return request(super.pageTplResponse("/apps/business/contacts/edit"));
     }
 
     @RequestMapping("/detail")
@@ -329,7 +330,7 @@ public class ContactsController extends Handler {
         if (id == null) {
             return null; // id is required. Block strange requst anyway with g2.min, https://github.com/alibaba/BizCharts/issues/143
         }
-        map.addAttribute("contacts", contactsRes.findOne(id));
+        map.addAttribute("contacts", contactsRes.findById(id).orElseThrow(EntityNotFoundException::new));
         return request(super.createAppsTempletResponse("/apps/business/contacts/detail"));
 
     }
@@ -375,7 +376,7 @@ public class ContactsController extends Handler {
     public ModelAndView update(HttpServletRequest request, @Valid Contacts contacts, @Valid String ckindId) {
         final User logined = super.getUser(request);
         final String orgi = logined.getOrgi();
-        Contacts data = contactsRes.findOne(contacts.getId());
+        Contacts data = contactsRes.findById(contacts.getId()).orElseThrow(EntityNotFoundException::new);
         String msg = "";
 
         String skypeIDReplace = contactsProxy.sanitizeSkypeId(contacts.getSkypeid());
@@ -393,13 +394,13 @@ public class ContactsController extends Handler {
                 msg = "edit_contacts_success";
             } else {
                 //无修改，直接点击确定
-                return request(super.createRequestPageTempletResponse(
+                return request(super.pageTplResponse(
                         "redirect:/apps/contacts/index.html?ckind=" + ckindId));
             }
         } else {
             logger.info("[contacts edit] errer :The same skypeid exists");
             msg = "edit_contacts_fail";
-            return request(super.createRequestPageTempletResponse(
+            return request(super.pageTplResponse(
                     "redirect:/apps/contacts/index.html?ckind=" + ckindId + "&msg=" + msg));
         }
 
@@ -433,7 +434,7 @@ public class ContactsController extends Handler {
         if (msg.equals("edit_contacts_success")) {
             contactsRes.save(contacts);
         }
-        return request(super.createRequestPageTempletResponse(
+        return request(super.pageTplResponse(
                 "redirect:/apps/contacts/index.html?ckind=" + ckindId + "&msg=" + msg));
     }
 
@@ -442,7 +443,7 @@ public class ContactsController extends Handler {
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView imp(ModelMap map, HttpServletRequest request, @Valid String ckind) {
         map.addAttribute("ckind", ckind);
-        return request(super.createRequestPageTempletResponse("/apps/business/contacts/imp"));
+        return request(super.pageTplResponse("/apps/business/contacts/imp"));
     }
 
     @RequestMapping("/impsave")
@@ -470,7 +471,7 @@ public class ContactsController extends Handler {
             reporterRes.save(event.getDSData().getReport());
             new ExcelImportProecess(event).process();        //启动导入任务
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/contacts/index.html"));
+        return request(super.pageTplResponse("redirect:/apps/contacts/index.html"));
     }
 
     @RequestMapping("/startmass")
@@ -479,14 +480,14 @@ public class ContactsController extends Handler {
         map.addAttribute("organList", organRes.findByOrgiAndSkill(super.getOrgi(request), true));
 
         map.addAttribute("ids", ids);
-        return request(super.createRequestPageTempletResponse("/apps/business/contacts/mass"));
+        return request(super.pageTplResponse("/apps/business/contacts/mass"));
     }
 
     @RequestMapping("/expids")
     @Menu(type = "contacts", subtype = "contacts")
     public void expids(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids) throws IOException {
         if (ids != null && ids.length > 0) {
-            Iterable<Contacts> contactsList = contactsRes.findAll(Arrays.asList(ids));
+            Iterable<Contacts> contactsList = contactsRes.findAllById(Arrays.asList(ids));
             MetadataTable table = metadataRes.findByTablename("uk_contacts");
             List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
             for (Contacts contacts : contactsList) {
@@ -623,7 +624,7 @@ public class ContactsController extends Handler {
             });
         }
 
-        return request(super.createRequestPageTempletResponse("/apps/business/contacts/embed/index"));
+        return request(super.pageTplResponse("/apps/business/contacts/embed/index"));
     }
 
     @RequestMapping("/embed/add")
@@ -632,7 +633,7 @@ public class ContactsController extends Handler {
         if (StringUtils.isNotBlank(agentserviceid)) {
             map.put("agentserviceid", agentserviceid);
         }
-        return request(super.createRequestPageTempletResponse("/apps/business/contacts/embed/add"));
+        return request(super.pageTplResponse("/apps/business/contacts/embed/add"));
     }
 
     @RequestMapping("/embed/save")
@@ -651,7 +652,7 @@ public class ContactsController extends Handler {
             contacts.setOrgi(logined.getOrgi());
 
             if (StringUtils.isNotBlank(agentserviceid)) {
-                AgentService agentService = agentServiceRes.findOne(agentserviceid);
+                AgentService agentService = agentServiceRes.findById(agentserviceid).orElseThrow(EntityNotFoundException::new);
                 contacts.setOrgan(agentService.getSkill());
             }
 
@@ -662,20 +663,20 @@ public class ContactsController extends Handler {
             contactsRes.save(contacts);
             msg = "new_contacts_success";
             return request(
-                    super.createRequestPageTempletResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
+                    super.pageTplResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
         }
         msg = "new_contacts_fail";
-        return request(super.createRequestPageTempletResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
+        return request(super.pageTplResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
     }
 
     @RequestMapping("/embed/edit")
     @Menu(type = "contacts", subtype = "embededit")
     public ModelAndView embededit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String agentserviceid) {
-        map.addAttribute("contacts", contactsRes.findOne(id));
+        map.addAttribute("contacts", contactsRes.findById(id).orElseThrow(EntityNotFoundException::new));
         if (StringUtils.isNotBlank(agentserviceid)) {
             map.addAttribute("agentserviceid", agentserviceid);
         }
-        return request(super.createRequestPageTempletResponse("/apps/business/contacts/embed/edit"));
+        return request(super.pageTplResponse("/apps/business/contacts/embed/edit"));
     }
 
     @RequestMapping("/embed/update")
@@ -683,7 +684,7 @@ public class ContactsController extends Handler {
     public ModelAndView embedupdate(HttpServletRequest request, @Valid Contacts contacts, @Valid String agentserviceid) {
         final User logined = super.getUser(request);
         final String orgi = logined.getOrgi();
-        Contacts data = contactsRes.findOne(contacts.getId());
+        Contacts data = contactsRes.findById(contacts.getId()).orElseThrow(EntityNotFoundException::new);
         String msg = "";
         String skypeIDReplace = contactsProxy.sanitizeSkypeId(contacts.getSkypeid());
         Contacts theOnlyContact = contactsRes.findByskypeidAndOrgiAndDatastatus(
@@ -701,13 +702,13 @@ public class ContactsController extends Handler {
                 msg = "edit_contacts_success";
             } else {
                 //无修改，直接点击确定
-                return request(super.createRequestPageTempletResponse("redirect:/apps/contacts/embed/index.html?agentserviceid=" + agentserviceid));
+                return request(super.pageTplResponse("redirect:/apps/contacts/embed/index.html?agentserviceid=" + agentserviceid));
             }
         } else {
             logger.info("[contacts edit] errer :The same skypeid exists");
             msg = "edit_contacts_fail";
             return request(
-                    super.createRequestPageTempletResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
+                    super.pageTplResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
         }
 
         List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(
@@ -740,6 +741,6 @@ public class ContactsController extends Handler {
         if (msg.equals("edit_contacts_success")) {
             contactsRes.save(contacts);
         }
-        return request(super.createRequestPageTempletResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
+        return request(super.pageTplResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
     }
 }

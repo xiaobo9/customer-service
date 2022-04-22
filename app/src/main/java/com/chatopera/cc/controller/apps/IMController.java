@@ -25,6 +25,7 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.ThumbnailUtils;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.es.ContactsRepository;
@@ -69,6 +70,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * FIXME method tooooooo long
+ */
 @Controller
 @RequestMapping("/im")
 @EnableAsync
@@ -169,7 +173,7 @@ public class IMController extends Handler {
             @Valid String userid,
             @Valid String title,
             @Valid String aiid) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/im/point"));
+        ModelAndView view = request(super.pageTplResponse("/apps/im/point"));
         view.addObject("channelVisitorSeparate", channelWebIMVisitorSeparate);
 
         final String sessionid = MainUtils.getContextID(request.getSession().getId());
@@ -357,7 +361,7 @@ public class IMController extends Handler {
         sessionMessage.put("uid", uid);
         cache.putSystemMapByIdAndOrgi(sessionid, Constants.SYSTEM_ORGI, sessionMessage);
 
-        OnlineUser onlineUser = onlineUserRes.findOne(userid);
+        OnlineUser onlineUser = onlineUserRes.findById(userid).orElse(null);
         if (onlineUser != null) {
             String updateusername = username + "@" + company_name;
             onlineUser.setUsername(updateusername);
@@ -551,7 +555,7 @@ public class IMController extends Handler {
             session.setAttribute("Sessionuid", sessionMessageObj.get("uid"));
         }
 
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/im/index"));
+        ModelAndView view = request(super.pageTplResponse("/apps/im/index"));
         BlackEntity blackEntity = cache.findOneBlackEntityByUserIdAndOrgi(userid, Constants.SYSTEM_ORGI).orElse(null);
         CousultInvite invite = OnlineUserProxy.consult(appid, orgi);
         // appid 或者 用户在黑名单里直接返回
@@ -657,7 +661,7 @@ public class IMController extends Handler {
             isLeavemsg = true;
             boolean isInWorkingHours = MainUtils.isInWorkingHours(sessionConfig.getWorkinghours());
             map.addAttribute("isInWorkingHours", isInWorkingHours);
-            view = request(super.createRequestPageTempletResponse("/apps/im/leavemsg"));
+            view = request(super.pageTplResponse("/apps/im/leavemsg"));
         } else if (invite.isConsult_info()) {    //启用了信息收集，从Request获取， 或从 Cookies 里去
             // 验证 OnlineUser 信息
             if (contacts != null && StringUtils.isNotBlank(contacts.getName())) {    //contacts用于传递信息，并不和 联系人表发生 关联，contacts信息传递给 Socket.IO，然后赋值给 AgentUser，最终赋值给 AgentService永久存储
@@ -738,7 +742,7 @@ public class IMController extends Handler {
                 }
                 if (StringUtils.isBlank(contacts.getName())) {
                     consult = false;
-                    view = request(super.createRequestPageTempletResponse("/apps/im/collecting"));
+                    view = request(super.pageTplResponse("/apps/im/collecting"));
                 }
             }
         } else {
@@ -755,8 +759,7 @@ public class IMController extends Handler {
                     agentUserRepository.findOneByUseridAndOrgi(userid, orgi).ifPresent(p -> {
                         // 关联AgentService的联系人
                         if (StringUtils.isNotBlank(p.getAgentserviceid())) {
-                            AgentService agentService = agentServiceRepository.findOne(
-                                    p.getAgentserviceid());
+                            AgentService agentService = agentServiceRepository.findById(p.getAgentserviceid()).orElseThrow(EntityNotFoundException::new);
                             agentService.setContactsid(contacts1.getId());
                         }
 
@@ -814,7 +817,7 @@ public class IMController extends Handler {
             // 是否使用机器人客服
             if (invite.isAi() && MainContext.hasModule(Constants.CSKEFU_MODULE_CHATBOT)) {
                 // 查找机器人
-                Chatbot bot = chatbotRes.findOne(invite.getAiid());
+                Chatbot bot = chatbotRes.findById(invite.getAiid()).orElse(null);
                 if (bot != null) {
                     // 判断是否接受访客切换坐席类型
                     isEnableExchangeAgentType = !StringUtils.equals(bot.getWorkmode(), Constants.CHATBOT_CHATBOT_ONLY);
@@ -839,16 +842,16 @@ public class IMController extends Handler {
 
 
                 map.addAttribute("chatbotConfig", chatbotConfig);
-                view = request(super.createRequestPageTempletResponse("/apps/im/chatbot/index"));
+                view = request(super.pageTplResponse("/apps/im/chatbot/index"));
                 if (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(
                         mobile)) {
-                    view = request(super.createRequestPageTempletResponse(
+                    view = request(super.pageTplResponse(
                             "/apps/im/chatbot/mobile"));        // 智能机器人 移动端
                 }
             } else {
                 // 维持人工坐席的设定，检查是否进入留言
                 if (!isLeavemsg && (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(mobile))) {
-                    view = request(super.createRequestPageTempletResponse("/apps/im/mobile"));    // WebIM移动端。再次点选技能组？
+                    view = request(super.pageTplResponse("/apps/im/mobile"));    // WebIM移动端。再次点选技能组？
                 }
             }
 
@@ -872,10 +875,10 @@ public class IMController extends Handler {
     private void updateInviteRecord(String orgi, String traceid, String title, String url, String userid) {
         logger.info("[index] update inviteRecord for user {}", userid);
         final Date threshold = new Date(System.currentTimeMillis() - Constants.WEBIM_AGENT_INVITE_TIMEOUT);
-        PageRequest page = new PageRequest(0, 1, Direction.DESC, "createtime");
+        PageRequest page = PageRequest.of(0, 1, Direction.DESC, "createtime");
         Page<InviteRecord> records = inviteRecordRes.findByUseridAndOrgiAndResultAndCreatetimeGreaterThan(
                 userid, orgi, MainContext.OnlineUserInviteStatus.DEFAULT.toString(), threshold, page);
-        if (records.getContent() != null && records.getContent().size() > 0) {
+        if (records.getContent().size() > 0) {
             final InviteRecord record = records.getContent().get(0);
             record.setUpdatetime(new Date());
             record.setTraceid(traceid);
@@ -912,7 +915,7 @@ public class IMController extends Handler {
             @Valid String imgurl,
             @Valid String pid,
             @Valid String purl) throws Exception {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/im/text"));
+        ModelAndView view = request(super.pageTplResponse("/apps/im/text"));
         CousultInvite invite = OnlineUserProxy.consult(
                 appid, StringUtils.isBlank(orgi) ? Constants.SYSTEM_ORGI : orgi);
 
@@ -1000,13 +1003,13 @@ public class IMController extends Handler {
                 }
             });
         }
-        return request(super.createRequestPageTempletResponse("/apps/im/leavemsgsave"));
+        return request(super.pageTplResponse("/apps/im/leavemsgsave"));
     }
 
     @RequestMapping("/refuse")
     @Menu(type = "im", subtype = "refuse", access = true)
     public void refuse(@Valid String orgi, @Valid String userid) throws Exception {
-        OnlineUserProxy.refuseInvite(userid, orgi);
+        OnlineUserProxy.refuseInvite(userid);
         final Date threshold = new Date(System.currentTimeMillis() - Constants.WEBIM_AGENT_INVITE_TIMEOUT);
         Page<InviteRecord> inviteRecords = inviteRecordRes.findByUseridAndOrgiAndResultAndCreatetimeGreaterThan(
                 userid,
@@ -1054,7 +1057,7 @@ public class IMController extends Handler {
             @Valid String appid,
             @Valid String orgi,
             @Valid String paste) throws IOException {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/im/upload"));
+        ModelAndView view = request(super.pageTplResponse("/apps/im/upload"));
         final User logined = super.getUser(request);
 
         if (multipart == null || multipart.getOriginalFilename().lastIndexOf(".") <= 0 || StringUtils.isBlank(userid)) {

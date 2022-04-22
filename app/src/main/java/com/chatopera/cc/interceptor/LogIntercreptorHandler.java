@@ -57,6 +57,9 @@ public class LogIntercreptorHandler implements org.springframework.web.servlet.H
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response,
                            Object arg2, ModelAndView arg3) throws Exception {
+        if (!(arg2 instanceof HandlerMethod)) {
+            return;
+        }
         HandlerMethod handlerMethod = (HandlerMethod) arg2;
         Object hander = handlerMethod.getBean();
         RequestMapping obj = handlerMethod.getMethod().getAnnotation(RequestMapping.class);
@@ -112,12 +115,14 @@ public class LogIntercreptorHandler implements org.springframework.web.servlet.H
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-                             Object arg2) {
-        HandlerMethod handlerMethod = (HandlerMethod) arg2;
-        Object hander = handlerMethod.getBean();
-        if (hander instanceof Handler) {
-            ((Handler) hander).setStarttime(System.currentTimeMillis());
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object arg2) {
+        // FIXME 排除静态文件 .excludePathPatterns("/static-resource-root/**")
+        if (arg2 instanceof HandlerMethod) {
+            HandlerMethod handlerMethod = (HandlerMethod) arg2;
+            Object hander = handlerMethod.getBean();
+            if (hander instanceof Handler) {
+                ((Handler) hander).setStarttime(System.currentTimeMillis());
+            }
         }
         return true;
     }

@@ -70,7 +70,7 @@ public class AgentAuditSubscription {
                 final AgentUserAudit agentUserAudit = cache.findOneAgentUserAuditByOrgiAndId(
                         json.get("orgi").getAsString(),
                         json.get("agentUserId").getAsString()).orElseGet(() -> {
-                    final AgentUser agentUser = agentUserRes.findOne(json.get("agentUserId").getAsString());
+                    final AgentUser agentUser = agentUserRes.findById(json.get("agentUserId").getAsString()).orElse(null);
                     if (agentUser != null) {
                         return agentAuditProxy.updateAgentUserAudits(agentUser);
                     } else {

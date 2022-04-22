@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -86,36 +85,36 @@ public class MetadataController extends Handler {
     @RequestMapping("/edit")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id) {
-        map.addAttribute("metadata", metadataRes.findById(id));
-        return request(super.createRequestPageTempletResponse("/admin/system/metadata/edit"));
+        map.addAttribute("metadata", metadataRes.findById(id).orElse(null));
+        return request(super.pageTplResponse("/admin/system/metadata/edit"));
     }
 
     @RequestMapping("/update")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView update(ModelMap map, HttpServletRequest request, @Valid MetadataTable metadata) throws SQLException {
-        MetadataTable table = metadataRes.findById(metadata.getId());
+        MetadataTable table = metadataRes.findById(metadata.getId()).orElse(null);
         table.setName(metadata.getName());
         table.setFromdb(metadata.isFromdb());
         table.setListblocktemplet(metadata.getListblocktemplet());
         table.setPreviewtemplet(metadata.getPreviewtemplet());
         metadataRes.save(table);
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/index.html"));
+        return request(super.pageTplResponse("redirect:/admin/metadata/index.html"));
     }
 
     @RequestMapping("/properties/edit")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView propertiesedit(ModelMap map, HttpServletRequest request, @Valid String id) {
-        map.addAttribute("tp", tablePropertiesRes.findById(id));
+        map.addAttribute("tp", tablePropertiesRes.findById(id).orElse(null));
         map.addAttribute("sysdicList", sysDicRes.findByParentid("0"));
         map.addAttribute("dataImplList", Dict.getInstance().getDic("com.dic.data.impl"));
 
-        return request(super.createRequestPageTempletResponse("/admin/system/metadata/tpedit"));
+        return request(super.pageTplResponse("/admin/system/metadata/tpedit"));
     }
 
     @RequestMapping("/properties/update")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView propertiesupdate(ModelMap map, HttpServletRequest request, @Valid TableProperties tp) throws SQLException {
-        TableProperties tableProperties = tablePropertiesRes.findById(tp.getId());
+        TableProperties tableProperties = tablePropertiesRes.findById(tp.getId()).orElseThrow(() -> new RuntimeException("not found"));
         tableProperties.setName(tp.getName());
         tableProperties.setSeldata(tp.isSeldata());
         tableProperties.setSeldatacode(tp.getSeldatacode());
@@ -134,41 +133,41 @@ public class MetadataController extends Handler {
         tableProperties.setImpfield(tp.isImpfield());
 
         tablePropertiesRes.save(tableProperties);
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/table.html?id=" + tableProperties.getDbtableid()));
+        return request(super.pageTplResponse("redirect:/admin/metadata/table.html?id=" + tableProperties.getDbtableid()));
     }
 
     @RequestMapping("/delete")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView delete(ModelMap map, HttpServletRequest request, @Valid String id) throws SQLException {
-        MetadataTable table = metadataRes.findById(id);
+        MetadataTable table = metadataRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
         metadataRes.delete(table);
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/index.html"));
+        return request(super.pageTplResponse("redirect:/admin/metadata/index.html"));
     }
 
     @RequestMapping("/batdelete")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView batdelete(ModelMap map, HttpServletRequest request, @Valid String[] ids) throws SQLException {
         if (ids != null && ids.length > 0) {
-            metadataRes.delete(metadataRes.findAll(Arrays.asList(ids)));
+            metadataRes.deleteAll(metadataRes.findAllById(Arrays.asList(ids)));
         }
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/index.html"));
+        return request(super.pageTplResponse("redirect:/admin/metadata/index.html"));
     }
 
     @RequestMapping("/properties/delete")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView propertiesdelete(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String tbid) throws SQLException {
-        TableProperties prop = tablePropertiesRes.findById(id);
+        TableProperties prop = tablePropertiesRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
         tablePropertiesRes.delete(prop);
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/table.html?id=" + (!StringUtils.isBlank(tbid) ? tbid : prop.getDbtableid())));
+        return request(super.pageTplResponse("redirect:/admin/metadata/table.html?id=" + (!StringUtils.isBlank(tbid) ? tbid : prop.getDbtableid())));
     }
 
     @RequestMapping("/properties/batdelete")
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView propertiesbatdelete(ModelMap map, HttpServletRequest request, @Valid String[] ids, @Valid String tbid) throws SQLException {
         if (ids != null && ids.length > 0) {
-            tablePropertiesRes.delete(tablePropertiesRes.findAll(Arrays.asList(ids)));
+            tablePropertiesRes.deleteAll(tablePropertiesRes.findAllById(Arrays.asList(ids)));
         }
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/table.html?id=" + tbid));
+        return request(super.pageTplResponse("redirect:/admin/metadata/table.html?id=" + tbid));
     }
 
     @RequestMapping("/table")
@@ -176,7 +175,7 @@ public class MetadataController extends Handler {
     public ModelAndView table(ModelMap map, HttpServletRequest request, @Valid String id) throws SQLException {
         map.addAttribute("propertiesList", tablePropertiesRes.findByDbtableid(id));
         map.addAttribute("tbid", id);
-        map.addAttribute("table", metadataRes.findById(id));
+        map.addAttribute("table", metadataRes.findById(id).orElseThrow(() -> new RuntimeException("not found")));
         return request(super.createAdminTempletResponse("/admin/system/metadata/table"));
     }
 
@@ -197,7 +196,7 @@ public class MetadataController extends Handler {
         });
 
         return request(super
-                .createRequestPageTempletResponse("/admin/system/metadata/imptb"));
+                .pageTplResponse("/admin/system/metadata/imptb"));
     }
 
     @RequestMapping("/imptbsave")
@@ -236,7 +235,7 @@ public class MetadataController extends Handler {
 
         }
 
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/index.html"));
+        return request(super.pageTplResponse("redirect:/admin/metadata/index.html"));
     }
 
     private MetadataTable processMetadataTable(UKTableMetaData metaData, MetadataTable table) {
@@ -281,7 +280,7 @@ public class MetadataController extends Handler {
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView clean(ModelMap map, HttpServletRequest request, @Valid String id) throws SQLException, BeansException, ClassNotFoundException {
         if (!StringUtils.isBlank(id)) {
-            MetadataTable table = metadataRes.findById(id);
+            MetadataTable table = metadataRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
             if (table.isFromdb() && !StringUtils.isBlank(table.getListblocktemplet())) {
                 SysDic dic = Dict.getInstance().getDicItem(table.getListblocktemplet());
                 if (dic != null) {
@@ -293,7 +292,7 @@ public class MetadataController extends Handler {
                 }
             }
         }
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/index.html"));
+        return request(super.pageTplResponse("redirect:/admin/metadata/index.html"));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -301,7 +300,7 @@ public class MetadataController extends Handler {
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView synctoes(ModelMap map, HttpServletRequest request, @Valid String id) throws SQLException, BeansException, ClassNotFoundException {
         if (!StringUtils.isBlank(id)) {
-            MetadataTable table = metadataRes.findById(id);
+            MetadataTable table = metadataRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
             if (table.isFromdb() && !StringUtils.isBlank(table.getListblocktemplet())) {
                 SysDic dic = Dict.getInstance().getDicItem(table.getListblocktemplet());
 
@@ -324,7 +323,7 @@ public class MetadataController extends Handler {
                 }
             }
         }
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/index.html"));
+        return request(super.pageTplResponse("redirect:/admin/metadata/index.html"));
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -332,7 +331,7 @@ public class MetadataController extends Handler {
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView synctodb(ModelMap map, HttpServletRequest request, @Valid String id) throws SQLException, BeansException, ClassNotFoundException {
         if (!StringUtils.isBlank(id)) {
-            MetadataTable table = metadataRes.findById(id);
+            MetadataTable table = metadataRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
             if (table.isFromdb() && !StringUtils.isBlank(table.getListblocktemplet())) {
                 SysDic dic = Dict.getInstance().getDicItem(table.getListblocktemplet());
 
@@ -351,7 +350,7 @@ public class MetadataController extends Handler {
                 }
             }
         }
-        return request(super.createRequestPageTempletResponse("redirect:/admin/metadata/index.html"));
+        return request(super.pageTplResponse("redirect:/admin/metadata/index.html"));
     }
 
 }

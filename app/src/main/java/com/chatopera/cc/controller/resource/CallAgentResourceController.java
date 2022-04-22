@@ -78,6 +78,6 @@ public class CallAgentResourceController extends Handler {
 				Predicate[] p = new Predicate[list.size()];  
 				return cb.and(list.toArray(p));   
 			}}));
-		return request(super.createRequestPageTempletResponse("/public/agent"));
+		return request(super.pageTplResponse("/public/agent"));
     }
 }

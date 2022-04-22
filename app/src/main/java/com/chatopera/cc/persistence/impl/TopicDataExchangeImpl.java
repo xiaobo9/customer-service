@@ -25,20 +25,20 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service("topic")
-public class TopicDataExchangeImpl implements DataExchangeInterface{
-	@Autowired
-	private TopicRepository topicRes ;
-	
-	public Topic getDataByIdAndOrgi(String id, String orgi){
-		return topicRes.findOne(id) ;
-	}
+public class TopicDataExchangeImpl implements DataExchangeInterface {
+    @Autowired
+    private TopicRepository topicRes;
 
-	@Override
-	public List<Topic> getListDataByIdAndOrgi(String id , String creater, String orgi) {
-		return topicRes.getTopicByTopAndOrgi(true,orgi , id , 0, 10).getContent() ;
-	}
-	
-	public void process(Object data , String orgi) {
-		
-	}
+    public Topic getDataByIdAndOrgi(String id, String orgi) {
+        return topicRes.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<Topic> getListDataByIdAndOrgi(String id, String creater, String orgi) {
+        return topicRes.getTopicByTopAndOrgi(true, orgi, id, 0, 10).getContent();
+    }
+
+    public void process(Object data, String orgi) {
+
+    }
 }

@@ -52,7 +52,7 @@ public class TopicProcess implements JPAProcess{
 			TopicItemRepository topicItemRes = MainContext.getContext().getBean(TopicItemRepository.class) ;
 			List<TopicItem> topicItemList = topicItemRes.findByTopicid(topic.getId()) ;
 			if(topicItemList!=null && topicItemList.size() > 0) {
-				topicItemRes.delete(topicItemList);
+				topicItemRes.deleteAll(topicItemList);
 			}
 			topicItemList.clear(); 
 			for(String item : topic.getSilimar()) {
@@ -65,7 +65,7 @@ public class TopicProcess implements JPAProcess{
 				topicItemList.add(topicItem) ;
 			}
 			if(topicItemList.size() > 0) {
-				topicItemRes.save(topicItemList) ;
+				topicItemRes.saveAll(topicItemList) ;
 			}
 		}
 	}

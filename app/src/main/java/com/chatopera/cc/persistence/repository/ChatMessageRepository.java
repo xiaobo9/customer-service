@@ -30,8 +30,6 @@ public interface ChatMessageRepository
         extends JpaRepository<ChatMessage, String> {
     List<ChatMessage> findByUsessionAndOrgi(String usession, String orgi);
 
-    ChatMessage findById(String id);
-
     Page<ChatMessage> findByUsessionAndOrgi(String usession, String orgi, Pageable page);
 
 //    public abstract Page<ChatMessage> findByUseridAndOrgi(String usession, String orgi, Pageable page);

@@ -44,6 +44,6 @@ public class ContactsResourceController extends Handler{
 		}
 		User user = super.getUser(request);
 		map.addAttribute("contactsList", contactsRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(),super.getOrgi(request), false , q , new PageRequest(0, 10))) ;
-        return request(super.createRequestPageTempletResponse("/public/contacts"));
+        return request(super.pageTplResponse("/public/contacts"));
     }
 }

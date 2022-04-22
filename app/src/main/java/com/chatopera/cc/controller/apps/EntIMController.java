@@ -168,7 +168,7 @@ public class EntIMController extends Handler {
     @Menu(type = "im", subtype = "entim")
     public ModelAndView chat(HttpServletRequest request, @Valid String userid) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/chat"));
-        User entImUser = userRes.findById(userid);
+        User entImUser = userRes.findById(userid).orElse(null);
 
         if (entImUser != null) {
             userProxy.attachOrgansPropertiesForUser(entImUser);
@@ -215,7 +215,7 @@ public class EntIMController extends Handler {
     @RequestMapping("/chat/more")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView chatMore(HttpServletRequest request, @Valid String userid, @Valid Date createtime) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/entim/more"));
+        ModelAndView view = request(super.pageTplResponse("/apps/entim/more"));
 
         Page<ChatMessage> chatMessageList = chatMessageRes.findByContextidAndUseridAndOrgiAndCreatetimeLessThan(userid,
                 super.getUser(request).getId(), super.getOrgi(request), createtime,
@@ -230,7 +230,7 @@ public class EntIMController extends Handler {
     @Menu(type = "im", subtype = "entim")
     public ModelAndView groupMore(HttpServletRequest request, @Valid String id) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/group/index"));
-        IMGroup imGroup = imGroupRes.findById(id);
+        IMGroup imGroup = imGroupRes.findById(id).orElse(null);
         view.addObject("imGroup", imGroup);
         view.addObject("imGroupUserList", imGroupUserRes.findByImgroupAndOrgi(imGroup, super.getOrgi(request)));
         view.addObject("contextid", id);
@@ -243,7 +243,7 @@ public class EntIMController extends Handler {
     @RequestMapping("/group/more")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView group(HttpServletRequest request, @Valid String id, @Valid Date createtime) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/entim/group/more"));
+        ModelAndView view = request(super.pageTplResponse("/apps/entim/group/more"));
         view.addObject("chatMessageList", chatMessageRes.findByContextidAndOrgiAndCreatetimeLessThan(id,
                 super.getOrgi(request), createtime, super.page(request, Sort.Direction.DESC, "createtime")
         ));
@@ -261,8 +261,8 @@ public class EntIMController extends Handler {
         users.forEach(u -> userProxy.attachOrgansPropertiesForUser(u));
         view.addObject("userList", users);
 
-        IMGroup imGroup = imGroupRes.findById(id);
-        List<Organ> organs = organRes.findAll(affiliates);
+        IMGroup imGroup = imGroupRes.findById(id).orElse(null);
+        List<Organ> organs = organRes.findAllById(affiliates);
 
         view.addObject("imGroup", imGroup);
         view.addObject("organList", organs);
@@ -305,8 +305,8 @@ public class EntIMController extends Handler {
     @RequestMapping("/group/tipmsg")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView tipmsg(@Valid String id, @Valid String tipmsg) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/entim/group/tipmsg"));
-        IMGroup imGroup = imGroupRes.findById(id);
+        ModelAndView view = request(super.pageTplResponse("/apps/entim/group/tipmsg"));
+        IMGroup imGroup = imGroupRes.findById(id).orElse(null);
         if (imGroup != null) {
             imGroup.setTipmessage(tipmsg);
             imGroupRes.save(imGroup);
@@ -318,7 +318,7 @@ public class EntIMController extends Handler {
     @RequestMapping("/group/save")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView groupsave(HttpServletRequest request, @Valid IMGroup group) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/entim/group/grouplist"));
+        ModelAndView view = request(super.pageTplResponse("/apps/entim/group/grouplist"));
         if (!StringUtils.isBlank(group.getName())
                 && imGroupRes.countByNameAndOrgi(group.getName(), super.getOrgi(request)) == 0) {
             group.setOrgi(super.getUser(request).getOrgi());
@@ -369,7 +369,7 @@ public class EntIMController extends Handler {
             @RequestParam(value = "imgFile", required = false) MultipartFile multipart, @Valid String group,
             @Valid String userid, @Valid String orgi, @Valid String paste
     ) throws IOException {
-        ModelAndView view = request(super.createRequestPageTempletResponse("/apps/im/upload"));
+        ModelAndView view = request(super.pageTplResponse("/apps/im/upload"));
         final User logined = super.getUser(request);
 
         if (multipart == null || multipart.getOriginalFilename().lastIndexOf(".") <= 0 || StringUtils.isNotBlank(userid)) {

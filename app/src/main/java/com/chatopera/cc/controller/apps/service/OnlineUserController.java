@@ -22,7 +22,6 @@ import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.AgentService;
 import com.chatopera.cc.model.AgentServiceSummary;
-import com.chatopera.cc.model.OnlineUser;
 import com.chatopera.cc.model.WeiXinUser;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.repository.*;
@@ -136,10 +135,10 @@ public class OnlineUserController extends Handler {
 
                 }
 
-                agentUserContactsRes.findOneByUseridAndOrgi(
-                        userid, orgi).ifPresent(p -> {
-                    map.put("contacts", contactsRes.findOne(p.getContactsid()));
-                });
+                agentUserContactsRes.findOneByUseridAndOrgi(userid, orgi)
+                        .ifPresent(p -> {
+                            map.put("contacts", contactsRes.findById(p.getContactsid()).orElse(null));
+                        });
                 AgentService service = agentServiceRes.findByIdAndOrgi(agentservice, orgi);
                 if (service != null) {
                     map.addAttribute("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
@@ -159,10 +158,7 @@ public class OnlineUserController extends Handler {
                     map.put("weiXinUser", weiXinUser);
                 }
             } else if (MainContext.ChannelType.WEBIM.toString().equals(channel)) {
-                OnlineUser onlineUser = onlineUserRes.findOne(userid);
-                if (onlineUser != null) {
-                    map.put("onlineUser", onlineUser);
-                }
+                onlineUserRes.findById(userid).ifPresent(onlineUser -> map.put("onlineUser", onlineUser));
             }
 
             cache.findOneAgentUserByUserIdAndOrgi(userid, orgi).ifPresent(agentUser -> {
@@ -206,7 +202,7 @@ public class OnlineUserController extends Handler {
                         new PageRequest(0, 50, Direction.DESC,
                                 "updatetime")));
 
-        return request(super.createRequestPageTempletResponse("/apps/service/online/chatmsg"));
+        return request(super.pageTplResponse("/apps/service/online/chatmsg"));
     }
 
     @RequestMapping("/trace")
@@ -221,6 +217,6 @@ public class OnlineUserController extends Handler {
                     "traceHisList", userEventRes.findBySessionidAndOrgi(sessionid, super.getOrgi(request),
                             new PageRequest(0, 100)));
         }
-        return request(super.createRequestPageTempletResponse("/apps/service/online/trace"));
+        return request(super.pageTplResponse("/apps/service/online/trace"));
     }
 }

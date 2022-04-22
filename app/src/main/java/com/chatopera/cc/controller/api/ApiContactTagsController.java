@@ -16,8 +16,6 @@
 
 package com.chatopera.cc.controller.api;
 
-import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
 import com.chatopera.cc.exception.CSKefuRestException;
@@ -136,7 +134,7 @@ public class ApiContactTagsController extends Handler {
 
         final String tagId = j.get("tagId").getAsString();
         final String contactid = j.get("contactid").getAsString();
-        Tag tag = tagRes.findOne(tagId);
+        Tag tag = tagRes.findById(tagId).orElse(null);
 
         if (tag == null) {
             resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_FAIL_2);
@@ -174,7 +172,7 @@ public class ApiContactTagsController extends Handler {
             return resp;
         }
 
-        TagRelation t = tagRelationRes.findOne(j.get("xid").getAsString());
+        TagRelation t = tagRelationRes.findById(j.get("xid").getAsString()).orElse(null);
         if (t == null) {
             resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_FAIL_4);
             resp.addProperty(RestUtils.RESP_KEY_ERROR, "该联系人没有打这个标签。");

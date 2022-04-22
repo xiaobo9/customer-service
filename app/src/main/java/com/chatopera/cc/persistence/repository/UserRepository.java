@@ -28,8 +28,6 @@ import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, String> {
 
-    User findById(String id);
-
     User findByEmailAndDatastatus(String email, boolean datastatus);
 
     User findByMobileAndDatastatus(String mobile, boolean datastatus);

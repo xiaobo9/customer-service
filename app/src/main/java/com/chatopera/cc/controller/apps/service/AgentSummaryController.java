@@ -129,12 +129,12 @@ public class AgentSummaryController extends Handler {
             AgentService service = agentServiceRes.findByIdAndOrgi(summary.getAgentserviceid(), super.getOrgi(request));
             map.addAttribute("service", service);
             if (!StringUtils.isBlank(summary.getContactsid())) {
-                Contacts contacts = contactsRes.findOne(summary.getContactsid());
+                Contacts contacts = contactsRes.findById(summary.getContactsid()).orElse(null);
                 map.addAttribute("contacts", contacts);
             }
         }
 
-        return request(super.createRequestPageTempletResponse("/apps/service/summary/process"));
+        return request(super.pageTplResponse("/apps/service/summary/process"));
     }
 
     @RequestMapping(value = "/save")
@@ -149,16 +149,16 @@ public class AgentSummaryController extends Handler {
             serviceSummaryRes.save(oldSummary);
         }
 
-        return request(super.createRequestPageTempletResponse("redirect:/apps/agent/summary/index.html"));
+        return request(super.pageTplResponse("redirect:/apps/agent/summary/index.html"));
     }
 
     @RequestMapping("/expids")
     @Menu(type = "agent", subtype = "agentsummary", access = false)
     public void expids(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids) throws IOException {
         if (ids != null && ids.length > 0) {
-            Iterable<AgentServiceSummary> statusEventList = serviceSummaryRes.findAll(Arrays.asList(ids));
+            Iterable<AgentServiceSummary> statusEventList = serviceSummaryRes.findAllById(Arrays.asList(ids));
             MetadataTable table = metadataRes.findByTablename("uk_servicesummary");
-            List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> values = new ArrayList<>();
             for (AgentServiceSummary event : statusEventList) {
                 values.add(MainUtils.transBean2Map(event));
             }
@@ -169,11 +169,10 @@ public class AgentSummaryController extends Handler {
             excelProcess.process();
         }
 
-        return;
     }
 
     @RequestMapping("/expall")
-    @Menu(type = "agent", subtype = "agentsummary", access = false)
+    @Menu(type = "agent", subtype = "agentsummary")
     public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response) throws IOException {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));

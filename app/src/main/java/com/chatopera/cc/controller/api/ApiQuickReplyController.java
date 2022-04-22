@@ -17,6 +17,7 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.QuickReply;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
 import com.chatopera.cc.util.Menu;
@@ -48,26 +49,29 @@ public class ApiQuickReplyController extends Handler {
 
     /**
      * 返回快捷回复列表，cate为分类id，通过/api/quicktype 获取分类id，支持分页，分页参数为 p=1&ps=50，默认分页尺寸为 20条每页
+     *
      * @param request
-     * @param cate	搜索分类id，精确搜索，通过/api/quicktype 获取分类id
+     * @param cate    搜索分类id，精确搜索，通过/api/quicktype 获取分类id
      * @return
      */
     @RequestMapping(method = RequestMethod.GET)
     @Menu(type = "apps", subtype = "quickreply", access = true)
     public ResponseEntity<RestResult> list(HttpServletRequest request, String id, @Valid String cate, @Valid String q, Integer p, Integer ps) {
         if (StringUtils.isNotBlank(id)) {
-            return new ResponseEntity<>(new RestResult(RestResultType.OK, quickReplyRepository.findOne(id)), HttpStatus.OK);
+            QuickReply quickReply = quickReplyRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            return new ResponseEntity<>(new RestResult(RestResultType.OK, quickReply), HttpStatus.OK);
         }
 
         Page<QuickReply> replyList = quickReplyRepository.getByOrgiAndCate(getOrgi(request), cate, q,
-                new PageRequest(p == null ? 1 : p, ps == null ? 20 : ps));
+                PageRequest.of(p == null ? 1 : p, ps == null ? 20 : ps));
         return new ResponseEntity<>(new RestResult(RestResultType.OK, replyList), HttpStatus.OK);
     }
 
     /**
      * 新增或修改快捷回复
+     *
      * @param request
-     * @param user
+     * @param quickReply
      * @return
      */
     @RequestMapping(method = RequestMethod.PUT)
@@ -83,16 +87,16 @@ public class ApiQuickReplyController extends Handler {
 
     /**
      * 删除用户，只提供 按照用户ID删除
-     * @param request
+     *
      * @param id
      * @return
      */
     @RequestMapping(method = RequestMethod.DELETE)
     @Menu(type = "apps", subtype = "quickreply", access = true)
-    public ResponseEntity<RestResult> delete(HttpServletRequest request, @Valid String id) {
+    public ResponseEntity<RestResult> delete(@Valid String id) {
         RestResult result = new RestResult(RestResultType.OK);
         if (!StringUtils.isBlank(id)) {
-            QuickReply reply = quickReplyRepository.findOne(id);
+            QuickReply reply = quickReplyRepository.findById(id).orElse(null);
             if (reply != null) {
                 quickReplyRepository.delete(reply);
             } else {

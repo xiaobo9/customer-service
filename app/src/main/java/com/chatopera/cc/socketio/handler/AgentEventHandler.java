@@ -192,7 +192,7 @@ public class AgentEventHandler {
         if (received.valid()) {
 
             // 获得AgentUser
-            final AgentUser agentUser = getAgentUserProxy().findOne(received.getAgentuserid()).get();
+            final AgentUser agentUser = getAgentUserProxy().findById(received.getAgentuserid()).get();
 
             // 验证当前的SSO中的session是否和传入的session匹配
             if (getAgentSessionProxy().isInvalidSessionId(
@@ -204,7 +204,7 @@ public class AgentEventHandler {
                 return;
             }
 
-            final User supervisor = getUserProxy().findOne(received.getSupervisorid());
+            final User supervisor = getUserProxy().findById(received.getSupervisorid());
             final Date now = new Date();
 
             // 创建消息

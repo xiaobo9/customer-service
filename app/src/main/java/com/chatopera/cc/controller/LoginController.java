@@ -47,11 +47,13 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author CSKefu
@@ -98,7 +100,7 @@ public class LoginController extends Handler {
      * @return
      * @throws NoSuchAlgorithmException
      */
-    @RequestMapping(value = "/login", method = RequestMethod.GET)
+    @RequestMapping(value = "/login.html", method = RequestMethod.GET)
     @Menu(type = "apps", subtype = "user", access = true)
     public ModelAndView login(HttpServletRequest request, HttpServletResponse response, @RequestHeader(value = "referer", required = false) String referer, @Valid String msg) {
         ModelAndView view = new ModelAndView("redirect:/");
@@ -120,14 +122,14 @@ public class LoginController extends Handler {
                             try {
                                 flagid = MainUtils.decryption(cookie.getValue());
                                 if (StringUtils.isNotBlank(flagid)) {
-                                    User user = userRepository.findById(flagid);
+                                    User user = userRepository.findById(flagid).orElse(null);
                                     if (user != null) {
                                         view = this.processLogin(request, user, referer);
                                     }
                                 }
                             } catch (EncryptionOperationNotPossibleException e) {
                                 logger.error("[login] error:", e);
-                                view = request(super.createRequestPageTempletResponse("/public/clearcookie"));
+                                view = request(super.pageTplResponse("/public/clearcookie"));
                                 return view;
                             } catch (NoSuchAlgorithmException e) {
                                 logger.error("[login] error:", e);
@@ -170,7 +172,7 @@ public class LoginController extends Handler {
      * @return
      * @throws NoSuchAlgorithmException
      */
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    @RequestMapping(value = "/login.html", method = RequestMethod.POST)
     @Menu(type = "apps", subtype = "user", access = true)
     public ModelAndView login(
             final HttpServletRequest request,
@@ -179,7 +181,8 @@ public class LoginController extends Handler {
             @Valid String referer,
             @Valid String sla) throws NoSuchAlgorithmException {
         ModelAndView view = new ModelAndView("redirect:/");
-        if (request.getSession(true).getAttribute(Constants.USER_SESSION_NAME) == null) {
+        HttpSession session = request.getSession(true);
+        if (session.getAttribute(Constants.USER_SESSION_NAME) == null) {
             if (user != null && user.getUsername() != null) {
                 final User loginUser = userRepository.findByUsernameAndPasswordAndDatastatus(
                         user.getUsername(), MainUtils.md5(user.getPassword()), false);
@@ -202,9 +205,10 @@ public class LoginController extends Handler {
                     response.addCookie((new Cookie("authorization", auth)));
 
                     // 该登录用户是坐席，并且具有坐席对话的角色
+                    Map<String, Object> roleAuthMap = loginUser.getRoleAuthMap();
                     if ((loginUser.isAgent() &&
-                            loginUser.getRoleAuthMap().containsKey("A01") &&
-                            ((boolean) loginUser.getRoleAuthMap().get("A01") == true))
+                            roleAuthMap.containsKey("A01") &&
+                            ((boolean) roleAuthMap.get("A01")))
                             || loginUser.isAdmin()) {
                         try {
                             /****************************************
@@ -232,7 +236,7 @@ public class LoginController extends Handler {
                         }
                     }
                 } else {
-                    view = request(super.createRequestPageTempletResponse("/login"));
+                    view = request(super.pageTplResponse("/login"));
                     if (StringUtils.isNotBlank(referer)) {
                         view.addObject("referer", referer);
                     }
@@ -342,9 +346,9 @@ public class LoginController extends Handler {
     @RequestMapping(value = "/register")
     @Menu(type = "apps", subtype = "user", access = true)
     public ModelAndView register(HttpServletRequest request, HttpServletResponse response, @Valid String msg) {
-        ModelAndView view = request(super.createRequestPageTempletResponse("redirect:/"));
+        ModelAndView view = request(super.pageTplResponse("redirect:/"));
         if (request.getSession(true).getAttribute(Constants.USER_SESSION_NAME) == null) {
-            view = request(super.createRequestPageTempletResponse("/register"));
+            view = request(super.pageTplResponse("/register"));
         }
         if (StringUtils.isNotBlank(msg)) {
             view.addObject("msg", msg);
@@ -358,7 +362,7 @@ public class LoginController extends Handler {
         String msg = "";
         msg = validUser(user);
         if (StringUtils.isNotBlank(msg)) {
-            return request(super.createRequestPageTempletResponse("redirect:/register.html?msg=" + msg));
+            return request(super.pageTplResponse("redirect:/register.html?msg=" + msg));
         } else {
             user.setUname(user.getUsername());
             user.setAdmin(true);

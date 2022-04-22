@@ -66,7 +66,7 @@ public class OnlineUserProxy {
      * @throws Exception
      */
     public static OnlineUser user(final String id) {
-        return getOnlineUserRes().findOne(id);
+        return getOnlineUserRes().findById(id).orElse(null);
     }
 
     /**
@@ -396,7 +396,7 @@ public class OnlineUserProxy {
                 Optional<AgentUserContacts> agentUserContactOpt = agentUserContactsRes.findOneByUseridAndOrgi(
                         userid, orgi);
                 if (agentUserContactOpt.isPresent()) {
-                    contacts = getContactsRes().findOne(agentUserContactOpt.get().getContactsid());
+                    contacts = getContactsRes().findById(agentUserContactOpt.get().getContactsid()).orElse(null);
                 }
             }
         }
@@ -646,20 +646,19 @@ public class OnlineUserProxy {
 
     /**
      * @param user
-     * @param orgi
      * @throws Exception
      */
-    public static void refuseInvite(final String user, final String orgi) {
-        OnlineUser onlineUser = getOnlineUserRes().findOne(user);
-        if (onlineUser != null) {
-            onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.REFUSE.toString());
-            onlineUser.setRefusetimes(onlineUser.getRefusetimes() + 1);
-            getOnlineUserRes().save(onlineUser);
-        }
+    public static void refuseInvite(final String user) {
+        getOnlineUserRes().findById(user)
+                .ifPresent(onlineUser -> {
+                    onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.REFUSE.toString());
+                    onlineUser.setRefusetimes(onlineUser.getRefusetimes() + 1);
+                    getOnlineUserRes().save(onlineUser);
+                });
     }
 
     public static String unescape(String src) {
-        StringBuffer tmp = new StringBuffer();
+        StringBuilder tmp = new StringBuilder();
         try {
             tmp.append(java.net.URLDecoder.decode(src, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -670,13 +669,13 @@ public class OnlineUserProxy {
     }
 
     public static String getKeyword(String url) {
-        Map<String, String[]> values = new HashMap<String, String[]>();
+        Map<String, String[]> values = new HashMap<>();
         try {
             OnlineUserUtils.parseParameters(values, url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        StringBuffer strb = new StringBuffer();
+        StringBuilder strb = new StringBuilder();
         String[] data = values.get("q");
         if (data != null) {
             for (String v : data) {
@@ -729,7 +728,6 @@ public class OnlineUserProxy {
         cacheHotTopic(dataExchange, user, orgi, aiid);
     }
 
-    @SuppressWarnings("unchecked")
     public static List<Topic> cacheHotTopic(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
         List<Topic> topicList = null;
         if ((topicList = getCache().findOneSystemListByIdAndOrgi("xiaoeTopic", orgi)) == null) {

@@ -21,6 +21,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainContext.ChannelType;
 import com.chatopera.cc.basic.MainContext.MessageType;
 import com.chatopera.cc.basic.MainContext.ReceiverType;
+import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.AgentService;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.AgentUserTask;
@@ -71,8 +72,8 @@ public class HumanUtils {
                 agentUser.getNickname()) ? agentUser.getNickname() : "";
 
         if (agentUser != null && StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
-            AgentService agentService = getAgentServiceRes().findOne(
-                    agentUser.getAgentserviceid());
+            AgentService agentService = getAgentServiceRes().findById(
+                    agentUser.getAgentserviceid()).orElseThrow(EntityNotFoundException::new);
             if (StringUtils.isNotBlank(agentService.getUsername())) {
                 userNickName = agentService.getUsername();
             }

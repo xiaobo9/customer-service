@@ -18,11 +18,9 @@ package com.chatopera.cc;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.plugins.PluginRegistry;
 import com.chatopera.cc.config.AppCtxRefreshEventListener;
 import com.chatopera.cc.util.SystemEnvHelper;
 import com.chatopera.cc.util.mobile.MobileNumberUtils;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +29,6 @@ import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
-import org.springframework.boot.web.servlet.ErrorPage;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -118,17 +113,6 @@ public class Application {
         factory.setMaxRequestSize(multipartMaxRequest);
         factory.setLocation(uploaddir);
         return factory.createMultipartConfig();
-    }
-
-    @Bean
-    public EmbeddedServletContainerCustomizer containerCustomizer() {
-        return new EmbeddedServletContainerCustomizer() {
-            @Override
-            public void customize(ConfigurableEmbeddedServletContainer container) {
-                ErrorPage error = new ErrorPage("/error.html");
-                container.addErrorPages(error);
-            }
-        };
     }
 
     public static void main(String[] args) {

@@ -24,8 +24,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface MetadataRepository extends JpaRepository<MetadataTable, String>{
-	MetadataTable findById(String id);
-	
+
 	MetadataTable findByTablename(String tablename);
 
 	Page<MetadataTable> findAll(Pageable paramPageable);

@@ -27,6 +27,7 @@
  import com.chatopera.cc.cache.Cache;
  import com.chatopera.cc.controller.Handler;
  import com.chatopera.cc.exception.CSKefuException;
+ import com.chatopera.cc.exception.EntityNotFoundException;
  import com.chatopera.cc.model.*;
  import com.chatopera.cc.peer.PeerSyncIM;
  import com.chatopera.cc.persistence.blob.JpaBlobHelper;
@@ -208,7 +209,7 @@
 
          if (StringUtils.isBlank(contactid)) {
              logger.info("[chat] empty contactid, fast return error page.");
-             return request(super.createRequestPageTempletResponse("/public/error"));
+             return request(super.pageTplResponse("/public/error"));
          }
 
          logger.info(
@@ -265,7 +266,7 @@
      @RequestMapping("/agentusers")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView agentusers(HttpServletRequest request, String userid) {
-         ModelAndView view = request(super.createRequestPageTempletResponse("/apps/agent/agentusers"));
+         ModelAndView view = request(super.pageTplResponse("/apps/agent/agentusers"));
          User logined = super.getUser(request);
          view.addObject(
                  "agentUserList", agentUserRes.findByAgentnoAndOrgi(logined.getId(), logined.getOrgi(),
@@ -286,7 +287,7 @@
              Integer page,
              Integer current) throws IOException, TemplateException {
          String mainagentuserconter = "/apps/agent/mainagentuserconter";
-         ModelAndView view = request(super.createRequestPageTempletResponse(mainagentuserconter));
+         ModelAndView view = request(super.pageTplResponse(mainagentuserconter));
          AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, super.getOrgi(request));
          if (agentUser != null) {
              view.addObject("curagentuser", agentUser);
@@ -303,14 +304,10 @@
              HttpServletRequest request,
              String iconid) throws IOException, TemplateException {
          String mainagentuserconter = "/apps/agent/mainagentuserconter";
-         ModelAndView view = request(super.createRequestPageTempletResponse(mainagentuserconter));
-         ChatMessage labelid = this.chatMessageRes.findById(iconid);
+         ModelAndView view = request(super.pageTplResponse(mainagentuserconter));
+         ChatMessage labelid = this.chatMessageRes.findById(iconid).orElse(null);
          if (labelid != null) {
-             if (labelid.isIslabel() == false) {
-                 labelid.setIslabel(true);
-             } else {
-                 labelid.setIslabel(false);
-             }
+             labelid.setIslabel(!labelid.isIslabel());
              chatMessageRes.save(labelid);
          }
          return view;
@@ -326,7 +323,7 @@
              String condition
      ) throws IOException, TemplateException {
          String mainagentuserconter = "/apps/agent/mainagentusersearch";
-         ModelAndView view = request(super.createRequestPageTempletResponse(mainagentuserconter));
+         ModelAndView view = request(super.pageTplResponse(mainagentuserconter));
          AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, super.getOrgi(request));
 
          if (agentUser != null) {
@@ -353,7 +350,7 @@
              String createtime,
              String thisid) throws IOException, TemplateException, ParseException {
          String mainagentuserconter = "/apps/agent/mainagentuserconter";
-         ModelAndView view = request(super.createRequestPageTempletResponse(mainagentuserconter));
+         ModelAndView view = request(super.pageTplResponse(mainagentuserconter));
          AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, super.getOrgi(request));
          if (agentUser != null) {
              SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -386,7 +383,7 @@
                  break;
          }
 
-         ModelAndView view = request(super.createRequestPageTempletResponse(mainagentuser));
+         ModelAndView view = request(super.pageTplResponse(mainagentuser));
          final User logined = super.getUser(request);
          final String orgi = logined.getOrgi();
          AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, orgi);
@@ -419,7 +416,7 @@
              view.addObject("agentUserMessageList", messages);
              AgentService agentService = null;
              if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
-                 agentService = this.agentServiceRes.findOne(agentUser.getAgentserviceid());
+                 agentService = this.agentServiceRes.findById(agentUser.getAgentserviceid()).orElse(null);
                  view.addObject("curAgentService", agentService);
                  if (agentService != null) {
                      // 获取关联数据
@@ -433,7 +430,7 @@
                      view.addObject("weiXinUser", weiXinUser);
                  }
              } else if (MainContext.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
-                 OnlineUser onlineUser = onlineUserRes.findOne(agentUser.getUserid());
+                 OnlineUser onlineUser = onlineUserRes.findById(agentUser.getUserid()).orElse(null);
                  if (onlineUser != null) {
                      if (onlineUser.getLogintime() != null) {
                          if (MainContext.OnlineUserStatusEnum.OFFLINE.toString().equals(onlineUser.getStatus())) {
@@ -448,7 +445,7 @@
                  }
              } else if (MainContext.ChannelType.PHONE.toString().equals(agentUser.getChannel())) {
                  if (agentService != null && StringUtils.isNotBlank(agentService.getOwner())) {
-                     StatusEvent statusEvent = this.statusEventRes.findById(agentService.getOwner());
+                     StatusEvent statusEvent = this.statusEventRes.findById(agentService.getOwner()).orElse(null);
                      if (statusEvent != null) {
                          if (StringUtils.isNotBlank(statusEvent.getHostid())) {
                              pbxHostRes.findById(statusEvent.getHostid()).ifPresent(p -> {
@@ -534,7 +531,7 @@
              }
              map.addAttribute("contactsid", contactsid);
          }
-         return request(super.createRequestPageTempletResponse("/apps/agent/workorders"));
+         return request(super.pageTplResponse("/apps/agent/workorders"));
      }
 
      /**
@@ -566,7 +563,7 @@
                  MainContext.AgentWorkType.MEIDIACHAT.toString(),
                  orgi, null);
 
-         return request(super.createRequestPageTempletResponse("/public/success"));
+         return request(super.pageTplResponse("/public/success"));
      }
 
      /**
@@ -604,7 +601,7 @@
                  MainContext.AgentWorkType.MEIDIACHAT.toString(),
                  orgi, null);
 
-         return request(super.createRequestPageTempletResponse("/public/success"));
+         return request(super.pageTplResponse("/public/success"));
      }
 
      /**
@@ -639,7 +636,7 @@
 
          agentStatusProxy.broadcastAgentsStatus(super.getOrgi(request), "agent", "busy", logined.getId());
 
-         return request(super.createRequestPageTempletResponse("/public/success"));
+         return request(super.pageTplResponse("/public/success"));
      }
 
      /**
@@ -683,7 +680,7 @@
          // 重新分配访客给坐席
          acdAgentService.assignVisitors(agentStatus.getAgentno(), super.getOrgi(request));
 
-         return request(super.createRequestPageTempletResponse("/public/success"));
+         return request(super.pageTplResponse("/public/success"));
      }
 
      @RequestMapping(value = "/clean")
@@ -704,9 +701,9 @@
                  }
              }
          }
-         agentServiceRes.save(agentServiceList);
+         agentServiceRes.saveAll(agentServiceList);
          return request(super
-                 .createRequestPageTempletResponse("redirect:/agent/index.html"));
+                 .pageTplResponse("redirect:/agent/index.html"));
      }
 
 
@@ -744,7 +741,7 @@
          }
 
          return request(super
-                 .createRequestPageTempletResponse("redirect:/agent/index.html"));
+                 .pageTplResponse("redirect:/agent/index.html"));
      }
 
      @RequestMapping({"/readmsg"})
@@ -756,7 +753,7 @@
              agentUserTask.setTokenum(0);
              agentUserTaskRes.save(agentUserTask);
          }
-         return request(super.createRequestPageTempletResponse("/public/success"));
+         return request(super.pageTplResponse("/public/success"));
      }
 
      @RequestMapping({"/blacklist/add"})
@@ -767,7 +764,7 @@
          map.addAttribute("agentserviceid", agentserviceid);
          map.addAttribute("userid", userid);
          map.addAttribute("agentUser", agentUserRes.findByIdAndOrgi(userid, super.getOrgi(request)));
-         return request(super.createRequestPageTempletResponse("/apps/agent/blacklistadd"));
+         return request(super.pageTplResponse("/apps/agent/blacklistadd"));
      }
 
      @RequestMapping({"/blacklist/save"})
@@ -820,7 +817,7 @@
          } else {
              tagRelationRes.delete(tagRelation);
          }
-         return request(super.createRequestPageTempletResponse("/public/success"));
+         return request(super.pageTplResponse("/public/success"));
      }
 
      /**
@@ -845,7 +842,7 @@
          logger.info("[upload] image file, agentUser id {}, paste {}", id, paste);
          final User logined = super.getUser(request);
          final String orgi = super.getOrgi(request);
-         ModelAndView view = request(super.createRequestPageTempletResponse("/apps/agent/upload"));
+         ModelAndView view = request(super.pageTplResponse("/apps/agent/upload"));
          UploadStatus notify;
          final AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, orgi);
 
@@ -870,14 +867,14 @@
      @RequestMapping("/message/image")
      @Menu(type = "resouce", subtype = "image", access = true)
      public ModelAndView messageimage(HttpServletResponse response, ModelMap map, @Valid String id, @Valid String t) throws IOException {
-         ChatMessage message = chatMessageRes.findById(id);
+         ChatMessage message = chatMessageRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
          map.addAttribute("chatMessage", message);
          map.addAttribute("agentUser", cache.findOneAgentUserByUserIdAndOrgi(message.getUserid(), message.getOrgi()));
     	/*if(StringUtils.isNotBlank(t)){
     		map.addAttribute("t", t) ;
     	}*/
          map.addAttribute("t", true);
-         return request(super.createRequestPageTempletResponse("/apps/agent/media/messageimage"));
+         return request(super.pageTplResponse("/apps/agent/media/messageimage"));
      }
 
      @RequestMapping("/message/image/upload")
@@ -893,7 +890,7 @@
              try {
                  // 写入临时文件
                  FileCopyUtils.copy(image.getBytes(), tempFile);
-                 ChatMessage chatMessage = chatMessageRes.findById(id);
+                 ChatMessage chatMessage = chatMessageRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
                  chatMessage.setCooperation(true);
                  chatMessageRes.save(chatMessage);
 
@@ -903,7 +900,7 @@
                  ThumbnailUtils.scaleImage(imageFile, tempFile, 0.1F);
 
                  // 保存到数据库
-                 StreamingFile sf = streamingFileRes.findOne(fileid);
+                 StreamingFile sf = streamingFileRes.findById(fileid).orElse(null);
                  if (sf != null) {
                      sf.setCooperation(jpaBlobHelper.createBlobWithFile(imageFile));
                      streamingFileRes.save(sf);
@@ -936,7 +933,7 @@
                  }
              }
          }
-         return request(super.createRequestPageTempletResponse("/public/success"));
+         return request(super.pageTplResponse("/public/success"));
      }
 
 
@@ -972,7 +969,7 @@
              /**
               * 获得联系人
               */
-             Contacts contacts = contactsRes.findOne(contactsid);
+             Contacts contacts = contactsRes.findById(contactsid).orElse(null);
              if (contacts != null) {
                  map.addAttribute("contacts", contacts);
              }
@@ -998,7 +995,7 @@
                  onlineUserRes.save(onlineUser);
              }
 
-             AgentService agentService = agentServiceRes.findOne(agentserviceid);
+             AgentService agentService = agentServiceRes.findById(agentserviceid).orElse(null);
              if (agentService != null) {
                  agentService.setContactsid(contactsid);
                  agentService.setUsername(contacts.getName());
@@ -1022,7 +1019,7 @@
                  agentUserContactsRes.save(agentUserContacts);
              }
          }
-         return request(super.createRequestPageTempletResponse("/apps/agent/contacts"));
+         return request(super.pageTplResponse("/apps/agent/contacts"));
      }
 
 
@@ -1038,7 +1035,7 @@
              }
          }
 
-         return request(super.createRequestPageTempletResponse("/apps/agent/contacts"));
+         return request(super.pageTplResponse("/apps/agent/contacts"));
      }
 
      @ResponseBody
@@ -1094,7 +1091,7 @@
              map.addAttribute("agentuserid", agentuserid);
              map.addAttribute("channel", channel);
          }
-         return request(super.createRequestPageTempletResponse("/apps/agent/summary"));
+         return request(super.pageTplResponse("/apps/agent/summary"));
      }
 
      @RequestMapping(value = "/summary/save")
@@ -1128,7 +1125,7 @@
              serviceSummaryRes.save(summary);
          }
 
-         return request(super.createRequestPageTempletResponse(
+         return request(super.pageTplResponse(
                  "redirect:/agent/agentuser.html?id=" + agentuserid + "&channel=" + channel));
      }
 
@@ -1184,7 +1181,7 @@
 
              logger.info("[transfer] get all userids except mine, {}", StringUtils.join(userids, "\t"));
 
-             final List<User> userList = userRes.findAll(userids);
+             final List<User> userList = userRes.findAllById(userids);
              for (final User o : userList) {
                  o.setAgentStatus(agentStatusMap.get(o.getId()));
                  // find user's skills
@@ -1201,7 +1198,7 @@
              map.addAttribute("currentorgan", currentOrgan);
          }
 
-         return request(super.createRequestPageTempletResponse("/apps/agent/transfer"));
+         return request(super.pageTplResponse("/apps/agent/transfer"));
      }
 
      /**
@@ -1232,7 +1229,7 @@
                  }
              }
 
-             final List<User> userList = userRes.findAll(userids);
+             final List<User> userList = userRes.findAllById(userids);
              for (final User o : userList) {
                  o.setAgentStatus(agentStatusMap.get(o.getId()));
                  // find user's skills
@@ -1241,7 +1238,7 @@
              map.addAttribute("userList", userList);
              map.addAttribute("currentorgan", organ);
          }
-         return request(super.createRequestPageTempletResponse("/apps/agent/transferagentlist"));
+         return request(super.pageTplResponse("/apps/agent/transferagentlist"));
      }
 
 
@@ -1262,7 +1259,7 @@
              map.addAttribute("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request)));
          }
 
-         return request(super.createRequestPageTempletResponse("/apps/agent/quicklist"));
+         return request(super.pageTplResponse("/apps/agent/quicklist"));
      }
 
      @RequestMapping("/quickreply/add")
@@ -1276,7 +1273,7 @@
                          super.getOrgi(request),
                          MainContext.QuickType.PRI.toString(),
                          super.getUser(request).getId()));
-         return request(super.createRequestPageTempletResponse("/apps/agent/quickreply/add"));
+         return request(super.pageTplResponse("/apps/agent/quickreply/add"));
      }
 
      @RequestMapping("/quickreply/save")
@@ -1288,50 +1285,44 @@
              quickReply.setType(MainContext.QuickType.PRI.toString());
              quickReplyRes.save(quickReply);
          }
-         return request(super.createRequestPageTempletResponse(
+         return request(super.pageTplResponse(
                  "redirect:/agent/quicklist.html?typeid=" + quickReply.getCate()));
      }
 
      @RequestMapping("/quickreply/delete")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplydelete(ModelMap map, HttpServletRequest request, @Valid String id) {
-         QuickReply quickReply = quickReplyRes.findOne(id);
-         if (quickReply != null) {
-             quickReplyRes.delete(quickReply);
-         }
-         return request(super.createRequestPageTempletResponse(
+         QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundException::new);
+         quickReplyRes.delete(quickReply);
+         return request(super.pageTplResponse(
                  "redirect:/agent/quicklist.html?typeid=" + quickReply.getCate()));
      }
 
      @RequestMapping("/quickreply/edit")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplyedit(ModelMap map, HttpServletRequest request, @Valid String id) {
-         QuickReply quickReply = quickReplyRes.findOne(id);
+         QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundException::new);
          map.put("quickReply", quickReply);
-         if (quickReply != null) {
-             map.put("quickType", quickTypeRes.findByIdAndOrgi(quickReply.getCate(), super.getOrgi(request)));
-         }
-         map.addAttribute(
-                 "quickTypeList", quickTypeRes.findByOrgiAndQuicktype(
-                         super.getOrgi(request),
-                         MainContext.QuickType.PUB.toString()));
-         return request(super.createRequestPageTempletResponse("/apps/agent/quickreply/edit"));
+         map.put("quickType", quickTypeRes.findByIdAndOrgi(quickReply.getCate(), super.getOrgi(request)));
+         map.addAttribute("quickTypeList",
+                 quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), MainContext.QuickType.PUB.toString()));
+         return request(super.pageTplResponse("/apps/agent/quickreply/edit"));
      }
 
      @RequestMapping("/quickreply/update")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplyupdate(ModelMap map, HttpServletRequest request, @Valid QuickReply quickReply) {
          if (StringUtils.isNotBlank(quickReply.getId())) {
-             QuickReply temp = quickReplyRes.findOne(quickReply.getId());
              quickReply.setOrgi(super.getOrgi(request));
              quickReply.setCreater(super.getUser(request).getId());
-             if (temp != null) {
-                 quickReply.setCreatetime(temp.getCreatetime());
-             }
+             quickReplyRes.findById(quickReply.getId())
+                     .ifPresent(temp -> {
+                         quickReply.setCreatetime(temp.getCreatetime());
+                     });
              quickReply.setType(MainContext.QuickType.PUB.toString());
              quickReplyRes.save(quickReply);
          }
-         return request(super.createRequestPageTempletResponse(
+         return request(super.pageTplResponse(
                  "redirect:/agent/quicklist.html?typeid=" + quickReply.getCate()));
      }
 
@@ -1346,7 +1337,7 @@
          if (StringUtils.isNotBlank(typeid)) {
              map.addAttribute("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request)));
          }
-         return request(super.createRequestPageTempletResponse("/apps/agent/quickreply/addtype"));
+         return request(super.pageTplResponse("/apps/agent/quickreply/addtype"));
      }
 
      @RequestMapping("/quickreply/type/save")
@@ -1361,7 +1352,7 @@
              quickType.setQuicktype(MainContext.QuickType.PRI.toString());
              quickTypeRes.save(quickType);
          }
-         return request(super.createRequestPageTempletResponse(
+         return request(super.pageTplResponse(
                  "redirect:/agent/quicklist.html?typeid=" + quickType.getParentid()));
      }
 
@@ -1374,7 +1365,7 @@
                          super.getOrgi(request),
                          MainContext.QuickType.PRI.toString(),
                          super.getUser(request).getId()));
-         return request(super.createRequestPageTempletResponse("/apps/agent/quickreply/edittype"));
+         return request(super.pageTplResponse("/apps/agent/quickreply/edittype"));
      }
 
      @RequestMapping("/quickreply/type/update")
@@ -1389,7 +1380,7 @@
              quickTypeRes.save(tempQuickType);
          }
          return request(
-                 super.createRequestPageTempletResponse("redirect:/agent/quicklist.html?typeid=" + quickType.getId()));
+                 super.pageTplResponse("redirect:/agent/quicklist.html?typeid=" + quickType.getId()));
      }
 
      @RequestMapping({"/quickreply/deletetype"})
@@ -1402,27 +1393,27 @@
              Page<QuickReply> quickReplyList = quickReplyRes.getByOrgiAndCate(
                      super.getOrgi(request), id, null, new PageRequest(0, 10000));
 
-             quickReplyRes.delete(quickReplyList.getContent());
+             quickReplyRes.deleteAll(quickReplyList.getContent());
          }
-         return request(super.createRequestPageTempletResponse(
+         return request(super.pageTplResponse(
                  "redirect:/agent/quicklist.html" + (tempQuickType != null ? "?typeid=" + tempQuickType.getParentid() : "")));
      }
 
      @RequestMapping({"/quickreply/content"})
      @Menu(type = "apps", subtype = "quickreply")
      public ModelAndView quickreplycontent(ModelMap map, HttpServletRequest request, @Valid String id) {
-         QuickReply quickReply = quickReplyRes.findOne(id);
+         QuickReply quickReply = quickReplyRes.findById(id).orElse(null);
          if (quickReply != null) {
              map.addAttribute("quickReply", quickReply);
          }
-         return request(super.createRequestPageTempletResponse("/apps/agent/quickreplycontent"));
+         return request(super.pageTplResponse("/apps/agent/quickreplycontent"));
      }
 
      @RequestMapping("/calloutcontact/add")
      @Menu(type = "apps", subtype = "calloutcontact", admin = true)
      public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String ckind) {
          map.addAttribute("ckind", ckind);
-         return request(super.createRequestPageTempletResponse("/apps/agent/calloutcontact/add"));
+         return request(super.pageTplResponse("/apps/agent/calloutcontact/add"));
      }
 
      @RequestMapping(value = "/calloutcontact/save")
@@ -1433,10 +1424,7 @@
              @RequestParam(value = "agentuser", required = true) String agentuser,
              @Valid Contacts contacts) throws CSKefuException {
          logger.info("[agent ctrl] calloutcontactsave agentuser [{}]", agentuser);
-         AgentUser au = agentUserRes.findOne(agentuser);
-         if (au == null) {
-             throw new CSKefuException("不存在该服务记录");
-         }
+         AgentUser au = agentUserRes.findById(agentuser).orElseThrow(() -> new CSKefuException("不存在该服务记录"));
 
          User logined = super.getUser(request);
          contacts.setId(MainUtils.getUUID());
@@ -1459,13 +1447,13 @@
          auc.setAppid(au.getAppid());
          auc.setCreater(logined.getId());
          agentUserContactsRes.save(auc);
-         return request(super.createRequestPageTempletResponse("redirect:/agent/index.html"));
+         return request(super.pageTplResponse("redirect:/agent/index.html"));
      }
 
      @RequestMapping("/calloutcontact/update")
      @Menu(type = "apps", subtype = "calloutcontact")
      public ModelAndView update(HttpServletRequest request, @Valid Contacts contacts) {
-         Contacts data = contactsRes.findOne(contacts.getId());
+         Contacts data = contactsRes.findById(contacts.getId()).orElse(null);
          if (data != null) {
              List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(
                      request, contacts, data, "id", "orgi", "creater", "createtime", "updatetime");    //记录 数据变更 历史
@@ -1494,6 +1482,6 @@
              contactsRes.save(contacts);
          }
 
-         return request(super.createRequestPageTempletResponse("redirect:/agent/index.html"));
+         return request(super.pageTplResponse("redirect:/agent/index.html"));
      }
  }

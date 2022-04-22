@@ -24,6 +24,5 @@ import java.util.List;
 public interface WorkTimeRepository extends JpaRepository<WorkTime, String> {
 	
 	WorkTime findByIdAndOrgi(String id, String orgi);
-	List<WorkTime> findByOrgi(String hostid, String orgi);
 	int countByNameAndOrgi(String name, String orgi);
 }

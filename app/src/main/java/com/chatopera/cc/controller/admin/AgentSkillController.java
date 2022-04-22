@@ -70,7 +70,7 @@ public class AgentSkillController extends Handler{
     @RequestMapping("/add")
     @Menu(type = "admin" , subtype = "skill")
     public ModelAndView add(ModelMap map , HttpServletRequest request) {
-        return request(super.createRequestPageTempletResponse("/admin/skill/add"));
+        return request(super.pageTplResponse("/admin/skill/add"));
     }
     
     @RequestMapping("/save")
@@ -83,13 +83,13 @@ public class AgentSkillController extends Handler{
     	}else{
     		skillRepository.save(skill) ;
     	}
-    	return request(super.createRequestPageTempletResponse("redirect:/admin/skill/index.html?msg="+msg));
+    	return request(super.pageTplResponse("redirect:/admin/skill/index.html?msg="+msg));
     }
     
     @RequestMapping("/edit")
     @Menu(type = "admin" , subtype = "skill")
     public ModelAndView edit(ModelMap map ,HttpServletRequest request ,  @Valid String id) {
-    	ModelAndView view = request(super.createRequestPageTempletResponse("/admin/skill/edit")) ;
+    	ModelAndView view = request(super.pageTplResponse("/admin/skill/edit")) ;
     	view.addObject("skillData", skillRepository.findByIdAndOrgi(id , super.getOrgi(request))) ;
         return view;
     }
@@ -106,7 +106,7 @@ public class AgentSkillController extends Handler{
     	}else{
     		msg =  "admin_skill_update_not_exist";
     	}
-    	return request(super.createRequestPageTempletResponse("redirect:/admin/skill/index.html?msg="+msg));
+    	return request(super.pageTplResponse("redirect:/admin/skill/index.html?msg="+msg));
     }
     
     @RequestMapping("/delete")
@@ -118,6 +118,6 @@ public class AgentSkillController extends Handler{
     	}else{
     		msg = "admin_skill_not_exist" ;
     	}
-    	return request(super.createRequestPageTempletResponse("redirect:/admin/skill/index.html?msg="+msg));
+    	return request(super.pageTplResponse("redirect:/admin/skill/index.html?msg="+msg));
     }
 }
