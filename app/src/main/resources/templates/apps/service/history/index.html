@@ -105,7 +105,7 @@
 								<div class="layui-inline" style="margin-right:0px;">
 									<div class="layui-input-inline" style="width: auto;margin-right:0px;">
 										<div class="layui-input-inline" style="width: auto;margin-right:0px;">
-									      <button class="layui-btn layui-btn-small layui-btn-primary" style="color:#ffffff;">
+									      <button class="layui-btn layui-btn-sm layui-btn-primary" style="color:#ffffff;">
 											  <i class="layui-icon"></i>
 											</button>
 									    </div>
@@ -181,7 +181,7 @@
 </div>
 <script>
 	layui.use('form', function(){
-		var form = layui.form();
+		var form = layui.form;
 		form.render(); //更新全部
 	});
 	var searchData = $("#search :input").serializeArray()
@@ -192,8 +192,8 @@
 	layui.use(['laypage', 'layer'], function(){
 		  var laypage = layui.laypage
 		  ,layer = layui.layer;
-		  laypage({
-				cont: 'page'
+		  laypage.render({
+				elem: 'page'
 				,pages: <#if agentServiceList??>${agentServiceList.totalPages}<#else>0</#if> //总页数
 				,curr:<#if agentServiceList??>${agentServiceList.number+1}<#else>0</#if>
 				,groups: 5 //连续显示分页数

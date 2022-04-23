@@ -33,19 +33,19 @@
                         </form>
                         <#if user?? && (user.roleAuthMap[ "A02_A01_A02_B05"]?? || user.admin)>
                             <div class="layui-btn-group">
-                                <a href="/apps/contacts/add.html<#if ckind??>?ckind=${ckind}</#if>" title="新建联系人" data-toggle="ajax" data-width="950" data-height="600" class="layui-btn layui-btn-small"><i class="layui-icon">&#xe608;</i>新建联系人</a>
+                                <a href="/apps/contacts/add.html<#if ckind??>?ckind=${ckind}</#if>" title="新建联系人" data-toggle="ajax" data-width="950" data-height="600" class="layui-btn layui-btn-sm"><i class="layui-icon">&#xe608;</i>新建联系人</a>
                             </div>
                         </#if>
                         <#if user?? && (user.roleAuthMap[ "A02_A01_A02_B08"]?? || user.admin)>
                             <div class="layui-btn-group ukefu-btn-group">
-                                <button class="layui-btn layui-btn-small" href="/apps/contacts/imp.html<#if ckind??>?ckind=${ckind}</#if>" title="导入联系人" data-toggle="ajax" data-width="950" data-height="600">
+                                <button class="layui-btn layui-btn-sm" href="/apps/contacts/imp.html<#if ckind??>?ckind=${ckind}</#if>" title="导入联系人" data-toggle="ajax" data-width="950" data-height="600">
 								    <i class="kfont">&#xe641;</i> 导入
 							    </button>
                             </div>
                         </#if>
                         <#if user?? && (user.roleAuthMap[ "A02_A01_A02_B09"]?? || user.admin)>
                             <div class="layui-btn-group ukefu-btn-group">
-                                <button class="layui-btn layui-btn-small dropdown-menu <#if !currentOrgan??>noexport</#if>">
+                                <button class="layui-btn layui-btn-sm dropdown-menu <#if !currentOrgan??>noexport</#if>">
                                     <i class="kfont">&#xe672;</i> 导出
                                     <i class="layui-icon">&#xe625;</i>
 							    </button>
@@ -212,9 +212,11 @@
     layui.use(['laypage', 'layer'], function() {
         var laypage = layui.laypage,
             layer = layui.layer;
-        laypage({
-            cont: 'page'
-            ,pages: <#if contactsList??>${contactsList.totalPages}<#else>0</#if>    //总页数
+        laypage.render({
+            elem: 'page'
+            ,limit: <#if page??>${page.pageSize}<#else>10</#if>
+            ,count: <#if contactsList??>${contactsList.totalElements}<#else>0</#if>
+            ,pages: <#if contactsList??>${contactsList.totalPages}<#else>0</#if>
             ,curr:<#if contactsList??>${contactsList.number+1}<#else>0</#if>
             ,groups : 5 //连续显示分页数
             ,jump : function(data, first) {
@@ -256,7 +258,7 @@
                 // 返回可用的触达渠道列表 data.data
                 if(multiMediaDialogWin.length > 0){
                     multiMediaDialogWin.load(function(){
-                        parent.layui.element().tabChange('ukefutab','multiMediaDialogWin');
+                        parent.layui.element.tabChange('ukefutab','multiMediaDialogWin');
                     }).attr('src' , '/agent/proactive.html?contactid='+id+'&channels='+data.data);
                 } else {
                     // 使用API调用，由SocketIO传达弹屏通知，跳转到该访客页面

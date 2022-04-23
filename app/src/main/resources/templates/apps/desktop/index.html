@@ -155,14 +155,16 @@
 <script>
 	layui.use(['laypage', 'layer'], function(){
 		  var laypage = layui.laypage
-		  ,layer = layui.layer;
+		  var layer = layui.layer;
 		  
-		  laypage({
-				cont: 'page'
-				,pages: <#if onlineUserList??>${onlineUserList.totalPages}<#else>0</#if> //总页数
-				,curr:<#if onlineUserList??>${onlineUserList.number+1}<#else>0</#if>
+		  laypage.render({
+			    elem: 'page'
+			  	,limit: <#if page??>${page.pageSize}<#else>10</#if>
+			    ,count: <#if onlineUserList??>${onlineUserList.totalElements}<#else>0</#if>
+				,pages: <#if onlineUserList??>${onlineUserList.totalPages}<#else>0</#if>
+				,curr: <#if onlineUserList??>${onlineUserList.number+1}<#else>0</#if>
 				,groups: 5 //连续显示分页数
-				,jump:function(data , first){
+				,jump: function(data , first){
 					if(!first){
 						location.href = "/apps/onlineuser.html?p="+data.curr ;
 					}

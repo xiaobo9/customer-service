@@ -9,7 +9,7 @@
             <div style="width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-wrap: break-word;
 word-break: break-all;"><#if curagentuser??>${curagentuser.username!''}<#if curagentuser.region??>  （ ${curagentuser.region!''} </#if></div>
     <div style="float:right;" class="ukefu-service-btn">
-        <a href="/apps/cca/transfer.html?userid=${curagentuser.userid!''}&agentserviceid=${curagentuser.agentserviceid!''}&agentuserid=${curagentuser.id}&agentnoid=${curagentuser.agentno}" data-toggle="ajax" data-width="750" data-height="550" title="选择转接对象"><button class="layui-btn layui-btn-small"><i class="kfont">&#xe7be;</i> 转接坐席</button></a>
+        <a href="/apps/cca/transfer.html?userid=${curagentuser.userid!''}&agentserviceid=${curagentuser.agentserviceid!''}&agentuserid=${curagentuser.id}&agentnoid=${curagentuser.agentno}" data-toggle="ajax" data-width="750" data-height="550" title="选择转接对象"><button class="layui-btn layui-btn-sm"><i class="kfont">&#xe7be;</i> 转接坐席</button></a>
     </div>
     <#else>
 </#if>
@@ -243,7 +243,7 @@ word-break: break-all;"><#if curagentuser??>${curagentuser.username!''}<#if cura
                                 访问信息
                                 <div style="float:right;">
                                     <#if user?? && user.admin?? && user.admin == true>
-                                    <button class="layui-btn layui-btn-small layui-btn-radius layui-btn-danger" href="/apps/cca/blacklist/add.html?userid=${curagentuser.userid!''}&agentserviceid=${curagentuser.agentserviceid!''}&agentuserid=${curagentuser.id}&times=${serviceCount!0}&chattime=<#if onlineUser?? && onlineUser.betweentime??>${onlineUser.betweentime}<#else>0</#if>" data-toggle="ajax" data-title="拉黑访客" data-width="900">拉黑访客</button>
+                                    <button class="layui-btn layui-btn-sm layui-btn-radius layui-btn-danger" href="/apps/cca/blacklist/add.html?userid=${curagentuser.userid!''}&agentserviceid=${curagentuser.agentserviceid!''}&agentuserid=${curagentuser.id}&times=${serviceCount!0}&chattime=<#if onlineUser?? && onlineUser.betweentime??>${onlineUser.betweentime}<#else>0</#if>" data-toggle="ajax" data-title="拉黑访客" data-width="900">拉黑访客</button>
                                    </#if>
                                 </div>
                             </h1>
@@ -325,7 +325,7 @@ word-break: break-all;"><#if curagentuser??>${curagentuser.username!''}<#if cura
         <h1 class="site-h1" style="background-color:#EEEEEE;">
             联系人
             <div style="float:right;">
-                <button class="layui-btn layui-btn-small layui-btn-normal" href="/apps/contacts/embed/index.html?userid=${curagentuser.userid!''}&agentserviceid=${curagentuser.agentserviceid!''}&agentuserid=${curagentuser.id}&times=${serviceCount!0}&chattime=<#if onlineUser?? && onlineUser.betweentime??>${onlineUser.betweentime}<#else>0</#if>" data-toggle="ajax" title="请选择联系人" data-width="950" data-height="500">关联联系人</button>
+                <button class="layui-btn layui-btn-sm layui-btn-normal" href="/apps/contacts/embed/index.html?userid=${curagentuser.userid!''}&agentserviceid=${curagentuser.agentserviceid!''}&agentuserid=${curagentuser.id}&times=${serviceCount!0}&chattime=<#if onlineUser?? && onlineUser.betweentime??>${onlineUser.betweentime}<#else>0</#if>" data-toggle="ajax" title="请选择联系人" data-width="950" data-height="500">关联联系人</button>
             </div>
         </h1>
     </div>
@@ -534,7 +534,7 @@ word-break: break-all;"><#if curagentuser??>${curagentuser.username!''}<#if cura
 
     document.getElementById('chat_msg_list_cca').scrollTop = document.getElementById('chat_msg_list_cca').scrollHeight;
     layui.use('element', function(){
-        var element = layui.element();
+        var element = layui.element;
     });
     layui.use('layer', function() {
         layer = layui.layer;

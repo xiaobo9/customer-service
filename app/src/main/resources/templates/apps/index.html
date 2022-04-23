@@ -12,7 +12,7 @@
 <link rel="shortcut icon" type="image/x-icon" href="<#if systemConfig?? && systemConfig.favlogo?? && systemConfig.favlogo != ''>/res/image.html?id=${systemConfig.favlogo?url}<#else>/images/favicon.ico?t=${.now?long}</#if>"/>
 <link rel="stylesheet" href="/css/flexboxgrid.min.css">
 <link rel="stylesheet" type="text/css" href="/css/darktooltip.css" />
-<link rel="stylesheet" href="css/layui.css">
+<link rel="stylesheet" href="/layui/css/layui.css">
 <link rel="stylesheet" href="/js/ztree/zTreeStyle/zTreeStyle.css">
 <link rel="stylesheet" href="/js/select/css/select2.min.css"/>
 <link rel="stylesheet" href="/res/css.html">
@@ -25,7 +25,7 @@
 <script src="/js/moment-timezone.js"></script>
 <script src="/js/moment-timezone-with-data.js"></script>
 
-<script src="/layui.js"></script>
+<script src="/layui/layui.js"></script>
 <!-- #894 和原生Map行为不一致 -->
 <!-- <script src="/js/utils.js"></script> -->
 <script src="/js/cskefu.js"></script>
@@ -479,7 +479,7 @@
 		var skills='${skills}'.split(',');
 
 		layui.use('element', function(){
-			var $ = layui.jquery,element = layui.element(); //Tab的切换功能，切换事件监听等，需要依赖element模块
+			var $ = layui.jquery,element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
 			//触发事件
 			$(".layui-tab").on("click",function(e){
 			  	if($(e.target).is(".layui-tab-close")){

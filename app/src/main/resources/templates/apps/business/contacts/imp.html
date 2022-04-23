@@ -72,10 +72,13 @@
 </div>
 <script>
 	layui.use('upload', function(){
-		var target = $(this).attr("data-target");
+		var upload = layui.upload;
+		upload.render({
+			elem: '.layui-upload-file'
+		})
 	});
 	layui.use('form', function(){
-	  var form = layui.form();
+	  var form = layui.form;
 	  form.render();
 	});
 </script>

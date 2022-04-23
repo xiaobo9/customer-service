@@ -4,7 +4,7 @@
 			网站列表<#if snsAccountList??>（${snsAccountList.totalElements!''}）</#if>
 			<span style="float:right;">
 				<#if user.superadmin || user.admin>
-				<button class="layui-btn layui-btn-small green" href="/admin/im/add.html" data-toggle="ajax" data-width="550" data-height="300" data-title="创建新网站">
+				<button class="layui-btn layui-btn-sm green" href="/admin/im/add.html" data-toggle="ajax" data-width="550" data-height="300" data-title="创建新网站">
 					创建新网站
 				</button>
 				</#if>
@@ -91,8 +91,8 @@
 	layui.use(['laypage', 'layer'], function(){
 		  var laypage = layui.laypage
 		  ,layer = layui.layer;
-		  laypage({
-				cont: 'page'
+		  laypage.render({
+				elem: 'page'
 				,pages: <#if snsAccountList??>${snsAccountList.totalPages}<#else>0</#if> //总页数
 				,curr:<#if snsAccountList??>${snsAccountList.number+1}<#else>0</#if>
 				,groups: 5 //连续显示分页数

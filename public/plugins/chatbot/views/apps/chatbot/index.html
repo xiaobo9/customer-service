@@ -19,19 +19,19 @@
                 <!-- 按钮组件 -->
                 <div class="ukefu-bt-text-content" style="position: absolute;right: 5px;top: 0px;">
                     <div class="layui-btn-group ukefu-btn-group">
-                        <button class="layui-btn layui-btn-small" onclick="showChatbotEditDialogue('${currentbotid}')">
+                        <button class="layui-btn layui-btn-sm" onclick="showChatbotEditDialogue('${currentbotid}')">
                             <i class="layui-icon">&#xe643;</i> 绑定
                         </button>
-                        <button class="layui-btn layui-btn-small" onclick="openChatbotBotPlatform('${currentbot.clientId}')">
+                        <button class="layui-btn layui-btn-sm" onclick="openChatbotBotPlatform('${currentbot.clientId}')">
                             <i class="layui-icon">&#xe631;</i> 配置
                         </button>
-                        <button class="layui-btn layui-btn-small" onclick="showChatbotCreateDialogue()">
+                        <button class="layui-btn layui-btn-sm" onclick="showChatbotCreateDialogue()">
                             <i class="layui-icon">&#xe654;</i> 新建
                         </button>
-                        <button class="layui-btn layui-btn-danger layui-btn-small" onclick="showChatbotDeleteDialogue()">
+                        <button class="layui-btn layui-btn-danger layui-btn-sm" onclick="showChatbotDeleteDialogue()">
                             <i class="layui-icon">&#xe640;</i> 删除
                         </button>
-                        <button class="layui-btn layui-btn-warm layui-btn-small" onclick="openChatbotIntegrationInfoCenter()">
+                        <button class="layui-btn layui-btn-warm layui-btn-sm" onclick="openChatbotIntegrationInfoCenter()">
                             <i class="layui-icon">&#xe60a;</i> 文档中心
                         </button>
                     </div>
@@ -190,13 +190,13 @@
                 <!-- 按钮组件 -->
                 <div class="ukefu-bt-text-content" style="position: absolute;right: 5px;top: 0px;">
                     <div class="layui-btn-group ukefu-btn-group">
-                        <button class="layui-btn layui-btn-small" onclick="showChatbotCreateDialogue()">
+                        <button class="layui-btn layui-btn-sm" onclick="showChatbotCreateDialogue()">
                             <i class="layui-icon">&#xe654;</i> 新建
                         </button>
-                        <button class="layui-btn layui-btn-small" onclick="openChatbotBotPlatform()">
+                        <button class="layui-btn layui-btn-sm" onclick="openChatbotBotPlatform()">
                             <i class="csfont">&#xe602;</i> 登录Chatopera云服务
                         </button>
-                        <button class="layui-btn layui-btn-warm layui-btn-small" onclick="openChatbotIntegrationInfoCenter()">
+                        <button class="layui-btn layui-btn-warm layui-btn-sm" onclick="openChatbotIntegrationInfoCenter()">
                             <i class="layui-icon">&#xe60a;</i> 文档中心
                         </button>
                     </div>
@@ -301,7 +301,7 @@
     }
 
     layui.use(['form'], function(){
-        var form = layui.form();
+        var form = layui.form;
         form.render();
 
         form.on('switch(bot-workstatus)', function (data) {
