@@ -1455,8 +1455,8 @@
      public ModelAndView update(HttpServletRequest request, @Valid Contacts contacts) {
          Contacts data = contactsRes.findById(contacts.getId()).orElse(null);
          if (data != null) {
-             List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(
-                     request, contacts, data, "id", "orgi", "creater", "createtime", "updatetime");    //记录 数据变更 历史
+             //记录 数据变更 历史
+             List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(request, contacts, data);
              if (events.size() > 0) {
                  String modifyid = MainUtils.getUUID();
                  Date modifytime = new Date();

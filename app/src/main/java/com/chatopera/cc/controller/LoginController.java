@@ -309,7 +309,7 @@ public class LoginController extends Handler {
      * @param code     登出的代码
      * @return
      */
-    @RequestMapping("/logout")
+    @RequestMapping("/logout.html")
     public String logout(HttpServletRequest request, HttpServletResponse response, @RequestParam(value = "code", required = false) String code) throws UnsupportedEncodingException {
         final User user = super.getUser(request);
         request.getSession().removeAttribute(Constants.USER_SESSION_NAME);
@@ -334,7 +334,7 @@ public class LoginController extends Handler {
         return "redirect:/";
     }
 
-    @RequestMapping(value = "/register")
+    @RequestMapping(value = "/register.html")
     @Menu(type = "apps", subtype = "user", access = true)
     public ModelAndView register(HttpServletRequest request, HttpServletResponse response, @Valid String msg) {
         ModelAndView view = request(super.pageTplResponse("redirect:/"));
@@ -347,14 +347,14 @@ public class LoginController extends Handler {
         return view;
     }
 
-    @RequestMapping("/addAdmin")
+    @RequestMapping("/addAdmin.html")
     @Menu(type = "apps", subtype = "user", access = true)
-    public ModelAndView addAdmin(HttpServletRequest request, HttpServletResponse response, @Valid User user) {
-        String msg = "";
-        msg = validUser(user);
+    public ModelAndView addAdmin(HttpServletRequest request, @Valid User user) {
+        String msg = validUser(user);
         if (StringUtils.isNotBlank(msg)) {
             return request(super.pageTplResponse("redirect:/register.html?msg=" + msg));
-        } else {
+        }
+        {
             user.setUname(user.getUsername());
             user.setAdmin(true);
             if (StringUtils.isNotBlank(user.getPassword())) {
@@ -363,27 +363,23 @@ public class LoginController extends Handler {
             user.setOrgi(super.getOrgi());
             userRepository.save(user);
         }
-        ModelAndView view = this.processLogin(request, user, "");
-        return view;
+        return this.processLogin(request, user, "");
     }
 
     private String validUser(User user) {
-        String msg = "";
+
         User tempUser = userRepository.findByUsernameAndDatastatus(user.getUsername(), false);
         if (tempUser != null) {
-            msg = "username_exist";
-            return msg;
+            return "username_exist";
         }
         tempUser = userRepository.findByEmailAndDatastatus(user.getEmail(), false);
         if (tempUser != null) {
-            msg = "email_exist";
-            return msg;
+            return "email_exist";
         }
         tempUser = userRepository.findByMobileAndDatastatus(user.getMobile(), false);
         if (tempUser != null) {
-            msg = "mobile_exist";
-            return msg;
+            return "mobile_exist";
         }
-        return msg;
+        return "";
     }
 }

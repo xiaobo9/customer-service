@@ -97,7 +97,7 @@ public class CustomerController extends Handler {
                               final @Valid String ekind,
                               final @Valid String msg) throws CSKefuException {
         logger.info("[index] query {}, ekind {}, msg {}", q, ekind, msg);
-        final User logined = super.getUser(request);
+        final User user = super.getUser(request);
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
@@ -105,7 +105,7 @@ public class CustomerController extends Handler {
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         map.put("msg", msg);
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
@@ -119,8 +119,8 @@ public class CustomerController extends Handler {
 
         map.addAttribute("currentOrgan", currentOrgan);
 
-        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(logined.getId(),
-                logined.getId(),
+        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(),
+                user.getId(),
                 super.getOrgi(request),
                 null,
                 null,
@@ -136,12 +136,12 @@ public class CustomerController extends Handler {
     @Menu(type = "customer", subtype = "today")
     public ModelAndView today(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
+        User user = super.getUser(request);
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
@@ -153,7 +153,6 @@ public class CustomerController extends Handler {
             boolQueryBuilder.must(termQuery("ekind", ekind));
             map.put("ekind", ekind);
         }
-        User user = super.getUser(request);
         map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(),
                 super.getOrgi(request), MainUtils.getStartTime(), null, false, boolQueryBuilder, q, super.page(request)));
 
@@ -168,8 +167,8 @@ public class CustomerController extends Handler {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
-
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        User user = super.getUser(request);
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
@@ -180,7 +179,7 @@ public class CustomerController extends Handler {
             boolQueryBuilder.must(termQuery("ekind", ekind));
             map.put("ekind", ekind);
         }
-        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(), super.getUser(request).getId(), super.getOrgi(request), MainUtils.getWeekStartTime(), null, false, boolQueryBuilder, q, super.page(request)));
+        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(), super.getOrgi(request), MainUtils.getWeekStartTime(), null, false, boolQueryBuilder, q, super.page(request)));
 
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
@@ -194,7 +193,8 @@ public class CustomerController extends Handler {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        User user = super.getUser(request);
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
@@ -206,7 +206,7 @@ public class CustomerController extends Handler {
         if (StringUtils.isNotBlank(q)) {
             map.put("q", q);
         }
-        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(), super.getUser(request).getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request)));
+        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request)));
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
@@ -219,7 +219,8 @@ public class CustomerController extends Handler {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        User user = super.getUser(request);
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
@@ -233,7 +234,7 @@ public class CustomerController extends Handler {
         if (StringUtils.isNotBlank(q)) {
             map.put("q", q);
         }
-        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(), super.getUser(request).getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request)));
+        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request)));
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
@@ -246,11 +247,12 @@ public class CustomerController extends Handler {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        User user = super.getUser(request);
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
-        boolQueryBuilder.must(termQuery("creater", super.getUser(request).getId()));
+        boolQueryBuilder.must(termQuery("creater", user.getId()));
 
         if (StringUtils.isNotBlank(ekind)) {
             boolQueryBuilder.must(termQuery("ekind", ekind));
@@ -260,7 +262,7 @@ public class CustomerController extends Handler {
             map.put("q", q);
         }
 
-        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(), super.getUser(request).getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request)));
+        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request)));
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
@@ -332,7 +334,8 @@ public class CustomerController extends Handler {
         EntCustomer customer = entCustomerRes.findById(entcustomer.getId()).orElseThrow(EntityNotFoundException::new);
         String msg = "";
 
-        List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(request, entcustomer, customer, "id", "orgi", "creater", "createtime", "updatetime");    //记录 数据变更 历史
+        //记录 数据变更 历史
+        List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(request, entcustomer, customer);
         if (events.size() > 0) {
             msg = "edit_entcustomer_success";
             String modifyid = MainUtils.getUUID();
@@ -417,7 +420,8 @@ public class CustomerController extends Handler {
     @Menu(type = "customer", subtype = "customer")
     public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String ekind) throws IOException, CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        User user = super.getUser(request);
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             // #TODO 提示没有部门
             return;
         }
@@ -432,7 +436,7 @@ public class CustomerController extends Handler {
         }
 
         boolQueryBuilder.must(termQuery("datastatus", false));        //只导出 数据删除状态 为 未删除的 数据
-        Iterable<EntCustomer> entCustomerList = entCustomerRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(), super.getUser(request).getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, null, super.page(request));
+        Iterable<EntCustomer> entCustomerList = entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, null, super.page(request));
 
         MetadataTable table = metadataRes.findByTablename("uk_entcustomer");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
@@ -451,7 +455,8 @@ public class CustomerController extends Handler {
     @Menu(type = "customer", subtype = "customer")
     public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String q, @Valid String ekind) throws IOException, CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (!super.esOrganFilter(request, boolQueryBuilder)) {
+        User user = super.getUser(request);
+        if (!esOrganFilter(user, boolQueryBuilder)) {
             // #TODO 提示没有部门
             return;
         }
@@ -468,7 +473,7 @@ public class CustomerController extends Handler {
             map.put("ekind", ekind);
         }
 
-        Iterable<EntCustomer> entCustomerList = entCustomerRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(), super.getUser(request).getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request));
+        Iterable<EntCustomer> entCustomerList = entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(), super.getOrgi(request), null, null, false, boolQueryBuilder, q, super.page(request));
         MetadataTable table = metadataRes.findByTablename("uk_entcustomer");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (EntCustomer customer : entCustomerList) {

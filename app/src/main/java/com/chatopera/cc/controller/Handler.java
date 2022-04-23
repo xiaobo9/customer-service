@@ -23,7 +23,6 @@ import com.chatopera.cc.basic.Viewport;
 import com.chatopera.cc.basic.auth.AuthToken;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.api.QueryParams;
-import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.Organ;
 import com.chatopera.cc.model.StreamingFile;
 import com.chatopera.cc.model.User;
@@ -135,27 +134,16 @@ public class Handler {
 
     /**
      * 构建ElasticSearch基于部门查询的Filter
-     *
-     * @param request
-     * @param boolQueryBuilder
-     * @return
-     * @throws CSKefuException
      */
-    public boolean esOrganFilter(final HttpServletRequest request, final BoolQueryBuilder boolQueryBuilder) throws CSKefuException {
-        // 组合部门条件
-        User u = getUser(request);
-        if (u == null) {
-            throw new CSKefuException("[esOrganFilter] 未能获取到登录用户。");
-        } else if (u.isAdmin()) {
+    public boolean esOrganFilter(User user, final BoolQueryBuilder boolQueryBuilder) {
+        if (user.isAdmin()) {
             // 管理员, 查看任何数据
             return true;
-        } else {
-            // 用户在部门中，通过部门过滤数据
-//            String[] values = u.getAffiliates().toArray(new String[u.getAffiliates().size()]);
-//            boolQueryBuilder.filter(termsQuery("organ", values));
-            // 不对contacts进行过滤，普通用户也可以查看该租户的任何数据
-//            return true;
         }
+        // 用户在部门中，通过部门过滤数据
+        // TODO 不对contacts进行过滤，普通用户也可以查看该租户的任何数据
+//        String[] values = user.getAffiliates().toArray(new String[0]);
+//        boolQueryBuilder.filter(termsQuery("organ", values));
         return true;
     }
 
