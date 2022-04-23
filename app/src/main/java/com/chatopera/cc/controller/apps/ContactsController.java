@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -128,18 +129,13 @@ public class ContactsController extends Handler {
         map.addAttribute("currentOrgan", currentOrgan);
 
         // FIXME
+        PageRequest page = super.page(request);
         Page<Contacts> contacts = contactsRepository.findByCreaterAndSharesAndOrgi(
-                user.getId(),
-                user.getId(),
-                orgi,
-                null,
-                null,
-                false,
-                boolQueryBuilder,
-                q,
-                super.page(request));
+                user.getId(), user.getId(), orgi,
+                null, null, false, boolQueryBuilder, q, page);
 
         map.addAttribute("contactsList", contacts);
+        map.addAttribute("page", page);
 
         contactsProxy.bindContactsApproachableData(contacts, map, user);
 

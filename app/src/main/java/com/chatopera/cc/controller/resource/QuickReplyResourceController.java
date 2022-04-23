@@ -31,7 +31,7 @@ import java.io.IOException;
 @Controller
 public class QuickReplyResourceController extends Handler{
 	
-	@RequestMapping("/res/quickreply")
+	@RequestMapping("/res/quickreply.html")
     @Menu(type = "res" , subtype = "quickreply")
     public ModelAndView add(ModelMap map , HttpServletRequest request , @Valid String q) throws IOException, TemplateException {
 		if(q==null){

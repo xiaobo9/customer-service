@@ -17,13 +17,11 @@
 package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Organ;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.repository.OrganRepository;
-import com.chatopera.cc.persistence.repository.OrgiSkillRelRepository;
 import com.chatopera.cc.persistence.repository.UserRepository;
-import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.util.Menu;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,8 +32,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.List;
 
+// FIXME 估计没用了
 @Controller
 @RequestMapping("/res")
 public class UsersResourceController extends Handler {
@@ -43,70 +41,39 @@ public class UsersResourceController extends Handler {
     private UserRepository userRes;
 
     @Autowired
-    private OrgiSkillRelRepository orgiSkillRelService;
-
-    @Autowired
     private OrganRepository organRes;
 
-    @Autowired
-    private UserProxy userProxy;
-
-    @RequestMapping("/users")
+    @RequestMapping("/users.html")
     @Menu(type = "res", subtype = "users")
-    public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String id) {
-        if (q == null) {
-            q = "";
-        }
-        map.addAttribute("usersList", getUsers(request, q));
+    public ModelAndView add(ModelMap map, @Valid String q) {
+        map.addAttribute("usersList", getUsers(q));
         return request(super.pageTplResponse("/public/users"));
     }
 
-    @RequestMapping("/bpm/users")
+    @RequestMapping("/bpm/users.html")
     @Menu(type = "res", subtype = "users")
-    public ModelAndView bpmusers(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String id) {
-        if (q == null) {
-            q = "";
-        }
-        map.addAttribute("usersList", getUsers(request, q));
+    public ModelAndView bpmusers(ModelMap map, @Valid String q) {
+        map.addAttribute("usersList", getUsers(q));
         return request(super.pageTplResponse("/public/bpmusers"));
     }
 
-    @RequestMapping("/bpm/organ")
+    @RequestMapping("/bpm/organ.html")
     @Menu(type = "res", subtype = "users")
-    public ModelAndView organ(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ids) {
-        map.addAttribute("organList", getOrgans(request));
-        map.addAttribute("usersList", getUsers(request));
+    public ModelAndView organ(ModelMap map, HttpServletRequest request, @Valid String ids) {
+        String orgi = super.getOrgi(request);
+        map.addAttribute("organList", organRes.findByOrgiAndSkill(orgi, true));
+        map.addAttribute("usersList", userRes.findByOrgiAndDatastatus(orgi, false));
         map.addAttribute("ids", ids);
         return request(super.pageTplResponse("/public/organ"));
     }
 
-    private List<User> getUsers(HttpServletRequest request) {
-        return userRes.findByOrgiAndDatastatus(super.getOrgi(request), false);
-    }
-
     /**
      * 获取当前产品下人员信息
-     *
-     * @param request
-     * @param q
-     * @return
      */
-    private Page<User> getUsers(HttpServletRequest request, String q) {
-        if (q == null) {
-            q = "";
-        }
-        Page<User> list = userRes.findByDatastatusAndOrgiAndUsernameLike(false, super.getOrgi(), "%" + q + "%", new PageRequest(0, 10));
-        return list;
+    private Page<User> getUsers(String q) {
+        String query = StringUtils.defaultString(q, "");
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        return userRes.findByDatastatusAndOrgiAndUsernameLike(false, super.getOrgi(), "%" + query + "%", pageRequest);
     }
 
-    /**
-     * 获取当前产品下 技能组 组织信息
-     *
-     * @param request
-     * @return
-     */
-    private List<Organ> getOrgans(HttpServletRequest request) {
-        List<Organ> list = organRes.findByOrgiAndSkill(super.getOrgi(request), true);
-        return list;
-    }
 }

@@ -35,7 +35,7 @@ import java.util.List;
 @RequestMapping("/res")
 public class SysDicResourceController extends Handler{
 	
-    @RequestMapping("/dic")
+    @RequestMapping("/dic.html")
     @Menu(type = "resouce" , subtype = "dic" , access = true)
     public ModelAndView index(ModelMap map , HttpServletResponse response, @Valid String id, @Valid String name, @Valid String attr , @Valid String style) throws IOException {
     	List<SysDic> itemList = new ArrayList<SysDic>() ;

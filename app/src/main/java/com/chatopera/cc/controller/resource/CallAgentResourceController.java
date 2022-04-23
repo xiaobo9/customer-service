@@ -45,7 +45,7 @@ public class CallAgentResourceController extends Handler {
 	@Autowired
 	private UserRepository userRes ;
 	
-	@RequestMapping("/res/agent")
+	@RequestMapping("/res/agent.html")
     @Menu(type = "res" , subtype = "agent")
     public ModelAndView add(ModelMap map , HttpServletRequest request , @Valid String q) {
 		if(q==null){

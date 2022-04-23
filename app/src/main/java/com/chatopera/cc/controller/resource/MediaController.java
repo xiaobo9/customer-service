@@ -116,7 +116,7 @@ public class MediaController extends Handler {
         }
     }
 
-    @RequestMapping("/image/upload")
+    @RequestMapping("/image/upload.html")
     @Menu(type = "resouce", subtype = "imageupload")
     public ModelAndView upload(ModelMap map, @RequestParam(value = "imgFile", required = false) MultipartFile multipart) throws IOException {
         ModelAndView view = request(super.pageTplResponse("/public/upload"));

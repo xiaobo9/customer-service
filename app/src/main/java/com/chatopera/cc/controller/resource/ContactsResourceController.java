@@ -36,7 +36,7 @@ public class ContactsResourceController extends Handler{
 	@Autowired
 	private ContactsRepository contactsRes ;
 	
-	@RequestMapping("/res/contacts")
+	@RequestMapping("/res/contacts.html")
     @Menu(type = "res" , subtype = "contacts")
     public ModelAndView add(ModelMap map , HttpServletRequest request , @Valid String q) {
 		if(q==null){
