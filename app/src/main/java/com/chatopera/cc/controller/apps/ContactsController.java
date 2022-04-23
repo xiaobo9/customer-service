@@ -32,7 +32,7 @@ import com.chatopera.cc.util.PinYinTools;
 import com.chatopera.cc.util.PropertiesEventUtil;
 import com.chatopera.cc.util.dsdata.DSData;
 import com.chatopera.cc.util.dsdata.DSDataEvent;
-import com.chatopera.cc.util.dsdata.ExcelImportProecess;
+import com.chatopera.cc.util.dsdata.ExcelImportProcess;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
 import com.chatopera.cc.util.dsdata.process.ContactsProcess;
 import org.apache.commons.io.FileUtils;
@@ -446,7 +446,7 @@ public class ContactsController extends Handler {
             event.getValues().put("organ", organId);
             event.getValues().put("shares", "all");
             reporterRes.save(event.getDSData().getReport());
-            new ExcelImportProecess(event).process();        //启动导入任务
+            new ExcelImportProcess(event).process();        //启动导入任务
         }
         return request(super.pageTplResponse("redirect:/apps/contacts/index.html"));
     }

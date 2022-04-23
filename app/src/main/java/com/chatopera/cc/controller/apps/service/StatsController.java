@@ -66,7 +66,7 @@ public class StatsController extends Handler {
     private UserProxy userProxy;
 
 
-    @RequestMapping("/stats/coment")
+    @RequestMapping("/stats/coment.html")
     @Menu(type = "service", subtype = "statcoment", admin = true)
     public ModelAndView statcoment(ModelMap map, HttpServletRequest request,
                                    @Valid String agent,
@@ -83,7 +83,7 @@ public class StatsController extends Handler {
         mapR.put("end", end);
         if (StringUtils.isNotBlank(skill)) {
             map.addAttribute("skill", skill);
-            map.addAttribute("agentList", userProxy.findUserInOrgans(Arrays.asList(skill)));
+            map.addAttribute("agentList", userProxy.findUserInOrgans(Collections.singletonList(skill)));
             mapR.put("skill", "'" + skill + "'");
         } else {
             map.addAttribute("agentList", userProxy.findUserInOrgans(organs.keySet()));
@@ -116,17 +116,15 @@ public class StatsController extends Handler {
             map.addAttribute("end", end);
         }
         map.addAttribute("orgi", super.getOrgi(request));
-        /***
-         * 查询 技能组 ， 缓存？
-         */
+        //  查询 技能组 ， 缓存？
         map.addAttribute("skillGroups", organs.values());
 
         return request(super.createAppsTempletResponse("/apps/service/stats/coment"));
     }
 
-    @RequestMapping("/stats/coment/exp")
+    @RequestMapping("/stats/coment/exp.html")
     @Menu(type = "service", subtype = "statcoment", admin = true)
-    public void statcomentexp(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
+    public void statcomentexp(HttpServletRequest request, HttpServletResponse response, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Map<String, Object> mapR = new HashMap<>();
@@ -153,11 +151,9 @@ public class StatsController extends Handler {
 
         response.setHeader("content-disposition", "attachment;filename=UCKeFu-Report-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
         new UKExcelUtil(reportData, response.getOutputStream(), "满意度统计").createFile();
-
-        return;
     }
 
-    @RequestMapping("/stats/agent")
+    @RequestMapping("/stats/agent.html")
     @Menu(type = "service", subtype = "statagent", admin = true)
     public ModelAndView statagent(ModelMap map, HttpServletRequest request, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
         Organ currentOrgan = super.getOrgan(request);
@@ -168,7 +164,7 @@ public class StatsController extends Handler {
         mapR.put("end", end);
         if (StringUtils.isNotBlank(skill)) {
             map.addAttribute("skill", skill);
-            map.addAttribute("agentList", userProxy.findUserInOrgans(Arrays.asList(skill)));
+            map.addAttribute("agentList", userProxy.findUserInOrgans(Collections.singletonList(skill)));
             mapR.put("skill", "'" + skill + "'");
         } else {
             map.addAttribute("agentList", userProxy.findUserInOrgans(organs.keySet()));
@@ -187,16 +183,14 @@ public class StatsController extends Handler {
         if (StringUtils.isNotBlank(end)) {
             map.addAttribute("end", end);
         }
-        /***
-         * 查询 技能组 ， 缓存？
-         */
+        // 查询 技能组 ， 缓存？
         map.addAttribute("skillGroups", organs.values());
         return request(super.createAppsTempletResponse("/apps/service/stats/consult"));
     }
 
-    @RequestMapping("/stats/agent/exp")
+    @RequestMapping("/stats/agent/exp.html")
     @Menu(type = "service", subtype = "statagent", admin = true)
-    public void statagentexp(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
+    public void statagentexp(HttpServletRequest request, HttpServletResponse response, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Map<String, Object> mapR = new HashMap<>();
@@ -212,6 +206,5 @@ public class StatsController extends Handler {
         ReportData reportData = new CubeService("consult.xml", path, dataSource, mapR).execute("SELECT {[Measures].[咨询数量],[Measures].[平均等待时长（秒）],[Measures].[平均咨询时长（秒）]} on columns , NonEmptyCrossJoin([time].[日期].members , NonEmptyCrossJoin([skill].[技能组].members,[agent].[坐席].members)) on rows  FROM [咨询]");
         response.setHeader("content-disposition", "attachment;filename=UCKeFu-Report-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
         new UKExcelUtil(reportData, response.getOutputStream(), "客服坐席统计").createFile();
-        return;
     }
 }

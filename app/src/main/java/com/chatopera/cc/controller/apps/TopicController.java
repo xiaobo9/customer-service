@@ -30,7 +30,7 @@ import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.dsdata.DSData;
 import com.chatopera.cc.util.dsdata.DSDataEvent;
-import com.chatopera.cc.util.dsdata.ExcelImportProecess;
+import com.chatopera.cc.util.dsdata.ExcelImportProcess;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
 import com.chatopera.cc.util.dsdata.process.TopicProcess;
 import org.apache.commons.io.FileUtils;
@@ -368,7 +368,7 @@ public class TopicController extends Handler {
             event.getValues().put("creater", super.getUser(request).getId());
             event.getDSData().setProcess(new TopicProcess(topicRes));
             reporterRes.save(event.getDSData().getReport());
-            new ExcelImportProecess(event).process();        //启动导入任务
+            new ExcelImportProcess(event).process();        //启动导入任务
         }
 
         return request(super.pageTplResponse("redirect:/apps/topic.html?type=" + type));

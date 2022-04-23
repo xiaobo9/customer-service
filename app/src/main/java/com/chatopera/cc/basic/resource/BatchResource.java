@@ -27,7 +27,7 @@ import com.chatopera.cc.persistence.repository.MetadataRepository;
 import com.chatopera.cc.persistence.repository.ReporterRepository;
 import com.chatopera.cc.util.dsdata.DSData;
 import com.chatopera.cc.util.dsdata.DSDataEvent;
-import com.chatopera.cc.util.dsdata.ExcelImportProecess;
+import com.chatopera.cc.util.dsdata.ExcelImportProcess;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -97,7 +97,7 @@ public class BatchResource extends Resource {
                 }
             }
             reporterRes.save(event.getDSData().getReport());
-            new ExcelImportProecess(event).process();        //启动导入任务
+            new ExcelImportProcess(event).process();        //启动导入任务
         }
     }
 
