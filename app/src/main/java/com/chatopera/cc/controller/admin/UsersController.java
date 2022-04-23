@@ -66,7 +66,7 @@ public class UsersController extends Handler {
     @Autowired
     private ExtensionRepository extensionRes;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView index(ModelMap map, HttpServletRequest request) throws IOException {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
@@ -76,7 +76,7 @@ public class UsersController extends Handler {
         return request(super.createAdminTempletResponse("/admin/user/index"));
     }
 
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView add(ModelMap map, HttpServletRequest request) {
         ModelAndView view = request(super.pageTplResponse("/admin/user/add"));
@@ -88,7 +88,7 @@ public class UsersController extends Handler {
         return view;
     }
 
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView edit(@Valid String id) {
         ModelAndView view = request(super.pageTplResponse("/admin/user/edit"));
@@ -109,7 +109,7 @@ public class UsersController extends Handler {
         return view;
     }
 
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView delete(@Valid User user) {
         String msg = "admin_user_delete";

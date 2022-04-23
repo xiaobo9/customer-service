@@ -44,8 +44,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 
+/**
+ * ApplicationController IndexController
+ * <p>
+ * web index
+ */
 @Controller
 public class ApplicationController extends Handler {
     private final static Logger logger = LoggerFactory.getLogger(ApplicationController.class);
@@ -85,7 +89,6 @@ public class ApplicationController extends Handler {
 
     @RequestMapping("/")
     public ModelAndView admin(HttpServletRequest request) {
-//        logger.info("[admin] path {} queryString {}", request.getPathInfo(),request.getQueryString());
         ModelAndView view = request(super.pageTplResponse("/apps/index"));
         User logined = super.getUser(request);
         Organ currentOrgan = super.getOrgan(request);
@@ -94,10 +97,8 @@ public class ApplicationController extends Handler {
 
         List<Organ> organs = organProxy.findOrganInIds(logined.getAffiliates());
 
-        view.addObject(
-                "skills",
-                organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request)).keySet().stream().collect(Collectors.joining(","))
-        );
+        Map<String, Organ> map = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        view.addObject("skills", String.join(",", map.keySet()));
 
         view.addObject("agentStatusReport", acdWorkMonitor.getAgentReport(currentOrgan != null ? currentOrgan.getId() : null, logined.getOrgi()));
         view.addObject("istenantshare", false);
@@ -116,21 +117,19 @@ public class ApplicationController extends Handler {
 
         // 呼叫中心信息
         if (MainContext.hasModule(Constants.CSKEFU_MODULE_CALLCENTER) && logined.isCallcenter()) {
-            extensionRes.findByAgentnoAndOrgi(logined.getId(), logined.getOrgi()).ifPresent(ext -> {
-                pbxHostRes.findById(ext.getHostid()).ifPresent(pbx -> {
-                    Map<String, Object> webrtcData = new HashMap<>();
-                    webrtcData.put("callCenterWebrtcIP", pbx.getWebrtcaddress());
-                    webrtcData.put("callCenterWebRtcPort", pbx.getWebrtcport());
-                    webrtcData.put("callCenterExtensionNum", ext.getExtension());
-                    try {
-                        webrtcData.put("callCenterExtensionPassword", MainUtils.decryption(ext.getPassword()));
-                    } catch (NoSuchAlgorithmException e) {
-                        logger.error("[admin]", e);
-                        webrtcData.put("callCenterError", "Invalid data for callcenter agent.");
-                    }
-                    view.addObject("webrtc", webrtcData);
-                });
-            });
+            extensionRes.findByAgentnoAndOrgi(logined.getId(), logined.getOrgi()).ifPresent(ext -> pbxHostRes.findById(ext.getHostid()).ifPresent(pbx -> {
+                Map<String, Object> webrtcData = new HashMap<>();
+                webrtcData.put("callCenterWebrtcIP", pbx.getWebrtcaddress());
+                webrtcData.put("callCenterWebRtcPort", pbx.getWebrtcport());
+                webrtcData.put("callCenterExtensionNum", ext.getExtension());
+                try {
+                    webrtcData.put("callCenterExtensionPassword", MainUtils.decryption(ext.getPassword()));
+                } catch (NoSuchAlgorithmException e) {
+                    logger.error("[admin]", e);
+                    webrtcData.put("callCenterError", "Invalid data for callcenter agent.");
+                }
+                view.addObject("webrtc", webrtcData);
+            }));
         }
 
         if (StringUtils.isNotBlank(tongjiBaiduSiteKey) && !StringUtils.equalsIgnoreCase(tongjiBaiduSiteKey, "placeholder")) {
@@ -150,7 +149,6 @@ public class ApplicationController extends Handler {
                 request.getSession(true).setAttribute(Constants.ORGAN_SESSION_NAME, currentOrgan);
             }
         }
-
         return "ok";
     }
 

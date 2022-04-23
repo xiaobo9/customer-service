@@ -75,7 +75,7 @@ public class WebIMController extends Handler {
     @Autowired
     private UserProxy userProxy;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "app", subtype = "app", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String snsid) {
         CousultInvite coultInvite = OnlineUserProxy.consult(snsid, super.getOrgi(request));
@@ -99,7 +99,7 @@ public class WebIMController extends Handler {
      * @return
      * @throws IOException
      */
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "admin", subtype = "app", admin = true)
     public ModelAndView save(HttpServletRequest request,
                              @Valid CousultInvite inviteData,
@@ -136,7 +136,7 @@ public class WebIMController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/webim/index.html?snsid=" + inviteData.getSnsaccountid()));
     }
 
-    @RequestMapping("/profile")
+    @RequestMapping("/profile.html")
     @Menu(type = "app", subtype = "profile", admin = true)
     public ModelAndView profile(ModelMap map, HttpServletRequest request, @Valid String snsid) {
         CousultInvite coultInvite = OnlineUserProxy.consult(snsid, super.getOrgi(request));
@@ -153,7 +153,7 @@ public class WebIMController extends Handler {
         return request(super.createAdminTempletResponse("/admin/webim/profile"));
     }
 
-    @RequestMapping("/profile/save")
+    @RequestMapping("/profile/save.html")
     @Menu(type = "admin", subtype = "profile", admin = true)
     public ModelAndView saveprofile(HttpServletRequest request, @Valid CousultInvite inviteData, @RequestParam(value = "dialogad", required = false) MultipartFile dialogad) throws IOException {
         final String orgi = super.getOrgi(request);
@@ -238,7 +238,7 @@ public class WebIMController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/webim/profile.html?snsid=" + inviteData.getSnsaccountid()));
     }
 
-    @RequestMapping("/invote")
+    @RequestMapping("/invote.html")
     @Menu(type = "app", subtype = "invote", admin = true)
     public ModelAndView invote(ModelMap map, HttpServletRequest request, @Valid String snsid) {
         CousultInvite coultInvite = OnlineUserProxy.consult(snsid, super.getOrgi(request));
@@ -252,7 +252,7 @@ public class WebIMController extends Handler {
         return request(super.createAdminTempletResponse("/admin/webim/invote"));
     }
 
-    @RequestMapping("/invote/save")
+    @RequestMapping("/invote/save.html")
     @Menu(type = "admin", subtype = "profile", admin = true)
     public ModelAndView saveinvote(HttpServletRequest request, @Valid CousultInvite inviteData, @RequestParam(value = "invotebg", required = false) MultipartFile invotebg) throws IOException {
         CousultInvite tempInviteData;

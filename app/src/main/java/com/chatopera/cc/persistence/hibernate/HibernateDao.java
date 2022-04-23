@@ -16,6 +16,7 @@
  */
 package com.chatopera.cc.persistence.hibernate;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +25,14 @@ import org.springframework.stereotype.Component;
 import javax.persistence.EntityManagerFactory;
 import java.util.List;
 
+@Slf4j
 @Component
-public class BaseService<T> {
+public class HibernateDao<T> {
 
-    private SessionFactory hibernateFactory;
+    private final SessionFactory hibernateFactory;
 
     @Autowired
-    public BaseService(EntityManagerFactory factory) {
+    public HibernateDao(EntityManagerFactory factory) {
         if (factory.unwrap(SessionFactory.class) == null) {
             throw new NullPointerException("factory is not a hibernate factory");
         }
@@ -44,40 +46,31 @@ public class BaseService<T> {
      * @param ts
      */
     public void saveOrUpdateAll(final List<Object> ts) {
-        Session session = hibernateFactory.openSession();
-        try {
+        try (Session session = hibernateFactory.openSession()) {
             for (final Object t : ts) {
                 session.saveOrUpdate(t);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
             session.flush();
-            session.close();
+        } catch (Exception ex) {
+            log.warn("", ex);
         }
     }
 
     public void saveOrUpdate(final Object t) {
-        Session session = hibernateFactory.openSession();
-        try {
+        try (Session session = hibernateFactory.openSession()) {
             session.saveOrUpdate(t);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
             session.flush();
-            session.close();
+        } catch (Exception ex) {
+            log.warn("", ex);
         }
     }
 
     public void save(final Object t) {
-        Session session = hibernateFactory.openSession();
-        try {
+        try (Session session = hibernateFactory.openSession()) {
             session.save(t);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
             session.flush();
-            session.close();
+        } catch (Exception ex) {
+            log.warn("", ex);
         }
     }
 
@@ -87,42 +80,32 @@ public class BaseService<T> {
      * @param objects
      */
     public void deleteAll(final List<Object> objects) {
-        Session session = hibernateFactory.openSession();
-        try {
+        try (Session session = hibernateFactory.openSession()) {
             for (final Object t : objects) {
                 session.delete(session.merge(t));
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
             session.flush();
-            session.close();
+        } catch (Exception ex) {
+            log.warn("", ex);
         }
     }
 
     public void delete(final Object object) {
-        Session session = hibernateFactory.openSession();
-        try {
+        try (Session session = hibernateFactory.openSession()) {
             session.delete(session.merge(object));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
             session.flush();
-            session.close();
+        } catch (Exception ex) {
+            log.warn("", ex);
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<T> list(final String bean) {
         List<T> dataList = null;
-        Session session = hibernateFactory.openSession();
-        try {
+        try (Session session = hibernateFactory.openSession()) {
             dataList = session.createCriteria(Class.forName(bean)).list();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
             session.flush();
-            session.close();
+        } catch (Exception ex) {
+            log.warn("", ex);
         }
         return dataList;
     }

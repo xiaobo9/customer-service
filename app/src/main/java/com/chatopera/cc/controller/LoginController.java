@@ -49,6 +49,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -94,7 +95,6 @@ public class LoginController extends Handler {
      * 登录页面
      *
      * @param request
-     * @param response
      * @param referer
      * @param msg
      * @return
@@ -102,7 +102,7 @@ public class LoginController extends Handler {
      */
     @RequestMapping(value = "/login.html", method = RequestMethod.GET)
     @Menu(type = "apps", subtype = "user", access = true)
-    public ModelAndView login(HttpServletRequest request, HttpServletResponse response, @RequestHeader(value = "referer", required = false) String referer, @Valid String msg) {
+    public ModelAndView login(HttpServletRequest request, @RequestHeader(value = "referer", required = false) String referer, @Valid String msg) {
         ModelAndView view = new ModelAndView("redirect:/");
         if (request.getSession(true).getAttribute(Constants.USER_SESSION_NAME) == null) {
             view = new ModelAndView("/login");
@@ -143,12 +143,10 @@ public class LoginController extends Handler {
             view.addObject("msg", msg);
         }
         SystemConfig systemConfig = MainUtils.getSystemConfig();
-        if (systemConfig != null && systemConfig.isEnableregorgi()) {
+        if (systemConfig.isEnableregorgi()) {
             view.addObject("show", true);
         }
-        if (systemConfig != null) {
-            view.addObject("systemConfig", systemConfig);
-        }
+        view.addObject("systemConfig", systemConfig);
 
         if (StringUtils.isNotBlank(tongjiBaiduSiteKey) && !StringUtils.equalsIgnoreCase(tongjiBaiduSiteKey, "placeholder")) {
             view.addObject("tongjiBaiduSiteKey", tongjiBaiduSiteKey);
@@ -182,76 +180,73 @@ public class LoginController extends Handler {
             @Valid String sla) throws NoSuchAlgorithmException {
         ModelAndView view = new ModelAndView("redirect:/");
         HttpSession session = request.getSession(true);
-        if (session.getAttribute(Constants.USER_SESSION_NAME) == null) {
-            if (user != null && user.getUsername() != null) {
-                final User loginUser = userRepository.findByUsernameAndPasswordAndDatastatus(
-                        user.getUsername(), MainUtils.md5(user.getPassword()), false);
-                if (loginUser != null && StringUtils.isNotBlank(loginUser.getId())) {
-                    view = this.processLogin(request, loginUser, referer);
+        if (session.getAttribute(Constants.USER_SESSION_NAME) != null) {
+            SystemConfig systemConfig = MainUtils.getSystemConfig();
+            view.addObject("show", systemConfig.isEnableregorgi());
+            view.addObject("systemConfig", systemConfig);
+            return view;
+        }
+        if (user != null && user.getUsername() != null) {
+            final User loginUser = userRepository.findByUsernameAndPasswordAndDatastatus(user.getUsername(), MainUtils.md5(user.getPassword()), false);
+            if (loginUser != null && StringUtils.isNotBlank(loginUser.getId())) {
+                view = this.processLogin(request, loginUser, referer);
 
-                    // 自动登录
-                    if (StringUtils.equals("1", sla)) {
-                        Cookie flagid = new Cookie(
-                                Constants.CSKEFU_SYSTEM_COOKIES_FLAG, MainUtils.encryption(loginUser.getId()));
-                        flagid.setMaxAge(7 * 24 * 60 * 60);
-                        response.addCookie(flagid);
-                    }
-
-                    // add authorization code for rest api
-                    final String orgi = loginUser.getOrgi();
-                    String auth = MainUtils.getUUID();
-                    authToken.putUserByAuth(auth, loginUser);
-                    userRepository.save(loginUser); // 更新登录状态到数据库
-                    response.addCookie((new Cookie("authorization", auth)));
-
-                    // 该登录用户是坐席，并且具有坐席对话的角色
-                    Map<String, Object> roleAuthMap = loginUser.getRoleAuthMap();
-                    if ((loginUser.isAgent() &&
-                            roleAuthMap.containsKey("A01") &&
-                            ((boolean) roleAuthMap.get("A01")))
-                            || loginUser.isAdmin()) {
-                        try {
-                            /****************************************
-                             * 登录成功，设置该坐席为就绪状态（默认）
-                             ****************************************/
-                            // https://gitlab.chatopera.com/chatopera/cosinee.w4l/issues/306
-                            final AgentStatus agentStatus = agentProxy.resolveAgentStatusByAgentnoAndOrgi(
-                                    loginUser.getId(), orgi, loginUser.getSkills());
-                            agentStatus.setBusy(false);
-                            agentProxy.ready(loginUser, agentStatus, false);
-
-                            // 工作状态记录
-                            acdWorkMonitor.recordAgentStatus(agentStatus.getAgentno(),
-                                    agentStatus.getUsername(),
-                                    agentStatus.getAgentno(),
-                                    user.isAdmin(), // 0代表admin
-                                    agentStatus.getAgentno(),
-                                    MainContext.AgentStatusEnum.OFFLINE.toString(),
-                                    MainContext.AgentStatusEnum.READY.toString(),
-                                    MainContext.AgentWorkType.MEIDIACHAT.toString(),
-                                    orgi, null);
-
-                        } catch (Exception e) {
-                            logger.error("[login] set agent status", e);
-                        }
-                    }
-                } else {
-                    view = request(super.pageTplResponse("/login"));
-                    if (StringUtils.isNotBlank(referer)) {
-                        view.addObject("referer", referer);
-                    }
-                    view.addObject("msg", "0");
+                // 自动登录
+                if (StringUtils.equals("1", sla)) {
+                    Cookie flagid = new Cookie(Constants.CSKEFU_SYSTEM_COOKIES_FLAG, MainUtils.encryption(loginUser.getId()));
+                    flagid.setMaxAge(7 * 24 * 60 * 60);
+                    response.addCookie(flagid);
                 }
+
+                // add authorization code for rest api
+                final String orgi = loginUser.getOrgi();
+                String auth = MainUtils.getUUID();
+                authToken.putUserByAuth(auth, loginUser);
+                userRepository.save(loginUser); // 更新登录状态到数据库
+                response.addCookie((new Cookie("authorization", auth)));
+
+                // 该登录用户是坐席，并且具有坐席对话的角色
+                Map<String, Object> roleAuthMap = loginUser.getRoleAuthMap();
+                if ((loginUser.isAgent() &&
+                        roleAuthMap.containsKey("A01") &&
+                        ((boolean) roleAuthMap.get("A01")))
+                        || loginUser.isAdmin()) {
+                    try {
+                        /****************************************
+                         * 登录成功，设置该坐席为就绪状态（默认）
+                         ****************************************/
+                        // https://gitlab.chatopera.com/chatopera/cosinee.w4l/issues/306
+                        final AgentStatus agentStatus = agentProxy.resolveAgentStatusByAgentnoAndOrgi(
+                                loginUser.getId(), orgi, loginUser.getSkills());
+                        agentStatus.setBusy(false);
+                        agentProxy.ready(loginUser, agentStatus, false);
+
+                        // 工作状态记录
+                        acdWorkMonitor.recordAgentStatus(agentStatus.getAgentno(),
+                                agentStatus.getUsername(),
+                                agentStatus.getAgentno(),
+                                user.isAdmin(), // 0代表admin
+                                agentStatus.getAgentno(),
+                                MainContext.AgentStatusEnum.OFFLINE.toString(),
+                                MainContext.AgentStatusEnum.READY.toString(),
+                                MainContext.AgentWorkType.MEIDIACHAT.toString(),
+                                orgi, null);
+
+                    } catch (Exception e) {
+                        logger.error("[login] set agent status", e);
+                    }
+                }
+            } else {
+                view = request(super.pageTplResponse("/login"));
+                if (StringUtils.isNotBlank(referer)) {
+                    view.addObject("referer", referer);
+                }
+                view.addObject("msg", "0");
             }
         }
         SystemConfig systemConfig = MainUtils.getSystemConfig();
-        if (systemConfig != null && systemConfig.isEnableregorgi()) {
-            view.addObject("show", true);
-        }
-        if (systemConfig != null) {
-            view.addObject("systemConfig", systemConfig);
-        }
-
+        view.addObject("show", systemConfig.isEnableregorgi());
+        view.addObject("systemConfig", systemConfig);
         return view;
     }
 
@@ -263,48 +258,44 @@ public class LoginController extends Handler {
      * @param referer
      * @return
      */
-    private ModelAndView processLogin(final HttpServletRequest request, final User loginUser, String referer) {
+    private ModelAndView processLogin(final HttpServletRequest request, @NotNull final User loginUser, String referer) {
+        // 设置登录用户的状态
+        loginUser.setLogin(true);
+        // 更新redis session信息，用以支持sso
+        agentSessionProxy.updateUserSession(loginUser.getId(), MainUtils.getContextID(request.getSession().getId()), loginUser.getOrgi());
+        loginUser.setSessionid(MainUtils.getContextID(request.getSession().getId()));
+
         ModelAndView view = new ModelAndView();
-        if (loginUser != null) {
-            // 设置登录用户的状态
-            loginUser.setLogin(true);
-            // 更新redis session信息，用以支持sso
-            agentSessionProxy.updateUserSession(
-                    loginUser.getId(), MainUtils.getContextID(request.getSession().getId()), loginUser.getOrgi());
-            loginUser.setSessionid(MainUtils.getContextID(request.getSession().getId()));
-
-
-            if (StringUtils.isNotBlank(referer)) {
-                view = new ModelAndView("redirect:" + referer);
-            } else {
-                view = new ModelAndView("redirect:/");
-            }
-
-            // 登录成功 判断是否进入多租户页面
-            SystemConfig systemConfig = MainUtils.getSystemConfig();
-            if (systemConfig != null && systemConfig.isEnabletneant() && systemConfig.isTenantconsole() && !loginUser.isAdmin()) {
-                view = new ModelAndView("redirect:/apps/tenant/index");
-            }
-            List<UserRole> userRoleList = userRoleRes.findByOrgiAndUser(loginUser.getOrgi(), loginUser);
-            if (userRoleList != null && userRoleList.size() > 0) {
-                for (UserRole userRole : userRoleList) {
-                    loginUser.getRoleList().add(userRole.getRole());
-                }
-            }
-
-            // 获取用户部门以及下级部门
-            userProxy.attachOrgansPropertiesForUser(loginUser);
-
-            // 添加角色信息
-            userProxy.attachRolesMap(loginUser);
-
-            loginUser.setLastlogintime(new Date());
-            if (StringUtils.isNotBlank(loginUser.getId())) {
-                userRepository.save(loginUser);
-            }
-
-            super.setUser(request, loginUser);
+        if (StringUtils.isNotBlank(referer)) {
+            view = new ModelAndView("redirect:" + referer);
+        } else {
+            view = new ModelAndView("redirect:/");
         }
+
+        // 登录成功 判断是否进入多租户页面
+        SystemConfig systemConfig = MainUtils.getSystemConfig();
+        if (systemConfig.isEnabletneant() && systemConfig.isTenantconsole() && !loginUser.isAdmin()) {
+            view = new ModelAndView("redirect:/apps/tenant/index");
+        }
+        List<UserRole> userRoleList = userRoleRes.findByOrgiAndUser(loginUser.getOrgi(), loginUser);
+        if (userRoleList != null && userRoleList.size() > 0) {
+            for (UserRole userRole : userRoleList) {
+                loginUser.getRoleList().add(userRole.getRole());
+            }
+        }
+
+        // 获取用户部门以及下级部门
+        userProxy.attachOrgansPropertiesForUser(loginUser);
+
+        // 添加角色信息
+        userProxy.attachRolesMap(loginUser);
+
+        loginUser.setLastlogintime(new Date());
+        if (StringUtils.isNotBlank(loginUser.getId())) {
+            userRepository.save(loginUser);
+        }
+
+        super.setUser(request, loginUser);
         return view;
     }
 

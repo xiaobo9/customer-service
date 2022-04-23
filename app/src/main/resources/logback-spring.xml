@@ -94,6 +94,5 @@
         <appender-ref ref="STDOUT" />
         <appender-ref ref="ERROR" />
         <appender-ref ref="INFO" />
-        <appender-ref ref="DEBUG" />
     </root>
 </configuration>

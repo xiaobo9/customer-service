@@ -89,7 +89,7 @@ public class CustomerController extends Handler {
     @Value("${web.upload-path}")
     private String path;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "customer", subtype = "index")
     public ModelAndView index(ModelMap map,
                               HttpServletRequest request,
@@ -132,7 +132,7 @@ public class CustomerController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
-    @RequestMapping("/today")
+    @RequestMapping("/today.html")
     @Menu(type = "customer", subtype = "today")
     public ModelAndView today(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -153,12 +153,14 @@ public class CustomerController extends Handler {
             boolQueryBuilder.must(termQuery("ekind", ekind));
             map.put("ekind", ekind);
         }
-        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(super.getUser(request).getId(), super.getUser(request).getId(), super.getOrgi(request), MainUtils.getStartTime(), null, false, boolQueryBuilder, q, super.page(request)));
+        User user = super.getUser(request);
+        map.addAttribute("entCustomerList", entCustomerRes.findByCreaterAndSharesAndOrgi(user.getId(), user.getId(),
+                super.getOrgi(request), MainUtils.getStartTime(), null, false, boolQueryBuilder, q, super.page(request)));
 
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
-    @RequestMapping("/week")
+    @RequestMapping("/week.html")
     @Menu(type = "customer", subtype = "week")
     public ModelAndView week(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -183,7 +185,7 @@ public class CustomerController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
-    @RequestMapping("/enterprise")
+    @RequestMapping("/enterprise.html")
     @Menu(type = "customer", subtype = "enterprise")
     public ModelAndView enterprise(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -208,7 +210,7 @@ public class CustomerController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
-    @RequestMapping("/personal")
+    @RequestMapping("/personal.html")
     @Menu(type = "customer", subtype = "personal")
     public ModelAndView personal(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -235,7 +237,7 @@ public class CustomerController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
-    @RequestMapping("/creater")
+    @RequestMapping("/creater.html")
     @Menu(type = "customer", subtype = "creater")
     public ModelAndView creater(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -262,14 +264,14 @@ public class CustomerController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/customer/index"));
     }
 
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String ekind) {
         map.addAttribute("ekind", ekind);
         return request(super.pageTplResponse("/apps/business/customer/add"));
     }
 
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView save(HttpServletRequest request,
                              @Valid CustomerGroupForm customerGroupForm) {
@@ -303,7 +305,7 @@ public class CustomerController extends Handler {
         return request(super.pageTplResponse("redirect:/apps/customer/index.html?ekind=" + customerGroupForm.getEntcustomer().getEkind() + "&msg=" + msg));
     }
 
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView delete(HttpServletRequest request, @Valid EntCustomer entCustomer, @Valid String p, @Valid String ekind) {
         if (entCustomer != null) {
@@ -314,7 +316,7 @@ public class CustomerController extends Handler {
         return request(super.pageTplResponse("redirect:/apps/customer/index.html?p=" + p + "&ekind=" + ekind));
     }
 
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String ekind) {
         map.addAttribute("entCustomer", entCustomerRes.findById(id).orElseThrow(EntityNotFoundException::new));
@@ -322,7 +324,7 @@ public class CustomerController extends Handler {
         return request(super.pageTplResponse("/apps/business/customer/edit"));
     }
 
-    @RequestMapping("/update")
+    @RequestMapping("/update.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView update(HttpServletRequest request, @Valid CustomerGroupForm customerGroupForm, @Valid String ekindId) {
         final User logined = super.getUser(request);
@@ -354,14 +356,14 @@ public class CustomerController extends Handler {
         return request(super.pageTplResponse("redirect:/apps/customer/index.html?ekind=" + ekindId + "&msg=" + msg));
     }
 
-    @RequestMapping("/imp")
+    @RequestMapping("/imp.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView imp(ModelMap map, HttpServletRequest request, @Valid String ekind) {
         map.addAttribute("ekind", ekind);
         return request(super.pageTplResponse("/apps/business/customer/imp"));
     }
 
-    @RequestMapping("/impsave")
+    @RequestMapping("/impsave.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView impsave(ModelMap map, HttpServletRequest request, @RequestParam(value = "cusfile", required = false) MultipartFile cusfile, @Valid String ekind) throws IOException {
         DSDataEvent event = new DSDataEvent();

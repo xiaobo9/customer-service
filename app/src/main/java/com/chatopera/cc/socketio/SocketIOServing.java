@@ -64,8 +64,8 @@ public class SocketIOServing implements CommandLineRunner {
     }
 
     @Bean(name = "entimNamespace")
-    public SocketIONamespace getEntIMSocketIONameSpace(SocketIOServer server) {
-        entIMSocketIONameSpace.addListeners(new EntIMEventHandler(server));
+    public SocketIONamespace getEntIMSocketIONameSpace(EntIMEventHandler handler) {
+        entIMSocketIONameSpace.addListeners(handler);
         return entIMSocketIONameSpace;
     }
 

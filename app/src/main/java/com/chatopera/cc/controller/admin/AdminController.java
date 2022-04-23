@@ -65,7 +65,7 @@ public class AdminController extends Handler {
     @Autowired
     private Cache cache;
 
-    @RequestMapping("/admin")
+    @RequestMapping("/admin.html")
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
         ModelAndView view = request(super.pageTplResponse("redirect:/"));
         User user = super.getUser(request);
@@ -111,7 +111,7 @@ public class AdminController extends Handler {
         return userList.isEmpty() ? new ArrayList<User>() : userList;
     }
 
-    @RequestMapping("/admin/content")
+    @RequestMapping("/admin/content.html")
     @Menu(type = "admin", subtype = "content")
     public ModelAndView content(ModelMap map, HttpServletRequest request) {
         aggValues(map, request);

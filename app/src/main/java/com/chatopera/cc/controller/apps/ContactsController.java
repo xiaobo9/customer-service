@@ -22,6 +22,7 @@ import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
+import com.chatopera.cc.persistence.es.ContactsRepositoryImpl;
 import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.ContactsProxy;
 import com.chatopera.cc.proxy.OrganProxy;
@@ -70,6 +71,9 @@ public class ContactsController extends Handler {
     private ContactsRepository contactsRes;
 
     @Autowired
+    private ContactsRepositoryImpl contactsRepository;
+
+    @Autowired
     private PropertiesEventRepository propertiesEventRes;
 
     @Autowired
@@ -96,16 +100,11 @@ public class ContactsController extends Handler {
     @Value("${web.upload-path}")
     private String path;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "customer", subtype = "index")
-    public ModelAndView index(
-            ModelMap map,
-            HttpServletRequest request,
-            @Valid String q,
-            @Valid String ckind
-    ) throws CSKefuException {
-        final User logined = super.getUser(request);
-        final String orgi = logined.getOrgi();
+    public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ckind) throws CSKefuException {
+        final User user = super.getUser(request);
+        final String orgi = user.getOrgi();
 
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -128,9 +127,10 @@ public class ContactsController extends Handler {
 
         map.addAttribute("currentOrgan", currentOrgan);
 
-        Page<Contacts> contacts = contactsRes.findByCreaterAndSharesAndOrgi(
-                logined.getId(),
-                logined.getId(),
+        // FIXME
+        Page<Contacts> contacts = contactsRepository.findByCreaterAndSharesAndOrgi(
+                user.getId(),
+                user.getId(),
                 orgi,
                 null,
                 null,
@@ -141,12 +141,12 @@ public class ContactsController extends Handler {
 
         map.addAttribute("contactsList", contacts);
 
-        contactsProxy.bindContactsApproachableData(contacts, map, logined);
+        contactsProxy.bindContactsApproachableData(contacts, map, user);
 
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
 
-    @RequestMapping("/today")
+    @RequestMapping("/today.html")
     @Menu(type = "customer", subtype = "today")
     public ModelAndView today(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ckind) throws CSKefuException {
         final User logined = super.getUser(request);
@@ -169,7 +169,7 @@ public class ContactsController extends Handler {
             map.put("ckind", ckind);
         }
 
-        Page<Contacts> contacts = contactsRes.findByCreaterAndSharesAndOrgi(logined.getId(),
+        Page<Contacts> contacts = contactsRepository.findByCreaterAndSharesAndOrgi(logined.getId(),
                 logined.getId(),
                 orgi,
                 MainUtils.getStartTime(), null, false,
@@ -183,7 +183,7 @@ public class ContactsController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
 
-    @RequestMapping("/week")
+    @RequestMapping("/week.html")
     @Menu(type = "customer", subtype = "week")
     public ModelAndView week(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ckind) throws CSKefuException {
         final User logined = super.getUser(request);
@@ -206,7 +206,7 @@ public class ContactsController extends Handler {
             map.put("ckind", ckind);
         }
 
-        Page<Contacts> contacts = contactsRes.findByCreaterAndSharesAndOrgi(logined.getId(),
+        Page<Contacts> contacts = contactsRepository.findByCreaterAndSharesAndOrgi(logined.getId(),
                 logined.getId(),
                 orgi,
                 MainUtils.getWeekStartTime(), null, false,
@@ -219,7 +219,7 @@ public class ContactsController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
 
-    @RequestMapping("/creater")
+    @RequestMapping("/creater.html")
     @Menu(type = "customer", subtype = "creater")
     public ModelAndView creater(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ckind) throws CSKefuException {
         final User logined = super.getUser(request);
@@ -244,7 +244,7 @@ public class ContactsController extends Handler {
             map.put("q", q);
         }
 
-        Page<Contacts> contacts = contactsRes.findByCreaterAndSharesAndOrgi(logined.getId(),
+        Page<Contacts> contacts = contactsRepository.findByCreaterAndSharesAndOrgi(logined.getId(),
                 logined.getId(),
                 orgi, null, null, false,
                 boolQueryBuilder, q,
@@ -256,7 +256,7 @@ public class ContactsController extends Handler {
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
 
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView delete(HttpServletRequest request, @Valid Contacts contacts, @Valid String p, @Valid String ckind) {
         if (contacts != null) {
@@ -268,7 +268,7 @@ public class ContactsController extends Handler {
                 "redirect:/apps/contacts/index.html?p=" + p + "&ckind=" + ckind));
     }
 
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "contacts", subtype = "add")
     public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String ckind) {
         map.addAttribute("ckind", ckind);
@@ -276,7 +276,7 @@ public class ContactsController extends Handler {
     }
 
 
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "contacts", subtype = "save")
     public ModelAndView save(
             ModelMap map,
@@ -316,7 +316,7 @@ public class ContactsController extends Handler {
                 "redirect:/apps/contacts/index.html?ckind=" + contacts.getCkind() + "&msg=" + msg));
     }
 
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String ckind) {
         map.addAttribute("contacts", contactsRes.findById(id).orElseThrow(EntityNotFoundException::new));
@@ -324,7 +324,7 @@ public class ContactsController extends Handler {
         return request(super.pageTplResponse("/apps/business/contacts/edit"));
     }
 
-    @RequestMapping("/detail")
+    @RequestMapping("/detail.html")
     @Menu(type = "customer", subtype = "index")
     public ModelAndView detail(ModelMap map, HttpServletRequest request, @Valid String id) {
         if (id == null) {
@@ -371,7 +371,7 @@ public class ContactsController extends Handler {
 //    }
 
 
-    @RequestMapping("/update")
+    @RequestMapping("/update.html")
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView update(HttpServletRequest request, @Valid Contacts contacts, @Valid String ckindId) {
         final User logined = super.getUser(request);
@@ -439,14 +439,14 @@ public class ContactsController extends Handler {
     }
 
 
-    @RequestMapping("/imp")
+    @RequestMapping("/imp.html")
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView imp(ModelMap map, HttpServletRequest request, @Valid String ckind) {
         map.addAttribute("ckind", ckind);
         return request(super.pageTplResponse("/apps/business/contacts/imp"));
     }
 
-    @RequestMapping("/impsave")
+    @RequestMapping("/impsave.html")
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView impsave(ModelMap map, HttpServletRequest request, @RequestParam(value = "cusfile", required = false) MultipartFile cusfile, @Valid String ckind) throws IOException {
         final User logined = super.getUser(request);
@@ -474,7 +474,7 @@ public class ContactsController extends Handler {
         return request(super.pageTplResponse("redirect:/apps/contacts/index.html"));
     }
 
-    @RequestMapping("/startmass")
+    @RequestMapping("/startmass.html")
     @Menu(type = "contacts", subtype = "contacts")
     public ModelAndView mass(ModelMap map, HttpServletRequest request, @Valid String ids) {
         map.addAttribute("organList", organRes.findByOrgiAndSkill(super.getOrgi(request), true));
@@ -527,7 +527,7 @@ public class ContactsController extends Handler {
         }
 
         boolQueryBuilder.must(termQuery("datastatus", false));        //只导出 数据删除状态 为 未删除的 数据
-        Iterable<Contacts> contactsList = contactsRes.findByCreaterAndSharesAndOrgi(
+        Iterable<Contacts> contactsList = contactsRepository.findByCreaterAndSharesAndOrgi(
                 logined.getId(), logined.getId(), orgi, null, null,
                 false, boolQueryBuilder, null, super.page(request));
 
@@ -566,7 +566,7 @@ public class ContactsController extends Handler {
             map.put("ckind", ckind);
         }
 
-        Iterable<Contacts> contactsList = contactsRes.findByCreaterAndSharesAndOrgi(
+        Iterable<Contacts> contactsList = contactsRepository.findByCreaterAndSharesAndOrgi(
                 logined.getId(), logined.getId(), orgi, null, null,
                 false, boolQueryBuilder, q, super.page(request));
         MetadataTable table = metadataRes.findByTablename("uk_contacts");
@@ -587,7 +587,7 @@ public class ContactsController extends Handler {
     }
 
 
-    @RequestMapping("/embed/index")
+    @RequestMapping("/embed/index.html")
     @Menu(type = "customer", subtype = "embed")
     public ModelAndView embed(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ckind, @Valid String msg, @Valid String userid, @Valid String agentserviceid) throws CSKefuException {
         final User logined = super.getUser(request);
@@ -611,7 +611,7 @@ public class ContactsController extends Handler {
             AgentService service = agentServiceRes.findByIdAndOrgi(agentserviceid, orgi);
             boolQueryBuilder.must(termQuery("organ", service.getSkill()));
         }
-        Page<Contacts> contactsList = contactsRes.findByCreaterAndSharesAndOrgi(
+        Page<Contacts> contactsList = contactsRepository.findByCreaterAndSharesAndOrgi(
                 logined.getId(), logined.getId(), orgi, null, null, false, boolQueryBuilder, q,
                 super.page(request));
 
@@ -627,7 +627,7 @@ public class ContactsController extends Handler {
         return request(super.pageTplResponse("/apps/business/contacts/embed/index"));
     }
 
-    @RequestMapping("/embed/add")
+    @RequestMapping("/embed/add.html")
     @Menu(type = "contacts", subtype = "embedadd")
     public ModelAndView embedadd(ModelMap map, HttpServletRequest request, @Valid String agentserviceid) {
         if (StringUtils.isNotBlank(agentserviceid)) {
@@ -636,7 +636,7 @@ public class ContactsController extends Handler {
         return request(super.pageTplResponse("/apps/business/contacts/embed/add"));
     }
 
-    @RequestMapping("/embed/save")
+    @RequestMapping("/embed/save.html")
     @Menu(type = "contacts", subtype = "embedsave")
     public ModelAndView embedsave(HttpServletRequest request, @Valid Contacts contacts, @Valid String agentserviceid) {
         final User logined = super.getUser(request);
@@ -669,7 +669,7 @@ public class ContactsController extends Handler {
         return request(super.pageTplResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
     }
 
-    @RequestMapping("/embed/edit")
+    @RequestMapping("/embed/edit.html")
     @Menu(type = "contacts", subtype = "embededit")
     public ModelAndView embededit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String agentserviceid) {
         map.addAttribute("contacts", contactsRes.findById(id).orElseThrow(EntityNotFoundException::new));
@@ -679,7 +679,7 @@ public class ContactsController extends Handler {
         return request(super.pageTplResponse("/apps/business/contacts/embed/edit"));
     }
 
-    @RequestMapping("/embed/update")
+    @RequestMapping("/embed/update.html")
     @Menu(type = "contacts", subtype = "embedupdate")
     public ModelAndView embedupdate(HttpServletRequest request, @Valid Contacts contacts, @Valid String agentserviceid) {
         final User logined = super.getUser(request);

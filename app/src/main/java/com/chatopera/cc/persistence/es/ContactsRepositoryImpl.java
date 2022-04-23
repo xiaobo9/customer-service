@@ -52,11 +52,11 @@ public class ContactsRepositoryImpl implements ContactsEsCommonRepository {
     public Page<Contacts> findByCreaterAndSharesAndOrgi(String creater, String shares, String orgi, boolean includeDeleteData, String q, Pageable page) {
 
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        BoolQueryBuilder boolQueryBuilder1 = new BoolQueryBuilder();
-        boolQueryBuilder1.should(termQuery("creater", creater));
-        boolQueryBuilder1.should(termQuery("shares", creater));
-        boolQueryBuilder1.should(termQuery("shares", "all"));
-        boolQueryBuilder.must(boolQueryBuilder1);
+        boolQueryBuilder.must(new BoolQueryBuilder()
+                .should(termQuery("creater", creater))
+                .should(termQuery("shares", creater))
+                .should(termQuery("shares", "all")));
+
         boolQueryBuilder.must(termQuery("orgi", orgi));
         if (includeDeleteData) {
             boolQueryBuilder.must(termQuery("datastatus", true));
@@ -70,14 +70,13 @@ public class ContactsRepositoryImpl implements ContactsEsCommonRepository {
     }
 
     @Override
-    public Page<Contacts> findByCreaterAndSharesAndOrgi(String creater,
-                                                        String shares, String orgi, Date begin, Date end, boolean includeDeleteData,
-                                                        BoolQueryBuilder boolQueryBuilder, String q, Pageable page) {
-        BoolQueryBuilder boolQueryBuilder1 = new BoolQueryBuilder();
-        boolQueryBuilder1.should(termQuery("creater", creater));
-        boolQueryBuilder1.should(termQuery("shares", creater));
-        boolQueryBuilder1.should(termQuery("shares", "all"));
-        boolQueryBuilder.must(boolQueryBuilder1);
+    public Page<Contacts> findByCreaterAndSharesAndOrgi(
+            String creater, String shares, String orgi, Date begin, Date end, boolean includeDeleteData,
+            BoolQueryBuilder boolQueryBuilder, String q, Pageable page) {
+        boolQueryBuilder.must(new BoolQueryBuilder()
+                .should(termQuery("creater", creater))
+                .should(termQuery("shares", creater))
+                .should(termQuery("shares", "all")));
         boolQueryBuilder.must(termQuery("orgi", orgi));
         if (includeDeleteData) {
             boolQueryBuilder.must(termQuery("datastatus", true));
@@ -152,27 +151,31 @@ public class ContactsRepositoryImpl implements ContactsEsCommonRepository {
 
 
     private Page<Contacts> processQuery(BoolQueryBuilder boolQueryBuilder, Pageable page) {
-        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder).withSort(new FieldSortBuilder("creater").unmappedType("boolean").order(SortOrder.DESC)).withSort(new FieldSortBuilder("name").unmappedType("string").order(SortOrder.DESC));
+        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder()
+                .withQuery(boolQueryBuilder)
+                .withSort(new FieldSortBuilder("creater.keyword").unmappedType("boolean").order(SortOrder.DESC))
+                .withSort(new FieldSortBuilder("name.keyword").unmappedType("string").order(SortOrder.DESC));
 
         searchQueryBuilder.withPageable(page);
 
         Page<Contacts> entCustomerList = null;
         if (elasticsearchTemplate.indexExists(Contacts.class)) {
             entCustomerList = elasticsearchTemplate.queryForPage(searchQueryBuilder.build(), Contacts.class);
-        }
-        if (entCustomerList.getContent().size() > 0) {
-            List<String> ids = new ArrayList<>();
-            for (Contacts contacts : entCustomerList.getContent()) {
-                if (contacts.getCreater() != null && ids.size() < 1024) {
-                    ids.add(contacts.getCreater());
+            List<Contacts> content = entCustomerList.getContent();
+            if (content.size() > 0) {
+                List<String> ids = new ArrayList<>();
+                for (Contacts contacts : content) {
+                    if (contacts.getCreater() != null && ids.size() < 1024) {
+                        ids.add(contacts.getCreater());
+                    }
                 }
-            }
-            List<User> users = userRes.findAllById(ids);
-            for (Contacts contacts : entCustomerList.getContent()) {
-                for (User user : users) {
-                    if (user.getId().equals(contacts.getCreater())) {
-                        contacts.setUser(user);
-                        break;
+                List<User> users = userRes.findAllById(ids);
+                for (Contacts contacts : content) {
+                    for (User user : users) {
+                        if (user.getId().equals(contacts.getCreater())) {
+                            contacts.setUser(user);
+                            break;
+                        }
                     }
                 }
             }

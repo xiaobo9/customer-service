@@ -27,19 +27,19 @@ import javax.validation.Valid;
 import java.io.IOException;
 
 @Controller
-public class CssResourceController extends Handler{
-	
-    @RequestMapping("/res/css")
-    @Menu(type = "resouce" , subtype = "css" , access = true)
+public class CssResourceController extends Handler {
+
+    @RequestMapping("/res/css.html")
+    @Menu(type = "resouce", subtype = "css", access = true)
     public ModelAndView index(HttpServletResponse response, @Valid String id) throws IOException {
-    	response.setContentType("text/css ; charset=UTF-8");
-    	return request(super.pageTplResponse("/resource/css/ukefu"));
+        response.setContentType("text/css; charset=UTF-8");
+        return request(super.pageTplResponse("/resource/css/ukefu"));
     }
-    
-    @RequestMapping("/res/css/system")
-    @Menu(type = "resouce" , subtype = "css" , access = true)
+
+    @RequestMapping("/res/css/system.html")
+    @Menu(type = "resouce", subtype = "css", access = true)
     public ModelAndView system(HttpServletResponse response, @Valid String id) throws IOException {
-    	response.setContentType("text/css ; charset=UTF-8");
-    	return request(super.pageTplResponse("/resource/css/system"));
+        response.setContentType("text/css; charset=UTF-8");
+        return request(super.pageTplResponse("/resource/css/system"));
     }
 }

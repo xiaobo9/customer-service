@@ -28,11 +28,11 @@ import javax.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/message")
-public class MessageController extends Handler{
-	
-    @RequestMapping("/ping")
-    @Menu(type = "message" , subtype = "ping" , admin= true)
-    public ModelAndView ping(ModelMap map , HttpServletRequest request) {
+public class MessageController extends Handler {
+
+    @RequestMapping("/ping.html")
+    @Menu(type = "message", subtype = "ping", admin = true)
+    public ModelAndView ping() {
         return request(super.pageTplResponse("/apps/message/ping"));
     }
 }

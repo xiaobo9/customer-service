@@ -46,7 +46,7 @@ public class AgentSkillController extends Handler{
 	@Autowired
 	private SkillRepository skillRepository;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "admin" , subtype = "skill")
     public ModelAndView index(ModelMap map , HttpServletRequest request , @Valid String skill) {
     	List<Skill> skillGroups = skillRepository.findAll() ;
@@ -67,7 +67,7 @@ public class AgentSkillController extends Handler{
         return request(super.createAdminTempletResponse("/admin/skill/index"));
     }
     
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "admin" , subtype = "skill")
     public ModelAndView add(ModelMap map , HttpServletRequest request) {
         return request(super.pageTplResponse("/admin/skill/add"));
@@ -86,7 +86,7 @@ public class AgentSkillController extends Handler{
     	return request(super.pageTplResponse("redirect:/admin/skill/index.html?msg="+msg));
     }
     
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "admin" , subtype = "skill")
     public ModelAndView edit(ModelMap map ,HttpServletRequest request ,  @Valid String id) {
     	ModelAndView view = request(super.pageTplResponse("/admin/skill/edit")) ;
@@ -94,7 +94,7 @@ public class AgentSkillController extends Handler{
         return view;
     }
     
-    @RequestMapping("/update")
+    @RequestMapping("/update.html")
     @Menu(type = "admin" , subtype = "skill")
     public ModelAndView update(HttpServletRequest request ,@Valid Skill skill) {
     	Skill tempSkill = skillRepository.findByIdAndOrgi(skill.getId() , super.getOrgi(request)) ;
@@ -109,7 +109,7 @@ public class AgentSkillController extends Handler{
     	return request(super.pageTplResponse("redirect:/admin/skill/index.html?msg="+msg));
     }
     
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "admin" , subtype = "skill")
     public ModelAndView delete(HttpServletRequest request ,@Valid Skill skill) {
     	String msg = "admin_skill_delete" ;

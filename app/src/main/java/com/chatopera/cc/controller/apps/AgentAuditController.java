@@ -120,7 +120,7 @@ public class AgentAuditController extends Handler {
     @Autowired
     private OrganProxy organProxy;
 
-    @RequestMapping(value = "/index")
+    @RequestMapping(value = "/index.html")
     @Menu(type = "cca", subtype = "cca", access = true)
     public ModelAndView index(
             ModelMap map,
@@ -203,7 +203,7 @@ public class AgentAuditController extends Handler {
         return view;
     }
 
-    @RequestMapping("/query")
+    @RequestMapping("/query.html")
     @Menu(type = "apps", subtype = "cca")
     public ModelAndView query(HttpServletRequest request, String skill, String agentno) {
         ModelAndView view = request(super.pageTplResponse("/apps/cca/chatusers"));
@@ -236,7 +236,7 @@ public class AgentAuditController extends Handler {
         return view;
     }
 
-    @RequestMapping("/agentusers")
+    @RequestMapping("/agentusers.html")
     @Menu(type = "apps", subtype = "cca")
     public ModelAndView agentusers(HttpServletRequest request, String userid) {
         ModelAndView view = request(super.pageTplResponse("/apps/cca/agentusers"));
@@ -253,7 +253,7 @@ public class AgentAuditController extends Handler {
         return view;
     }
 
-    @RequestMapping("/agentuser")
+    @RequestMapping("/agentuser.html")
     @Menu(type = "apps", subtype = "cca")
     public ModelAndView agentuser(
             ModelMap map,
@@ -354,7 +354,7 @@ public class AgentAuditController extends Handler {
      * @param agentuserid
      * @return
      */
-    @RequestMapping(value = "/transfer")
+    @RequestMapping(value = "/transfer.html")
     @Menu(type = "apps", subtype = "transfer")
     public ModelAndView transfer(
             ModelMap map,
@@ -424,7 +424,7 @@ public class AgentAuditController extends Handler {
      * @param organ
      * @return
      */
-    @RequestMapping(value = "/transfer/agent")
+    @RequestMapping(value = "/transfer/agent.html")
     @Menu(type = "apps", subtype = "transferagent")
     public ModelAndView transferagent(
             ModelMap map,
@@ -469,7 +469,7 @@ public class AgentAuditController extends Handler {
      * @param memo
      * @return
      */
-    @RequestMapping(value = "/transfer/save")
+    @RequestMapping(value = "/transfer/save.html")
     @Menu(type = "apps", subtype = "transfersave")
     public ModelAndView transfersave(
             final ModelMap map, HttpServletRequest request,
@@ -581,7 +581,7 @@ public class AgentAuditController extends Handler {
      * @return
      * @throws Exception
      */
-    @RequestMapping({"/end"})
+    @RequestMapping({"/end.html"})
     @Menu(type = "apps", subtype = "agent")
     public ModelAndView end(HttpServletRequest request, @Valid String id) {
         final String orgi = super.getOrgi(request);
@@ -607,7 +607,7 @@ public class AgentAuditController extends Handler {
         return request(super.pageTplResponse("redirect:/apps/cca/index.html"));
     }
 
-    @RequestMapping({"/blacklist/add"})
+    @RequestMapping({"/blacklist/add.html"})
     @Menu(type = "apps", subtype = "blacklist")
     public ModelAndView blacklistadd(ModelMap map, HttpServletRequest request, @Valid String agentuserid, @Valid String agentserviceid, @Valid String userid)
             throws Exception {
@@ -618,7 +618,7 @@ public class AgentAuditController extends Handler {
         return request(super.pageTplResponse("/apps/cca/blacklistadd"));
     }
 
-    @RequestMapping({"/blacklist/save"})
+    @RequestMapping({"/blacklist/save.html"})
     @Menu(type = "apps", subtype = "blacklist")
     public ModelAndView blacklist(
             HttpServletRequest request,

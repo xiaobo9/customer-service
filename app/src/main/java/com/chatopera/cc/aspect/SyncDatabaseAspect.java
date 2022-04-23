@@ -17,15 +17,13 @@
 package com.chatopera.cc.aspect;
 
 import com.chatopera.cc.model.ESBean;
-import com.chatopera.cc.persistence.hibernate.BaseService;
+import com.chatopera.cc.persistence.hibernate.HibernateDao;
 import com.chatopera.cc.util.CskefuList;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.hibernate.StaleStateException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,10 +32,9 @@ import java.util.List;
 @Aspect
 @Component
 public class SyncDatabaseAspect {
-    private final static Logger logger = LoggerFactory.getLogger(SyncDatabaseAspect.class);
 
     @Autowired
-    private BaseService<?> dbDataRes;
+    private HibernateDao<?> dbDataRes;
 
     /**
      * 定义拦截规则：拦截org.springframework.data.elasticsearch.repository。
@@ -53,7 +50,6 @@ public class SyncDatabaseAspect {
     public void syncDeleteEsData() {
     }
 
-    @SuppressWarnings("unchecked")
     @Around("syncSaveEsData()")
     public void syncSaveEsData(ProceedingJoinPoint pjp) throws Throwable {
         pjp.proceed();
@@ -79,7 +75,6 @@ public class SyncDatabaseAspect {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Around("syncDeleteEsData()")
     public void syncDeleteEsData(ProceedingJoinPoint pjp) throws Throwable {
         pjp.proceed();

@@ -75,7 +75,7 @@ public class Handler {
     public final static int PAGE_SIZE_FV = 50;
     public final static int PAGE_SIZE_HA = 100;
 
-    private long starttime = System.currentTimeMillis();
+    private long startTime = System.currentTimeMillis();
 
     public User getUser(HttpServletRequest request) {
         User user = (User) request.getSession(true).getAttribute(Constants.USER_SESSION_NAME);
@@ -492,12 +492,12 @@ public class Handler {
         return getOrgi();
     }
 
-    public long getStarttime() {
-        return starttime;
+    public long getStartTime() {
+        return startTime;
     }
 
-    public void setStarttime(long starttime) {
-        this.starttime = starttime;
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
     }
 
     /**

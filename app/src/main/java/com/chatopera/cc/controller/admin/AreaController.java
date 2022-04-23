@@ -53,14 +53,14 @@ public class AreaController extends Handler{
 	@Autowired
 	private SysDicRepository sysDicRepository;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "admin" , subtype = "area")
     public ModelAndView index(ModelMap map , HttpServletRequest request) throws IOException {
     	map.addAttribute("areaList", areaRepository.findByOrgi(super.getOrgi(request)));
     	return request(super.createAdminTempletResponse("/admin/area/index"));
     }
     
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "admin" , subtype = "area")
     public ModelAndView add(ModelMap map , HttpServletRequest request) {
     	SysDic sysDic = sysDicRepository.findByCode(Constants.CSKEFU_SYSTEM_AREA_DIC) ;
@@ -72,7 +72,7 @@ public class AreaController extends Handler{
         return request(super.pageTplResponse("/admin/area/add"));
     }
     
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "admin" , subtype = "area")
     public ModelAndView save(HttpServletRequest request ,@Valid AreaType area) {
     	int areas = areaRepository.countByNameAndOrgi(area.getName(), super.getOrgi(request)) ;
@@ -86,7 +86,7 @@ public class AreaController extends Handler{
     	return request(super.pageTplResponse("redirect:/admin/area/index.html"));
     }
     
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "admin" , subtype = "area")
     public ModelAndView edit(ModelMap map ,HttpServletRequest request , @Valid String id) {
     	map.addAttribute("area", areaRepository.findByIdAndOrgi(id, super.getOrgi(request))) ;
@@ -100,7 +100,7 @@ public class AreaController extends Handler{
         return request(super.pageTplResponse("/admin/area/edit"));
     }
     
-    @RequestMapping("/update")
+    @RequestMapping("/update.html")
     @Menu(type = "admin" , subtype = "area" , admin = true)
     public ModelAndView update(HttpServletRequest request ,@Valid AreaType area) {
     	AreaType areaType = areaRepository.findByIdAndOrgi(area.getId(), super.getOrgi(request)) ;
@@ -114,7 +114,7 @@ public class AreaController extends Handler{
     	return request(super.pageTplResponse("redirect:/admin/area/index.html"));
     }
     
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "admin" , subtype = "area")
     public ModelAndView delete(HttpServletRequest request ,@Valid AreaType area) {
     	AreaType areaType = areaRepository.findByIdAndOrgi(area.getId(), super.getOrgi(request)) ;

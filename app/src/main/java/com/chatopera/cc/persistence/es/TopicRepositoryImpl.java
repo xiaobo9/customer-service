@@ -17,7 +17,7 @@
 package com.chatopera.cc.persistence.es;
 
 import com.chatopera.cc.model.Topic;
-import com.chatopera.cc.persistence.repository.XiaoEUKResultMapper;
+import com.chatopera.cc.persistence.es.mapper.XiaoEUKResultMapper;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;

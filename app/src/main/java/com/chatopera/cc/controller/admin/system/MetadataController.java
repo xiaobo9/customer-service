@@ -20,7 +20,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.hibernate.BaseService;
+import com.chatopera.cc.persistence.hibernate.HibernateDao;
 import com.chatopera.cc.persistence.repository.MetadataRepository;
 import com.chatopera.cc.persistence.repository.SysDicRepository;
 import com.chatopera.cc.persistence.repository.TablePropertiesRepository;
@@ -61,7 +61,7 @@ public class MetadataController extends Handler {
     private MetadataRepository metadataRes;
 
     @Autowired
-    private BaseService<?> service;
+    private HibernateDao<?> service;
 
     @Autowired
     private SysDicRepository sysDicRes;

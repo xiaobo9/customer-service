@@ -197,7 +197,7 @@
       * @throws IOException
       * @throws TemplateException
       */
-     @RequestMapping("/proactive")
+     @RequestMapping("/proactive.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView proactive(
              ModelMap map,
@@ -249,7 +249,7 @@
       * @throws IOException
       * @throws TemplateException
       */
-     @RequestMapping("/index")
+     @RequestMapping("/index.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView index(
              ModelMap map,
@@ -263,7 +263,7 @@
          return view;
      }
 
-     @RequestMapping("/agentusers")
+     @RequestMapping("/agentusers.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView agentusers(HttpServletRequest request, String userid) {
          ModelAndView view = request(super.pageTplResponse("/apps/agent/agentusers"));
@@ -278,7 +278,7 @@
          return view;
      }
 
-     @RequestMapping("/agentuserpage")
+     @RequestMapping("/agentuserpage.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView agentuserpage(
              ModelMap map,
@@ -297,7 +297,7 @@
          return view;
      }
 
-     @RequestMapping("/agentuserLabel")
+     @RequestMapping("/agentuserLabel.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView agentuserLabel(
              ModelMap map,
@@ -313,7 +313,7 @@
          return view;
      }
 
-     @RequestMapping("/agentusersearch")
+     @RequestMapping("/agentusersearch.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView agentusersearch(
              ModelMap map,
@@ -341,7 +341,7 @@
      }
 
 
-     @RequestMapping("/agentusersearchdetails")
+     @RequestMapping("/agentusersearchdetails.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView agentusersearchdetails(
              ModelMap map,
@@ -365,7 +365,7 @@
          return (view);
      }
 
-     @RequestMapping("/agentuser")
+     @RequestMapping("/agentuser.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView agentuser(
              ModelMap map,
@@ -517,7 +517,7 @@
 //     }
 
 
-     @RequestMapping("/workorders/list")
+     @RequestMapping("/workorders/list.html")
      @Menu(type = "apps", subtype = "workorderslist")
      public ModelAndView workorderslist(HttpServletRequest request, String contactsid, ModelMap map) {
          if (MainContext.hasModule(Constants.CSKEFU_MODULE_WORKORDERS) && StringUtils.isNotBlank(contactsid)) {
@@ -540,7 +540,7 @@
       * @param request
       * @return
       */
-     @RequestMapping(value = "/ready")
+     @RequestMapping(value = "/ready.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView ready(HttpServletRequest request) {
          final User logined = super.getUser(request);
@@ -573,7 +573,7 @@
       * @param request
       * @return
       */
-     @RequestMapping(value = "/notready")
+     @RequestMapping(value = "/notready.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView notready(HttpServletRequest request) {
          final User logined = super.getUser(request);
@@ -610,7 +610,7 @@
       * @param request
       * @return
       */
-     @RequestMapping(value = "/busy")
+     @RequestMapping(value = "/busy.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView busy(HttpServletRequest request) {
          final User logined = super.getUser(request);
@@ -645,7 +645,7 @@
       * @param request
       * @return
       */
-     @RequestMapping(value = "/notbusy")
+     @RequestMapping(value = "/notbusy.html")
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView notbusy(HttpServletRequest request) {
          final User logined = super.getUser(request);
@@ -683,7 +683,7 @@
          return request(super.pageTplResponse("/public/success"));
      }
 
-     @RequestMapping(value = "/clean")
+     @RequestMapping(value = "/clean.html")
      @Menu(type = "apps", subtype = "clean", access = false)
      public ModelAndView clean(HttpServletRequest request) throws Exception {
          final String orgi = super.getOrgi(request);
@@ -716,7 +716,7 @@
       * @return
       * @throws Exception
       */
-     @RequestMapping({"/end"})
+     @RequestMapping({"/end.html"})
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView end(HttpServletRequest request, @Valid String id) {
          logger.info("[end] end id {}", id);
@@ -744,7 +744,7 @@
                  .pageTplResponse("redirect:/agent/index.html"));
      }
 
-     @RequestMapping({"/readmsg"})
+     @RequestMapping({"/readmsg.html"})
      @Menu(type = "apps", subtype = "agent")
      public ModelAndView readmsg(HttpServletRequest request, @Valid String userid) {
          List<AgentUserTask> agentUserTaskList = agentUserTaskRes.findByIdAndOrgi(userid, super.getOrgi(request));
@@ -756,7 +756,7 @@
          return request(super.pageTplResponse("/public/success"));
      }
 
-     @RequestMapping({"/blacklist/add"})
+     @RequestMapping({"/blacklist/add.html"})
      @Menu(type = "apps", subtype = "blacklist")
      public ModelAndView blacklistadd(ModelMap map, HttpServletRequest request, @Valid String agentuserid, @Valid String agentserviceid, @Valid String userid)
              throws Exception {
@@ -767,7 +767,7 @@
          return request(super.pageTplResponse("/apps/agent/blacklistadd"));
      }
 
-     @RequestMapping({"/blacklist/save"})
+     @RequestMapping({"/blacklist/save.html"})
      @Menu(type = "apps", subtype = "blacklist")
      public ModelAndView blacklist(
              HttpServletRequest request,
@@ -804,7 +804,7 @@
          return view;
      }
 
-     @RequestMapping("/tagrelation")
+     @RequestMapping("/tagrelation.html")
      @Menu(type = "apps", subtype = "tagrelation")
      public ModelAndView tagrelation(ModelMap map, HttpServletRequest request, @Valid String userid, @Valid String tagid, @Valid String dataid) {
          TagRelation tagRelation = tagRelationRes.findByUseridAndTagid(userid, tagid);
@@ -831,7 +831,7 @@
       * @return
       * @throws IOException
       */
-     @RequestMapping("/image/upload")
+     @RequestMapping("/image/upload.html")
      @Menu(type = "im", subtype = "image", access = false)
      public ModelAndView upload(
              ModelMap map,
@@ -864,7 +864,7 @@
          return view;
      }
 
-     @RequestMapping("/message/image")
+     @RequestMapping("/message/image.html")
      @Menu(type = "resouce", subtype = "image", access = true)
      public ModelAndView messageimage(HttpServletResponse response, ModelMap map, @Valid String id, @Valid String t) throws IOException {
          ChatMessage message = chatMessageRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
@@ -877,7 +877,7 @@
          return request(super.pageTplResponse("/apps/agent/media/messageimage"));
      }
 
-     @RequestMapping("/message/image/upload")
+     @RequestMapping("/message/image/upload.html")
      @Menu(type = "im", subtype = "image", access = false)
      public ModelAndView messageimage(
              @RequestParam(value = "image", required = false) MultipartFile image,
@@ -948,7 +948,7 @@
       * @param agentuserid    坐席ID
       * @return
       */
-     @RequestMapping(value = "/contacts")
+     @RequestMapping(value = "/contacts.html")
      @Menu(type = "apps", subtype = "contacts")
      public ModelAndView contacts(
              ModelMap map,
@@ -1023,7 +1023,7 @@
      }
 
 
-     @RequestMapping(value = "/clean/associated")
+     @RequestMapping(value = "/clean/associated.html")
      @Menu(type = "apps", subtype = "cleanassociated")
      public ModelAndView cleanAssociated(ModelMap map, HttpServletRequest request, final @RequestParam String currentAgentUserContactsId) {
          String contactsid = null;
@@ -1060,7 +1060,7 @@
          return "ok";
      }
 
-     @RequestMapping(value = "/summary")
+     @RequestMapping(value = "/summary.html")
      @Menu(type = "apps", subtype = "summary")
      public ModelAndView summary(
              ModelMap map,
@@ -1094,7 +1094,7 @@
          return request(super.pageTplResponse("/apps/agent/summary"));
      }
 
-     @RequestMapping(value = "/summary/save")
+     @RequestMapping(value = "/summary/save.html")
      @Menu(type = "apps", subtype = "summarysave")
      public ModelAndView summarysave(
              ModelMap map,
@@ -1139,7 +1139,7 @@
       * @param agentuserid
       * @return
       */
-     @RequestMapping(value = "/transfer")
+     @RequestMapping(value = "/transfer.html")
      @Menu(type = "apps", subtype = "transfer")
      public ModelAndView transfer(
              ModelMap map,
@@ -1209,7 +1209,7 @@
       * @param organ
       * @return
       */
-     @RequestMapping(value = "/transfer/agent")
+     @RequestMapping(value = "/transfer/agent.html")
      @Menu(type = "apps", subtype = "transferagent")
      public ModelAndView transferagent(
              ModelMap map,
@@ -1242,7 +1242,7 @@
      }
 
 
-     @RequestMapping("/quicklist")
+     @RequestMapping("/quicklist.html")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quicklist(ModelMap map, HttpServletRequest request, @Valid String typeid) {
          map.addAttribute(
@@ -1262,7 +1262,7 @@
          return request(super.pageTplResponse("/apps/agent/quicklist"));
      }
 
-     @RequestMapping("/quickreply/add")
+     @RequestMapping("/quickreply/add.html")
      @Menu(type = "setting", subtype = "quickreplyadd", admin = true)
      public ModelAndView quickreplyadd(ModelMap map, HttpServletRequest request, @Valid String parentid) {
          if (StringUtils.isNotBlank(parentid)) {
@@ -1276,7 +1276,7 @@
          return request(super.pageTplResponse("/apps/agent/quickreply/add"));
      }
 
-     @RequestMapping("/quickreply/save")
+     @RequestMapping("/quickreply/save.html")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplysave(ModelMap map, HttpServletRequest request, @Valid QuickReply quickReply) {
          if (StringUtils.isNotBlank(quickReply.getTitle()) && StringUtils.isNotBlank(quickReply.getContent())) {
@@ -1289,7 +1289,7 @@
                  "redirect:/agent/quicklist.html?typeid=" + quickReply.getCate()));
      }
 
-     @RequestMapping("/quickreply/delete")
+     @RequestMapping("/quickreply/delete.html")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplydelete(ModelMap map, HttpServletRequest request, @Valid String id) {
          QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundException::new);
@@ -1298,7 +1298,7 @@
                  "redirect:/agent/quicklist.html?typeid=" + quickReply.getCate()));
      }
 
-     @RequestMapping("/quickreply/edit")
+     @RequestMapping("/quickreply/edit.html")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplyedit(ModelMap map, HttpServletRequest request, @Valid String id) {
          QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundException::new);
@@ -1309,7 +1309,7 @@
          return request(super.pageTplResponse("/apps/agent/quickreply/edit"));
      }
 
-     @RequestMapping("/quickreply/update")
+     @RequestMapping("/quickreply/update.html")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplyupdate(ModelMap map, HttpServletRequest request, @Valid QuickReply quickReply) {
          if (StringUtils.isNotBlank(quickReply.getId())) {
@@ -1326,7 +1326,7 @@
                  "redirect:/agent/quicklist.html?typeid=" + quickReply.getCate()));
      }
 
-     @RequestMapping({"/quickreply/addtype"})
+     @RequestMapping({"/quickreply/addtype.html"})
      @Menu(type = "apps", subtype = "kbs")
      public ModelAndView addtype(ModelMap map, HttpServletRequest request, @Valid String typeid) {
          map.addAttribute(
@@ -1340,7 +1340,7 @@
          return request(super.pageTplResponse("/apps/agent/quickreply/addtype"));
      }
 
-     @RequestMapping("/quickreply/type/save")
+     @RequestMapping("/quickreply/type/save.html")
      @Menu(type = "apps", subtype = "kbs")
      public ModelAndView typesave(HttpServletRequest request, @Valid QuickType quickType) {
          int count = quickTypeRes.countByOrgiAndNameAndParentid(
@@ -1356,7 +1356,7 @@
                  "redirect:/agent/quicklist.html?typeid=" + quickType.getParentid()));
      }
 
-     @RequestMapping({"/quickreply/edittype"})
+     @RequestMapping({"/quickreply/edittype.html"})
      @Menu(type = "apps", subtype = "kbs")
      public ModelAndView edittype(ModelMap map, HttpServletRequest request, String id) {
          map.addAttribute("quickType", quickTypeRes.findByIdAndOrgi(id, super.getOrgi(request)));
@@ -1368,7 +1368,7 @@
          return request(super.pageTplResponse("/apps/agent/quickreply/edittype"));
      }
 
-     @RequestMapping("/quickreply/type/update")
+     @RequestMapping("/quickreply/type/update.html")
      @Menu(type = "apps", subtype = "kbs")
      public ModelAndView typeupdate(HttpServletRequest request, @Valid QuickType quickType) {
          QuickType tempQuickType = quickTypeRes.findByIdAndOrgi(quickType.getId(), super.getOrgi(request));
@@ -1383,7 +1383,7 @@
                  super.pageTplResponse("redirect:/agent/quicklist.html?typeid=" + quickType.getId()));
      }
 
-     @RequestMapping({"/quickreply/deletetype"})
+     @RequestMapping({"/quickreply/deletetype.html"})
      @Menu(type = "apps", subtype = "kbs")
      public ModelAndView deletetype(ModelMap map, HttpServletRequest request, @Valid String id) {
          QuickType tempQuickType = quickTypeRes.findByIdAndOrgi(id, super.getOrgi(request));
@@ -1399,7 +1399,7 @@
                  "redirect:/agent/quicklist.html" + (tempQuickType != null ? "?typeid=" + tempQuickType.getParentid() : "")));
      }
 
-     @RequestMapping({"/quickreply/content"})
+     @RequestMapping({"/quickreply/content.html"})
      @Menu(type = "apps", subtype = "quickreply")
      public ModelAndView quickreplycontent(ModelMap map, HttpServletRequest request, @Valid String id) {
          QuickReply quickReply = quickReplyRes.findById(id).orElse(null);
@@ -1409,14 +1409,14 @@
          return request(super.pageTplResponse("/apps/agent/quickreplycontent"));
      }
 
-     @RequestMapping("/calloutcontact/add")
+     @RequestMapping("/calloutcontact/add.html")
      @Menu(type = "apps", subtype = "calloutcontact", admin = true)
      public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String ckind) {
          map.addAttribute("ckind", ckind);
          return request(super.pageTplResponse("/apps/agent/calloutcontact/add"));
      }
 
-     @RequestMapping(value = "/calloutcontact/save")
+     @RequestMapping(value = "/calloutcontact/save.html")
      @Menu(type = "apps", subtype = "calloutcontact")
      public ModelAndView calloutcontactsave(
              ModelMap map,
@@ -1450,7 +1450,7 @@
          return request(super.pageTplResponse("redirect:/agent/index.html"));
      }
 
-     @RequestMapping("/calloutcontact/update")
+     @RequestMapping("/calloutcontact/update.html")
      @Menu(type = "apps", subtype = "calloutcontact")
      public ModelAndView update(HttpServletRequest request, @Valid Contacts contacts) {
          Contacts data = contactsRes.findById(contacts.getId()).orElse(null);

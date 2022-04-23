@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.persistence.repository;
+package com.chatopera.cc.persistence.es.mapper;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -49,24 +49,24 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class XiaoEUKResultMapper extends AbstractResultMapper {
+public class UKResultMapper extends AbstractResultMapper {
 
     private MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
-    public XiaoEUKResultMapper() {
+    public UKResultMapper() {
         this(new SimpleElasticsearchMappingContext());
     }
 
-    public XiaoEUKResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+    public UKResultMapper(MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
         super(new DefaultEntityMapper(mappingContext));
         this.mappingContext = mappingContext;
     }
 
-    public XiaoEUKResultMapper(EntityMapper entityMapper) {
+    public UKResultMapper(EntityMapper entityMapper) {
         super(entityMapper);
     }
 
-    public XiaoEUKResultMapper(
+    public UKResultMapper(
             MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
             EntityMapper entityMapper) {
         super(entityMapper);
@@ -83,8 +83,7 @@ public class XiaoEUKResultMapper extends AbstractResultMapper {
                 if (StringUtils.isNotBlank(hit.getSourceAsString())) {
                     result = mapEntity(hit.getSourceAsString(), hit, clazz);
                 } else {
-                    Collection<DocumentField> values = hit.getFields().values();
-                    result = mapEntity(values, hit, clazz);
+                    result = mapEntity(hit.getFields().values(), hit, clazz);
                 }
                 setPersistentEntityId(result, hit.getId(), clazz);
                 populateScriptFields(result, hit);

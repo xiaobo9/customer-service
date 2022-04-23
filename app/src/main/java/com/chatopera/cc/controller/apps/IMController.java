@@ -165,7 +165,7 @@ public class IMController extends Handler {
      * @param aiid
      * @return
      */
-    @RequestMapping("/{id}")
+    @RequestMapping("/{id}.html")
     @Menu(type = "im", subtype = "point", access = true)
     public ModelAndView point(
             HttpServletRequest request,
@@ -513,7 +513,7 @@ public class IMController extends Handler {
      * @return
      * @throws Exception
      */
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "im", subtype = "index", access = true)
     public ModelAndView index(
             ModelMap map,
@@ -891,7 +891,7 @@ public class IMController extends Handler {
         }
     }
 
-    @RequestMapping("/text/{appid}")
+    @RequestMapping("/text/{appid}.html")
     @Menu(type = "im", subtype = "index", access = true)
     public ModelAndView text(
             HttpServletRequest request,
@@ -983,7 +983,7 @@ public class IMController extends Handler {
     }
 
 
-    @RequestMapping("/leavemsg/save")
+    @RequestMapping("/leavemsg/save.html")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView leavemsgsave(@Valid String appid,
                                      @Valid LeaveMsg msg,
@@ -1046,7 +1046,7 @@ public class IMController extends Handler {
         }
     }
 
-    @RequestMapping("/image/upload")
+    @RequestMapping("/image/upload.html")
     @Menu(type = "im", subtype = "image", access = true)
     public ModelAndView upload(
             ModelMap map, HttpServletRequest request,

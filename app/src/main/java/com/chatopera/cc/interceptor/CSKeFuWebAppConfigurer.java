@@ -14,11 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.config;
+package com.chatopera.cc.interceptor;
 
-import com.chatopera.cc.interceptor.CrossInterceptorHandler;
-import com.chatopera.cc.interceptor.LogIntercreptorHandler;
-import com.chatopera.cc.interceptor.UserInterceptorHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -35,7 +32,7 @@ public class CSKeFuWebAppConfigurer implements WebMvcConfigurer {
                 .excludePathPatterns("/login.html", "/im/**", "/res/image*", "/res/file*", "/cs/**");
         registry.addInterceptor(new CrossInterceptorHandler())
                 .addPathPatterns("/**").excludePathPatterns("/static");
-        registry.addInterceptor(new LogIntercreptorHandler())
+        registry.addInterceptor(new LogInterceptorHandler())
                 .addPathPatterns("/**");
     }
 }

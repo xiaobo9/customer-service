@@ -48,6 +48,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -676,13 +677,15 @@ public class MainUtils {
      *
      * @return
      */
+    @NotNull
     public static SystemConfig getSystemConfig() {
         SystemConfig systemConfig = MainContext.getCache().findOneSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI);
         if (systemConfig == null) {
             SystemConfigRepository systemConfigRes = MainContext.getContext().getBean(SystemConfigRepository.class);
             systemConfig = systemConfigRes.findByOrgi(Constants.SYSTEM_ORGI);
         }
-        return systemConfig;
+        // FIXME 默认配置
+        return systemConfig != null ? systemConfig : new SystemConfig();
     }
 
     /**

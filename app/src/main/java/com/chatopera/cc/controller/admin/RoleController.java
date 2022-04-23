@@ -65,7 +65,7 @@ public class RoleController extends Handler {
     @Autowired
     UserProxy userProxy;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String role, @Valid String msg) {
         Organ currentOrgan = super.getOrgan(request);
@@ -92,13 +92,13 @@ public class RoleController extends Handler {
         return request(super.createAdminTempletResponse("/admin/role/index"));
     }
 
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView add(ModelMap map, HttpServletRequest request) {
         return request(super.pageTplResponse("/admin/role/add"));
     }
 
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView save(HttpServletRequest request, @Valid Role role) {
         Organ currentOrgan = super.getOrgan(request);
@@ -117,7 +117,7 @@ public class RoleController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/role/index.html?msg=" + msg));
     }
 
-    @RequestMapping("/seluser")
+    @RequestMapping("/seluser.html")
     @Menu(type = "admin", subtype = "seluser", admin = true)
     public ModelAndView seluser(ModelMap map, HttpServletRequest request, @Valid String role) {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
@@ -128,7 +128,7 @@ public class RoleController extends Handler {
         return request(super.pageTplResponse("/admin/role/seluser"));
     }
 
-    @RequestMapping("/saveuser")
+    @RequestMapping("/saveuser.html")
     @Menu(type = "admin", subtype = "saveuser", admin = true)
     public ModelAndView saveuser(HttpServletRequest request, @Valid String[] users, @Valid String role) {
         Role roleData = roleRepository.findByIdAndOrgi(role, super.getOrgi());
@@ -155,7 +155,7 @@ public class RoleController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/role/index.html?role=" + role));
     }
 
-    @RequestMapping("/user/delete")
+    @RequestMapping("/user/delete.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView userroledelete(HttpServletRequest request, @Valid String id, @Valid String role) {
         if (role != null) {
@@ -164,7 +164,7 @@ public class RoleController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/role/index.html?role=" + role));
     }
 
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id) {
         ModelAndView view = request(super.pageTplResponse("/admin/role/edit"));
@@ -172,7 +172,7 @@ public class RoleController extends Handler {
         return view;
     }
 
-    @RequestMapping("/update")
+    @RequestMapping("/update.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView update(HttpServletRequest request, @Valid Role role) {
         Role tempRoleExist = roleRepository.findByNameAndOrgi(role.getName(), super.getOrgi());
@@ -189,7 +189,7 @@ public class RoleController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/role/index.html?msg=" + msg));
     }
 
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView delete(HttpServletRequest request, @Valid Role role) {
         String msg = "admin_role_delete";
@@ -202,7 +202,7 @@ public class RoleController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/role/index.html?msg=" + msg));
     }
 
-    @RequestMapping("/auth")
+    @RequestMapping("/auth.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView auth(ModelMap map, final HttpServletRequest request, final @Valid String id) {
         logger.info("[auth] role id {}", id);
@@ -217,7 +217,7 @@ public class RoleController extends Handler {
         return request(super.pageTplResponse("/admin/role/auth"));
     }
 
-    @RequestMapping("/auth/save")
+    @RequestMapping("/auth/save.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView authsave(HttpServletRequest request, @Valid String id, @Valid String menus) {
         // logger.info("[authsave] id {}, menus {}", id, menus);

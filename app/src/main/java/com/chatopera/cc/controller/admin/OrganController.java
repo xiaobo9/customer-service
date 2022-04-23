@@ -83,7 +83,7 @@ public class OrganController extends Handler {
         return organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi()).values();
     }
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String organ, @Valid String msg) {
         List<Organ> organList = organRepository.findByOrgi(super.getOrgi());
@@ -114,7 +114,7 @@ public class OrganController extends Handler {
         return request(super.createAdminTempletResponse("/admin/organ/index"));
     }
 
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView add(ModelMap map, HttpServletRequest request, @Valid String parent, @Valid String area) {
         map.addAttribute("areaList", areaRepository.findByOrgi(super.getOrgi()));
@@ -130,7 +130,7 @@ public class OrganController extends Handler {
         return request(super.pageTplResponse("/admin/organ/add"));
     }
 
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView save(HttpServletRequest request, @Valid Organ organ) {
         Organ tempOrgan = organRepository.findByNameAndOrgi(organ.getName(), super.getOrgi(request));
@@ -156,7 +156,7 @@ public class OrganController extends Handler {
      * @param organ
      * @return
      */
-    @RequestMapping("/seluser")
+    @RequestMapping("/seluser.html")
     @Menu(type = "admin", subtype = "seluser", admin = true)
     public ModelAndView seluser(ModelMap map, HttpServletRequest request, @Valid String organ) {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
@@ -177,7 +177,7 @@ public class OrganController extends Handler {
      * @param organ
      * @return
      */
-    @RequestMapping("/saveuser")
+    @RequestMapping("/saveuser.html")
     @Menu(type = "admin", subtype = "saveuser", admin = true)
     public ModelAndView saveuser(
             HttpServletRequest request,
@@ -240,7 +240,7 @@ public class OrganController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/organ/index.html?organ=" + organ));
     }
 
-    @RequestMapping("/user/delete")
+    @RequestMapping("/user/delete.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView userroledelete(
             final HttpServletRequest request,
@@ -259,7 +259,7 @@ public class OrganController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/organ/index.html?organ=" + organ));
     }
 
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id) {
         ModelAndView view = request(super.pageTplResponse("/admin/organ/edit"));
@@ -271,7 +271,7 @@ public class OrganController extends Handler {
         return view;
     }
 
-    @RequestMapping("/update")
+    @RequestMapping("/update.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView update(HttpServletRequest request, @Valid Organ organ) {
         String msg = organProxy.updateOrgan(organ, super.getOrgi(request), super.getUser(request));
@@ -279,7 +279,7 @@ public class OrganController extends Handler {
                 "redirect:/admin/organ/index.html?msg=" + msg + "&organ=" + organ.getId()));
     }
 
-    @RequestMapping("/area")
+    @RequestMapping("/area.html")
     @Menu(type = "admin", subtype = "area")
     public ModelAndView area(ModelMap map, HttpServletRequest request, @Valid String id) {
 
@@ -295,7 +295,7 @@ public class OrganController extends Handler {
     }
 
 
-    @RequestMapping("/area/update")
+    @RequestMapping("/area/update.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView areaupdate(HttpServletRequest request, @Valid Organ organ) {
         Organ tempOrgan = organRepository.findByIdAndOrgi(organ.getId(), super.getOrgi());
@@ -310,7 +310,7 @@ public class OrganController extends Handler {
                 "redirect:/admin/organ/index.html?msg=" + msg + "&organ=" + organ.getId()));
     }
 
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView delete(HttpServletRequest request, @Valid Organ organ) {
         String msg = "admin_organ_delete";
@@ -329,7 +329,7 @@ public class OrganController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/organ/index.html?msg=" + msg));
     }
 
-    @RequestMapping("/auth/save")
+    @RequestMapping("/auth/save.html")
     @Menu(type = "admin", subtype = "role")
     public ModelAndView authsave(HttpServletRequest request, @Valid String id, @Valid String menus) {
         Organ organData = organRepository.findByIdAndOrgi(id, super.getOrgi());

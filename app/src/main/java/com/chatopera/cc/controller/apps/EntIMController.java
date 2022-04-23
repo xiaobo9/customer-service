@@ -116,7 +116,7 @@ public class EntIMController extends Handler {
         return organs;
     }
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView index(HttpServletRequest request) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/index"));
@@ -141,13 +141,13 @@ public class EntIMController extends Handler {
         return view;
     }
 
-    @RequestMapping("/skin")
+    @RequestMapping("/skin.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView skin() {
         return request(super.createEntIMTempletResponse("/apps/entim/skin"));
     }
 
-    @RequestMapping("/point")
+    @RequestMapping("/point.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView point(HttpServletRequest request) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/point"));
@@ -158,13 +158,13 @@ public class EntIMController extends Handler {
         return view;
     }
 
-    @RequestMapping("/expand")
+    @RequestMapping("/expand.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView expand() {
         return request(super.createEntIMTempletResponse("/apps/entim/expand"));
     }
 
-    @RequestMapping("/chat")
+    @RequestMapping("/chat.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView chat(HttpServletRequest request, @Valid String userid) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/chat"));
@@ -212,7 +212,7 @@ public class EntIMController extends Handler {
         return view;
     }
 
-    @RequestMapping("/chat/more")
+    @RequestMapping("/chat/more.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView chatMore(HttpServletRequest request, @Valid String userid, @Valid Date createtime) {
         ModelAndView view = request(super.pageTplResponse("/apps/entim/more"));
@@ -226,7 +226,7 @@ public class EntIMController extends Handler {
         return view;
     }
 
-    @RequestMapping("/group")
+    @RequestMapping("/group.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView groupMore(HttpServletRequest request, @Valid String id) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/group/index"));
@@ -240,7 +240,7 @@ public class EntIMController extends Handler {
         return view;
     }
 
-    @RequestMapping("/group/more")
+    @RequestMapping("/group/more.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView group(HttpServletRequest request, @Valid String id, @Valid Date createtime) {
         ModelAndView view = request(super.pageTplResponse("/apps/entim/group/more"));
@@ -250,7 +250,7 @@ public class EntIMController extends Handler {
         return view;
     }
 
-    @RequestMapping("/group/user")
+    @RequestMapping("/group/user.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView user(HttpServletRequest request, @Valid String id) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/group/user"));
@@ -302,7 +302,7 @@ public class EntIMController extends Handler {
         }
     }
 
-    @RequestMapping("/group/tipmsg")
+    @RequestMapping("/group/tipmsg.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView tipmsg(@Valid String id, @Valid String tipmsg) {
         ModelAndView view = request(super.pageTplResponse("/apps/entim/group/tipmsg"));
@@ -315,7 +315,7 @@ public class EntIMController extends Handler {
         return view;
     }
 
-    @RequestMapping("/group/save")
+    @RequestMapping("/group/save.html")
     @Menu(type = "im", subtype = "entim")
     public ModelAndView groupsave(HttpServletRequest request, @Valid IMGroup group) {
         ModelAndView view = request(super.pageTplResponse("/apps/entim/group/grouplist"));
@@ -362,7 +362,7 @@ public class EntIMController extends Handler {
         return data;
     }
 
-    @RequestMapping("/image/upload")
+    @RequestMapping("/image/upload.html")
     @Menu(type = "im", subtype = "image", access = true)
     public ModelAndView upload(
             ModelMap map, HttpServletRequest request,

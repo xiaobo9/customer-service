@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.persistence.es;
+package com.chatopera.cc.persistence.es.mapper;
 
 import com.chatopera.cc.model.KbsTopic;
 import com.chatopera.cc.model.KbsTopicComment;
+import com.chatopera.cc.persistence.es.mapper.UKResultMapper;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.InternalDateHistogram;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class UKAggResultExtractor extends UKResultMapper{
+public class UKAggResultExtractor extends UKResultMapper {
 	
 	private String term ;
 	

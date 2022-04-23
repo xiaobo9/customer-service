@@ -72,7 +72,7 @@ public class AgentSettingsController extends Handler {
     @Autowired
     private Cache cache;
 
-    @RequestMapping("/agent/index")
+    @RequestMapping("/agent/index.html")
     @Menu(type = "setting", subtype = "sessionconfig")
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
         SessionConfig sessionConfig = null;

@@ -18,9 +18,8 @@ package com.chatopera.cc.config;
 
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.exception.InstantMessagingExceptionListener;
-import com.corundumstudio.socketio.AuthorizationListener;
 import com.corundumstudio.socketio.Configuration;
-import com.corundumstudio.socketio.HandshakeData;
+import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.SpringAnnotationScanner;
 import org.apache.commons.lang3.StringUtils;
@@ -54,24 +53,14 @@ public class MessagingServerConfigure {
 
     private SocketIOServer server;
 
-    @Bean(name = "webimport")
     public Integer getWebIMPort() {
-        if (sslPort != null) {
-            return sslPort;
-        } else {
-            return port;
-        }
+        return sslPort != null ? sslPort : port;
     }
 
     @Bean
     public SocketIOServer socketIOServer() throws NoSuchAlgorithmException, IOException {
         Configuration config = new Configuration();
-//		config.setHostname("localhost");
         config.setPort(port);
-
-//		config.getSocketConfig().setReuseAddress(true);
-//		config.setSocketConfig(new SocketConfig());
-//		config.setOrigin("*");
         config.setExceptionListener(new InstantMessagingExceptionListener());
 
         File sslFile = new File(path, "ssl/https.properties");
@@ -80,30 +69,24 @@ public class MessagingServerConfigure {
             FileInputStream in = new FileInputStream(sslFile);
             sslProperties.load(in);
             in.close();
-            if (StringUtils.isNotBlank(sslProperties.getProperty("key-store")) && StringUtils.isNotBlank(
-                    sslProperties.getProperty("key-store-password"))) {
-                config.setKeyStorePassword(MainUtils.decryption(sslProperties.getProperty("key-store-password")));
-                InputStream stream = new FileInputStream(
-                        new File(path, "ssl/" + sslProperties.getProperty("key-store")));
+            String keyStore = sslProperties.getProperty("key-store");
+            String storePassword = sslProperties.getProperty("key-store-password");
+            if (StringUtils.isNotBlank(keyStore) && StringUtils.isNotBlank(storePassword)) {
+                config.setKeyStorePassword(MainUtils.decryption(storePassword));
+                InputStream stream = new FileInputStream(new File(path, "ssl/" + keyStore));
                 config.setKeyStore(stream);
             }
         }
 
 
-//	    config.setSSLProtocol("https");
-        int workThreads = StringUtils.isNotBlank(threads) && threads.matches("[\\d]{1,6}") ? Integer.parseInt(
-                threads) : 100;
+        int workThreads = StringUtils.isNotBlank(threads) && threads.matches("[\\d]{1,6}") ? Integer.parseInt(threads) : 100;
         config.setWorkerThreads(workThreads);
-//		config.setStoreFactory(new HazelcastStoreFactory());
-        config.setAuthorizationListener(new AuthorizationListener() {
-            public boolean isAuthorized(HandshakeData data) {
-                return true;
-            }
-        });
-        config.getSocketConfig().setReuseAddress(true);
-        config.getSocketConfig().setSoLinger(0);
-        config.getSocketConfig().setTcpNoDelay(true);
-        config.getSocketConfig().setTcpKeepAlive(true);
+        config.setAuthorizationListener(data -> true);
+        SocketConfig socketConfig = config.getSocketConfig();
+        socketConfig.setReuseAddress(true);
+        socketConfig.setSoLinger(0);
+        socketConfig.setTcpNoDelay(true);
+        socketConfig.setTcpKeepAlive(true);
 
         return server = new SocketIOServer(config);
     }
@@ -114,7 +97,7 @@ public class MessagingServerConfigure {
     }
 
     @PreDestroy
-    public void destory() {
+    public void destroy() {
         server.stop();
     }
 }  

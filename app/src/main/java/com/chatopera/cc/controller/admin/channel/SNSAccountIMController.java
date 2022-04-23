@@ -60,7 +60,7 @@ public class SNSAccountIMController extends Handler {
     @Autowired
     private OrganProxy organProxy;
 
-    @RequestMapping("/index")
+    @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "im", access = false, admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String execute, @RequestParam(name = "status", required = false) String status) {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
@@ -77,13 +77,13 @@ public class SNSAccountIMController extends Handler {
         return request(super.createAdminTempletResponse("/admin/channel/im/index"));
     }
 
-    @RequestMapping("/add")
+    @RequestMapping("/add.html")
     @Menu(type = "admin", subtype = "send", access = false, admin = true)
     public ModelAndView add(ModelMap map, HttpServletRequest request) {
         return request(super.pageTplResponse("/admin/channel/im/add"));
     }
 
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "admin", subtype = "weixin")
     public ModelAndView save(HttpServletRequest request,
                              @Valid SNSAccount snsAccount) throws NoSuchAlgorithmException {
@@ -125,7 +125,7 @@ public class SNSAccountIMController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/im/index.html?status=" + status));
     }
 
-    @RequestMapping("/delete")
+    @RequestMapping("/delete.html")
     @Menu(type = "weixin", subtype = "delete")
     public ModelAndView delete(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String confirm) {
         boolean execute;
@@ -143,14 +143,14 @@ public class SNSAccountIMController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/im/index.html?execute=" + execute));
     }
 
-    @RequestMapping("/edit")
+    @RequestMapping("/edit.html")
     @Menu(type = "admin", subtype = "send", access = false, admin = true)
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id) {
         map.addAttribute("snsAccount", snsAccountRes.findByIdAndOrgi(id, super.getOrgi(request)));
         return request(super.pageTplResponse("/admin/channel/im/edit"));
     }
 
-    @RequestMapping("/update")
+    @RequestMapping("/update.html")
     @Menu(type = "admin", subtype = "send", access = false, admin = true)
     public ModelAndView update(HttpServletRequest request, @Valid SNSAccount snsAccount) throws NoSuchAlgorithmException {
         SNSAccount oldSnsAccount = snsAccountRes.findByIdAndOrgi(snsAccount.getId(), super.getOrgi(request));

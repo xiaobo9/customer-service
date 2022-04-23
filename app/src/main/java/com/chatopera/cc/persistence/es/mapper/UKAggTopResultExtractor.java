@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.persistence.es;
+package com.chatopera.cc.persistence.es.mapper;
 
 import com.chatopera.cc.model.UKAgg;
+import com.chatopera.cc.persistence.es.mapper.UKResultMapper;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -31,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class UKAggTopResultExtractor extends UKResultMapper{
+public class UKAggTopResultExtractor extends UKResultMapper {
 	
 	private String term  , name ;
 	

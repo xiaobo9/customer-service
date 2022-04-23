@@ -18,6 +18,7 @@ package com.chatopera.cc.persistence.es;
 
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.model.QuickReply;
+import com.chatopera.cc.persistence.es.mapper.UKResultMapper;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -93,7 +94,7 @@ public class QuickReplyRepositoryImpl implements QuickReplyEsCommonRepository {
         }
         NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder).withSort(new FieldSortBuilder("createtime").unmappedType("date").order(SortOrder.DESC));
         searchQueryBuilder.withHighlightFields(new HighlightBuilder.Field("title").fragmentSize(200));
-        SearchQuery searchQuery = searchQueryBuilder.build().setPageable(new PageRequest(0, 10000));
+        SearchQuery searchQuery = searchQueryBuilder.build().setPageable(PageRequest.of(0, 10000));
         if (elasticsearchTemplate.indexExists(QuickReply.class)) {
             pages = elasticsearchTemplate.queryForList(searchQuery, QuickReply.class);
         }
@@ -124,15 +125,15 @@ public class QuickReplyRepositoryImpl implements QuickReplyEsCommonRepository {
 
         Page<QuickReply> pages = null;
 
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        boolQueryBuilder.must(termQuery("cate", cate));
+        BoolQueryBuilder builder = QueryBuilders.boolQuery();
+        builder.must(termQuery("cate", cate));
 
         if (!StringUtils.isBlank(q)) {
-            boolQueryBuilder.must(new QueryStringQueryBuilder(q).defaultOperator(Operator.AND));
+            builder.must(new QueryStringQueryBuilder(q).defaultOperator(Operator.AND));
         }
 
-        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder).withQuery(termQuery("creater", user)).withSort(new FieldSortBuilder("top").unmappedType("boolean").order(SortOrder.DESC)).withSort(new FieldSortBuilder("updatetime").unmappedType("date").order(SortOrder.DESC));
-        SearchQuery searchQuery = searchQueryBuilder.build().setPageable(new PageRequest(p, ps));
+        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder().withQuery(builder).withQuery(termQuery("creater", user)).withSort(new FieldSortBuilder("top").unmappedType("boolean").order(SortOrder.DESC)).withSort(new FieldSortBuilder("updatetime").unmappedType("date").order(SortOrder.DESC));
+        SearchQuery searchQuery = searchQueryBuilder.build().setPageable(PageRequest.of(p, ps));
         if (elasticsearchTemplate.indexExists(QuickReply.class)) {
             pages = elasticsearchTemplate.queryForPage(searchQuery, QuickReply.class, new UKResultMapper());
         }
@@ -165,9 +166,7 @@ public class QuickReplyRepositoryImpl implements QuickReplyEsCommonRepository {
 
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(termQuery("orgi", orgi));
-        if (!StringUtils.isBlank(type)) {
-            boolQueryBuilder.must(termQuery("type", type));
-        }
+        mustTermQuery(boolQueryBuilder, "type", type);
 
         if (!StringUtils.isBlank(q)) {
             boolQueryBuilder.must(new QueryStringQueryBuilder(q).defaultOperator(Operator.AND));
@@ -199,12 +198,9 @@ public class QuickReplyRepositoryImpl implements QuickReplyEsCommonRepository {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.must(termQuery("orgi", orgi));
 
-        if (!StringUtils.isBlank(cate)) {
-            boolQueryBuilder.must(termQuery("cate", cate));
-        }
-        if (!StringUtils.isBlank(type)) {
-            boolQueryBuilder.must(termQuery("type", type));
-        }
+        mustTermQuery(boolQueryBuilder, "cate", cate);
+        mustTermQuery(boolQueryBuilder, "type", type);
+
         if (!StringUtils.isBlank(q)) {
             boolQueryBuilder.must(new QueryStringQueryBuilder(q).defaultOperator(Operator.AND));
         }
@@ -216,4 +212,11 @@ public class QuickReplyRepositoryImpl implements QuickReplyEsCommonRepository {
         }
         return list;
     }
+
+    public void mustTermQuery(BoolQueryBuilder builder, String name, String value) {
+        if (StringUtils.isNotBlank(value)) {
+            builder.must(termQuery(name, value));
+        }
+    }
+
 }

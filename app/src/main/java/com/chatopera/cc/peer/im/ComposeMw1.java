@@ -94,36 +94,34 @@ public class ComposeMw1 implements Middleware<PeerContext> {
     private void prcessAgentUserTask(final PeerContext ctx) {
         AgentUserTask agentUserTask = agentUserTaskRes.getOne(ctx.getMessage().getAgentUser().getId());
 
-        if (agentUserTask != null) {
-            final ChatMessage received = (ChatMessage) ctx.getMessage().getChannelMessage();
-            if (agentUserTask.getLastgetmessage() != null && agentUserTask.getLastmessage() != null) {
-                received.setLastagentmsgtime(agentUserTask.getLastgetmessage());
-                received.setLastmsgtime(agentUserTask.getLastmessage());
-                received.setAgentreplyinterval(
-                        (int) ((System.currentTimeMillis() - agentUserTask.getLastgetmessage().getTime()) / 1000));    //坐席上次回复消息的间隔
-                received.setAgentreplytime(
-                        (int) ((System.currentTimeMillis() - agentUserTask.getLastmessage().getTime()) / 1000));        //坐席回复消息花费时间
-            }
-
-            agentUserTask.setAgentreplys(agentUserTask.getAgentreplys() + 1);    // 总咨询记录数量
-            agentUserTask.setAgentreplyinterval(
-                    agentUserTask.getAgentreplyinterval() + received.getAgentreplyinterval());    //总时长
-            if (agentUserTask.getAgentreplys() > 0) {
-                agentUserTask.setAvgreplyinterval(
-                        agentUserTask.getAgentreplyinterval() / agentUserTask.getAgentreplys());
-            }
-
-            agentUserTask.setLastmsg(
-                    received.getMessage().length() > 100 ? received.getMessage().substring(
-                            0,
-                            100) : received.getMessage());
-
-            if (StringUtils.equals(received.getType(), MainContext.MessageType.MESSAGE.toString())) {
-                agentUserTask.setTokenum(agentUserTask.getTokenum() + 1);
-            }
-            received.setTokenum(agentUserTask.getTokenum());
-
-            agentUserTaskRes.save(agentUserTask);
+        final ChatMessage received = (ChatMessage) ctx.getMessage().getChannelMessage();
+        if (agentUserTask.getLastgetmessage() != null && agentUserTask.getLastmessage() != null) {
+            received.setLastagentmsgtime(agentUserTask.getLastgetmessage());
+            received.setLastmsgtime(agentUserTask.getLastmessage());
+            received.setAgentreplyinterval(
+                    (int) ((System.currentTimeMillis() - agentUserTask.getLastgetmessage().getTime()) / 1000));    //坐席上次回复消息的间隔
+            received.setAgentreplytime(
+                    (int) ((System.currentTimeMillis() - agentUserTask.getLastmessage().getTime()) / 1000));        //坐席回复消息花费时间
         }
+
+        agentUserTask.setAgentreplys(agentUserTask.getAgentreplys() + 1);    // 总咨询记录数量
+        agentUserTask.setAgentreplyinterval(
+                agentUserTask.getAgentreplyinterval() + received.getAgentreplyinterval());    //总时长
+        if (agentUserTask.getAgentreplys() > 0) {
+            agentUserTask.setAvgreplyinterval(
+                    agentUserTask.getAgentreplyinterval() / agentUserTask.getAgentreplys());
+        }
+
+        agentUserTask.setLastmsg(
+                received.getMessage().length() > 100 ? received.getMessage().substring(
+                        0,
+                        100) : received.getMessage());
+
+        if (StringUtils.equals(received.getType(), MainContext.MessageType.MESSAGE.toString())) {
+            agentUserTask.setTokenum(agentUserTask.getTokenum() + 1);
+        }
+        received.setTokenum(agentUserTask.getTokenum());
+
+        agentUserTaskRes.save(agentUserTask);
     }
 }

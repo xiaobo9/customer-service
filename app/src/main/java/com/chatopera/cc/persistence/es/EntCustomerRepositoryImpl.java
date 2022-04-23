@@ -55,18 +55,14 @@ public class EntCustomerRepositoryImpl implements EntCustomerEsCommonRepository 
     @Override
     public Page<EntCustomer> findByCreaterAndSharesAndOrgi(String creater, String shares, String orgi, boolean includeDeleteData, String q, Pageable page) {
 
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        BoolQueryBuilder boolQueryBuilder1 = new BoolQueryBuilder();
-        boolQueryBuilder1.should(termQuery("creater", creater));
-        boolQueryBuilder1.should(termQuery("shares", creater));
-        boolQueryBuilder1.should(termQuery("shares", "all"));
-        boolQueryBuilder.must(boolQueryBuilder1);
-        boolQueryBuilder.must(termQuery("orgi", orgi));
-        if (includeDeleteData) {
-            boolQueryBuilder.must(termQuery("datastatus", true));
-        } else {
-            boolQueryBuilder.must(termQuery("datastatus", false));
-        }
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
+                .must(new BoolQueryBuilder()
+                        .should(termQuery("creater", creater))
+                        .should(termQuery("shares", creater))
+                        .should(termQuery("shares", "all")))
+                .must(termQuery("orgi", orgi))
+                .must(termQuery("datastatus", includeDeleteData));
+
         if (!StringUtils.isBlank(q)) {
             boolQueryBuilder.must(new QueryStringQueryBuilder(q).defaultOperator(Operator.AND));
         }
@@ -74,29 +70,22 @@ public class EntCustomerRepositoryImpl implements EntCustomerEsCommonRepository 
     }
 
     @Override
-    public Page<EntCustomer> findByCreaterAndSharesAndOrgi(String creater,
-                                                           String shares, String orgi, Date begin, Date end, boolean includeDeleteData,
-                                                           BoolQueryBuilder boolQueryBuilder, String q, Pageable page) {
-        BoolQueryBuilder boolQueryBuilder1 = new BoolQueryBuilder();
-        boolQueryBuilder1.should(termQuery("creater", creater));
-        boolQueryBuilder1.should(termQuery("shares", creater));
-        boolQueryBuilder1.should(termQuery("shares", "all"));
-        boolQueryBuilder.must(boolQueryBuilder1);
-        boolQueryBuilder.must(termQuery("orgi", orgi));
-        if (includeDeleteData) {
-            boolQueryBuilder.must(termQuery("datastatus", true));
-        } else {
-            boolQueryBuilder.must(termQuery("datastatus", false));
-        }
+    public Page<EntCustomer> findByCreaterAndSharesAndOrgi(
+            String creater, String shares, String orgi, Date begin, Date end, boolean includeDeleteData,
+            BoolQueryBuilder boolQueryBuilder, String q, Pageable page) {
+        boolQueryBuilder
+                .must(new BoolQueryBuilder()
+                        .should(termQuery("creater", creater))
+                        .should(termQuery("shares", creater))
+                        .should(termQuery("shares", "all")))
+                .must(termQuery("orgi", orgi))
+                .must(termQuery("datastatus", includeDeleteData));
+
         RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("createtime");
         if (begin != null) {
             rangeQuery.from(begin.getTime());
         }
-        if (end != null) {
-            rangeQuery.to(end.getTime());
-        } else {
-            rangeQuery.to(new Date().getTime());
-        }
+        rangeQuery.to(end != null ? end.getTime() : new Date().getTime());
         if (begin != null || end != null) {
             boolQueryBuilder.must(rangeQuery);
         }
@@ -108,31 +97,24 @@ public class EntCustomerRepositoryImpl implements EntCustomerEsCommonRepository 
 
     @Override
     public Page<EntCustomer> findByCreaterAndSharesAndOrgi(String creater, String shares, String orgi, Date begin, Date end, boolean includeDeleteData, String q, Pageable page) {
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        BoolQueryBuilder boolQueryBuilder1 = new BoolQueryBuilder();
-        boolQueryBuilder1.should(termQuery("creater", creater));
-        boolQueryBuilder1.should(termQuery("shares", creater));
-        boolQueryBuilder1.should(termQuery("shares", "all"));
-        boolQueryBuilder.must(boolQueryBuilder1);
-        boolQueryBuilder.must(termQuery("orgi", orgi));
-        if (includeDeleteData) {
-            boolQueryBuilder.must(termQuery("datastatus", true));
-        } else {
-            boolQueryBuilder.must(termQuery("datastatus", false));
-        }
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
+                .must(new BoolQueryBuilder()
+                        .should(termQuery("creater", creater))
+                        .should(termQuery("shares", creater))
+                        .should(termQuery("shares", "all"))
+                )
+                .must(termQuery("orgi", orgi))
+                .must(termQuery("datastatus", includeDeleteData));
+
         RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("createtime");
         if (begin != null) {
             rangeQuery.from(dateFromate.format(begin));
         }
-        if (end != null) {
-            rangeQuery.to(dateFromate.format(end));
-        } else {
-            rangeQuery.to(dateFromate.format(new Date()));
-        }
+        rangeQuery.to(dateFromate.format(end != null ? end : new Date()));
         if (begin != null || end != null) {
             boolQueryBuilder.must(rangeQuery);
         }
-        if (!StringUtils.isBlank(q)) {
+        if (StringUtils.isNotBlank(q)) {
             boolQueryBuilder.must(new QueryStringQueryBuilder(q).defaultOperator(Operator.AND));
         }
         return processQuery(boolQueryBuilder, page);
@@ -140,7 +122,10 @@ public class EntCustomerRepositoryImpl implements EntCustomerEsCommonRepository 
 
 
     private Page<EntCustomer> processQuery(BoolQueryBuilder boolQueryBuilder, Pageable page) {
-        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder).withSort(new FieldSortBuilder("creater").unmappedType("boolean").order(SortOrder.DESC)).withSort(new FieldSortBuilder("name").unmappedType("string").order(SortOrder.DESC));
+        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder()
+                .withQuery(boolQueryBuilder)
+                .withSort(new FieldSortBuilder("creater.keyword").unmappedType("boolean").order(SortOrder.DESC))
+                .withSort(new FieldSortBuilder("name.keyword").unmappedType("string").order(SortOrder.DESC));
 
         searchQueryBuilder.withPageable(page);
 

@@ -18,6 +18,9 @@ package com.chatopera.cc.persistence.es;
 
 import com.chatopera.cc.model.KbsTopicComment;
 import com.chatopera.cc.model.Topic;
+import com.chatopera.cc.persistence.es.mapper.UKAggResultExtractor;
+import com.chatopera.cc.persistence.es.mapper.UKAggTopResultExtractor;
+import com.chatopera.cc.persistence.es.mapper.UKResultMapper;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;

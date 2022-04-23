@@ -79,7 +79,7 @@ public class AppsController extends Handler {
     @Autowired
     private ConsultInviteRepository invite;
 
-    @RequestMapping({"/apps/content"})
+    @RequestMapping({"/apps/content.html"})
     @Menu(type = "apps", subtype = "content")
     public ModelAndView content(ModelMap map, HttpServletRequest request, @Valid String msg) {
         final User user = super.getUser(request);
@@ -208,7 +208,7 @@ public class AppsController extends Handler {
 
     }
 
-    @RequestMapping({"/apps/onlineuser"})
+    @RequestMapping({"/apps/onlineuser.html"})
     @Menu(type = "apps", subtype = "onlineuser")
     public ModelAndView onlineuser(ModelMap map, HttpServletRequest request) {
         Page<OnlineUser> onlineUserList = this.onlineUserRes.findByOrgiAndStatus(
@@ -239,7 +239,7 @@ public class AppsController extends Handler {
         return request(super.createAppsTempletResponse("/apps/desktop/onlineuser"));
     }
 
-    @RequestMapping({"/apps/profile"})
+    @RequestMapping({"/apps/profile.html"})
     @Menu(type = "apps", subtype = "content")
     public ModelAndView profile(ModelMap map, HttpServletRequest request, @Valid String index) {
         map.addAttribute("userData", super.getUser(request));
@@ -247,7 +247,7 @@ public class AppsController extends Handler {
         return request(super.pageTplResponse("/apps/desktop/profile"));
     }
 
-    @RequestMapping({"/apps/profile/save"})
+    @RequestMapping({"/apps/profile/save.html"})
     @Menu(type = "apps", subtype = "content")
     public ModelAndView profile(ModelMap map, HttpServletRequest request, @Valid User user, @Valid String index) {
         User tempUser = userRes.getOne(user.getId());
