@@ -17,6 +17,7 @@ package com.chatopera.cc.cache;
 
 import com.chatopera.cc.aspect.AgentUserAspect;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.exception.CSKefuCacheException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.repository.AgentUserRepository;
@@ -313,7 +314,7 @@ public class Cache {
             // 服务中
             if (!StringUtils.equals(
                     agentUser.getStatus(),
-                    MainContext.AgentUserStatusEnum.INSERVICE.toString())) {
+                    AgentUserStatusEnum.INSERVICE.toString())) {
                 // 删除旧记录
                 redisCommand.delHashKV(RedisKey.getAgentUserInServHashKey(orgi), agentUser.getUserid());
             }
@@ -321,14 +322,14 @@ public class Cache {
             // 等待服务
             if (!StringUtils.equals(
                     agentUser.getStatus(),
-                    MainContext.AgentUserStatusEnum.INQUENE.toString())) {
+                    AgentUserStatusEnum.INQUENE.toString())) {
                 // 删除旧记录
                 redisCommand.delHashKV(RedisKey.getAgentUserInQueHashKey(orgi), agentUser.getUserid());
             }
         }
 
         // 更新新记录，忽略状态为END的agentUser，已结束的服务不加入缓存
-        if (!StringUtils.equals(agentUser.getStatus(), MainContext.AgentUserStatusEnum.END.toString())) {
+        if (!StringUtils.equals(agentUser.getStatus(), AgentUserStatusEnum.END.toString())) {
             redisCommand.setHashKV(
                     RedisKey.getAgentUserHashKeyByStatusStr(orgi, agentUser.getStatus()), agentUser.getUserid(),
                     SerializeUtil.serialize(agentUser));

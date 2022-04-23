@@ -22,6 +22,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.User;
@@ -304,7 +305,7 @@ public class AgentEventHandler {
         if (agentUser != null &&
                 agentno != null &&
                 StringUtils.equals(agentno, agentUser.getAgentno()) &&
-                !StringUtils.equals(agentUser.getStatus(), MainContext.AgentUserStatusEnum.END.toString())) {
+                !StringUtils.equals(agentUser.getStatus(), AgentUserStatusEnum.END.toString())) {
             logger.info("[onEvent] condition：visitor online.");
 
             /**

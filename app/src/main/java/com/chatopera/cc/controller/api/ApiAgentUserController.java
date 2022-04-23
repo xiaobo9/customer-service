@@ -22,6 +22,7 @@ import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext.*;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
@@ -204,9 +205,8 @@ public class ApiAgentUserController extends Handler {
                 // 转接源坐席
                 final AgentStatus currentAgentStatus = cache.findOneAgentStatusByAgentnoAndOrig(currentAgentno, orgi);
 
-                if (StringUtils.equals(
-                        AgentUserStatusEnum.INSERVICE.toString(),
-                        agentUser.getStatus())) { //转接 ， 发送消息给 目标坐席
+                //转接 ， 发送消息给 目标坐席
+                if (StringUtils.equals(AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus())) {
                     // 更新当前坐席的服务访客列表
                     if (currentAgentStatus != null) {
                         cache.deleteOnlineUserIdFromAgentStatusByUseridAndAgentnoAndOrgi(userId, currentAgentno, orgi);

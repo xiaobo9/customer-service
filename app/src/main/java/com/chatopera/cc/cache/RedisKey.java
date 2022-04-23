@@ -16,6 +16,7 @@
 package com.chatopera.cc.cache;
 
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 
 public class RedisKey {
 
@@ -88,7 +89,7 @@ public class RedisKey {
      * @return
      */
     public static String getAgentUserInQueHashKey(final String orgi) {
-        return getAgentUserHashKeyByStatusStr(orgi, MainContext.AgentUserStatusEnum.INQUENE.toString());
+        return getAgentUserHashKeyByStatusStr(orgi, AgentUserStatusEnum.INQUENE.toString());
     }
 
     /**
@@ -98,7 +99,7 @@ public class RedisKey {
      * @return
      */
     public static String getAgentUserInServHashKey(final String orgi) {
-        return getAgentUserHashKeyByStatusStr(orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString());
+        return getAgentUserHashKeyByStatusStr(orgi, AgentUserStatusEnum.INSERVICE.toString());
     }
 
     /**
@@ -108,7 +109,7 @@ public class RedisKey {
      * @return
      */
     public static String getAgentUserEndHashKey(final String orgi) {
-        return getAgentUserHashKeyByStatusStr(orgi, MainContext.AgentUserStatusEnum.END.toString());
+        return getAgentUserHashKeyByStatusStr(orgi, AgentUserStatusEnum.END.toString());
     }
 
     /**

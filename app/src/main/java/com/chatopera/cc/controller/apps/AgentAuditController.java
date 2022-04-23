@@ -23,6 +23,7 @@ import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.CSKefuException;
@@ -163,22 +164,22 @@ public class AgentAuditController extends Handler {
         if (StringUtils.isBlank(skill) && StringUtils.isBlank(agentno)) {
             if (organs.size() > 0) {
                 agentUsers = agentUserRes.findByOrgiAndStatusAndSkillInAndAgentnoIsNot(
-                        orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), organs.keySet(), logined.getId(), defaultSort);
+                        orgi, AgentUserStatusEnum.INSERVICE.toString(), organs.keySet(), logined.getId(), defaultSort);
             }
         } else if (StringUtils.isNotBlank(skill) && StringUtils.isNotBlank(agentno)) {
             view.addObject("skill", skill);
             view.addObject("agentno", agentno);
             agentUsers = agentUserRes.findByOrgiAndStatusAndSkillAndAgentno(
-                    orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
+                    orgi, AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
         } else if (StringUtils.isNotBlank(skill)) {
             view.addObject("skill", skill);
             agentUsers = agentUserRes.findByOrgiAndStatusAndSkillAndAgentnoIsNot(
-                    orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
+                    orgi, AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
         } else {
             // agent is not Blank
             view.addObject("agentno", agentno);
             agentUsers = agentUserRes.findByOrgiAndStatusAndAgentno(
-                    orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), agentno, defaultSort);
+                    orgi, AgentUserStatusEnum.INSERVICE.toString(), agentno, defaultSort);
         }
 
         logger.info("[index] agent users size: {}", agentUsers.size());
@@ -218,17 +219,17 @@ public class AgentAuditController extends Handler {
 
         if (StringUtils.isBlank(skill) && StringUtils.isBlank(agentno)) {
             agentUsers = agentUserRes.findByOrgiAndStatusAndAgentnoIsNot(
-                    orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), logined.getId(), defaultSort);
+                    orgi, AgentUserStatusEnum.INSERVICE.toString(), logined.getId(), defaultSort);
         } else if (StringUtils.isNotBlank(skill) && StringUtils.isNotBlank(agentno)) {
             agentUsers = agentUserRes.findByOrgiAndStatusAndSkillAndAgentno(
-                    orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
+                    orgi, AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
         } else if (StringUtils.isNotBlank(skill)) {
             agentUsers = agentUserRes.findByOrgiAndStatusAndSkillAndAgentnoIsNot(
-                    orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
+                    orgi, AgentUserStatusEnum.INSERVICE.toString(), skill, agentno, defaultSort);
         } else {
             // agent is not Blank
             agentUsers = agentUserRes.findByOrgiAndStatusAndAgentno(
-                    orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), agentno, defaultSort);
+                    orgi, AgentUserStatusEnum.INSERVICE.toString(), agentno, defaultSort);
         }
 
         view.addObject("agentUserList", agentUsers);
@@ -245,7 +246,7 @@ public class AgentAuditController extends Handler {
         Sort defaultSort = new Sort(Sort.Direction.DESC, "status");
         view.addObject(
                 "agentUserList", agentUserRes.findByOrgiAndStatusAndAgentnoIsNot(
-                        orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), logined.getId(), defaultSort));
+                        orgi, AgentUserStatusEnum.INSERVICE.toString(), logined.getId(), defaultSort));
         List<AgentUser> agentUserList = agentUserRepository.findByUseridAndOrgi(userid, logined.getOrgi());
         view.addObject(
                 "curagentuser", agentUserList != null && agentUserList.size() > 0 ? agentUserList.get(0) : null);
@@ -324,7 +325,7 @@ public class AgentAuditController extends Handler {
                     .valueOf(this.agentServiceRes
                             .countByUseridAndOrgiAndStatus(agentUser
                                             .getUserid(), orgi,
-                                    MainContext.AgentUserStatusEnum.END
+                                    AgentUserStatusEnum.END
                                             .toString())));
             view.addObject("tagRelationList", tagRelationRes.findByUserid(agentUser.getUserid()));
 
@@ -507,7 +508,7 @@ public class AgentAuditController extends Handler {
             final AgentStatus currentAgentStatus = cache.findOneAgentStatusByAgentnoAndOrig(currentAgentno, orgi);
 
             if (StringUtils.equals(
-                    MainContext.AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus())) { //转接 ， 发送消息给 目标坐席
+                    AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus())) { //转接 ， 发送消息给 目标坐席
 
                 // 更新当前坐席的服务访客列表
                 if (currentAgentStatus != null) {

@@ -20,6 +20,7 @@ import com.chatopera.cc.acd.ACDQueueService;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.AgentUserContacts;
@@ -132,7 +133,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
             /**
              * 找到空闲坐席，如果未找到坐席，则将该用户放入到 排队队列
              */
-            switch (MainContext.AgentUserStatusEnum.toValue(ctx.getAgentService().getStatus())) {
+            switch (AgentUserStatusEnum.toValue(ctx.getAgentService().getStatus())) {
                 case INSERVICE:
                     ctx.setMessage(acdMessageHelper.getSuccessMessage(
                             ctx.getAgentService(),
@@ -153,7 +154,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
                     }
 
                     agentStatusProxy.broadcastAgentsStatus(
-                            ctx.getOrgi(), "user", MainContext.AgentUserStatusEnum.INSERVICE.toString(),
+                            ctx.getOrgi(), "user", AgentUserStatusEnum.INSERVICE.toString(),
                             ctx.getAgentUser().getId());
                     break;
                 case INQUENE:
@@ -181,7 +182,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
                     }
 
                     agentStatusProxy.broadcastAgentsStatus(
-                            ctx.getOrgi(), "user", MainContext.AgentUserStatusEnum.INQUENE.toString(),
+                            ctx.getOrgi(), "user", AgentUserStatusEnum.INQUENE.toString(),
                             ctx.getAgentUser().getId());
 
                     break;

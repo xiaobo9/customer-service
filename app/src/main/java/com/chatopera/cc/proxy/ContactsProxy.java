@@ -12,6 +12,7 @@ package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.AgentUser;
@@ -98,7 +99,7 @@ public class ContactsProxy {
             // 查看 WebIM 渠道
             agentUserRes.findOneByContactIdAndStatusNotAndChannelAndOrgi(
                     contact.getId(),
-                    MainContext.AgentUserStatusEnum.END.toString(),
+                    AgentUserStatusEnum.END.toString(),
                     MainContext.ChannelType.WEBIM.toString(),
                     contact.getOrgi())
                     .filter(p -> StringUtils.equals(p.getAgentno(), logined.getId()))
@@ -129,7 +130,7 @@ public class ContactsProxy {
                         if (agentUserOpt.isPresent()) {
                             AgentUser agentUser = agentUserOpt.get();
                             if ((StringUtils.equals(
-                                    agentUser.getStatus(), MainContext.AgentUserStatusEnum.INSERVICE.toString())) &&
+                                    agentUser.getStatus(), AgentUserStatusEnum.INSERVICE.toString())) &&
                                     (StringUtils.equals(agentUser.getAgentno(), logined.getId()))) {
                                 // 该联系人的Skype账号被服务中
                                 // TODO 此处可能是因为该联系的Skype对应的AgentUser没有被结束，长期被一个坐席占有

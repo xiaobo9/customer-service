@@ -24,6 +24,7 @@
  import com.chatopera.cc.basic.MainContext;
  import com.chatopera.cc.basic.MainUtils;
  import com.chatopera.cc.basic.ThumbnailUtils;
+ import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
  import com.chatopera.cc.cache.Cache;
  import com.chatopera.cc.controller.Handler;
  import com.chatopera.cc.exception.CSKefuException;
@@ -457,12 +458,11 @@
                  }
              }
 
-             view.addObject("serviceCount", Integer
-                     .valueOf(this.agentServiceRes
-                             .countByUseridAndOrgiAndStatus(agentUser
-                                             .getUserid(), orgi,
-                                     MainContext.AgentUserStatusEnum.END
-                                             .toString())));
+             view.addObject("serviceCount", this.agentServiceRes
+                     .countByUseridAndOrgiAndStatus(agentUser
+                                     .getUserid(), orgi,
+                             AgentUserStatusEnum.END
+                                     .toString()));
              view.addObject("tagRelationList", tagRelationRes.findByUserid(agentUser.getUserid()));
          }
 
@@ -688,7 +688,7 @@
      public ModelAndView clean(HttpServletRequest request) throws Exception {
          final String orgi = super.getOrgi(request);
          List<AgentUser> agentUserList = agentUserRes.findByAgentnoAndStatusAndOrgi(
-                 super.getUser(request).getId(), MainContext.AgentUserStatusEnum.END.toString(),
+                 super.getUser(request).getId(), AgentUserStatusEnum.END.toString(),
                  super.getOrgi(request));
          List<AgentService> agentServiceList = new ArrayList<AgentService>();
          for (AgentUser agentUser : agentUserList) {
@@ -696,7 +696,7 @@
                  acdAgentService.finishAgentUser(agentUser, orgi);
                  AgentService agentService = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
                  if (agentService != null) {
-                     agentService.setStatus(MainContext.AgentUserStatusEnum.END.toString());
+                     agentService.setStatus(AgentUserStatusEnum.END.toString());
                      agentServiceList.add(agentService);
                  }
              }

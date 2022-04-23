@@ -19,6 +19,7 @@ package com.chatopera.cc.acd;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.model.AgentUser;
@@ -347,7 +348,7 @@ public class ACDPolicyService {
     }
 
     public int getAgentUsersBySkill(AgentStatus agentStatus, String skill) {
-        return agentUserRes.countByAgentnoAndStatusAndOrgiAndSkill(agentStatus.getAgentno(), MainContext.AgentUserStatusEnum.INSERVICE.toString(), agentStatus.getOrgi(), skill);
+        return agentUserRes.countByAgentnoAndStatusAndOrgiAndSkill(agentStatus.getAgentno(), AgentUserStatusEnum.INSERVICE.toString(), agentStatus.getOrgi(), skill);
     }
 
 }

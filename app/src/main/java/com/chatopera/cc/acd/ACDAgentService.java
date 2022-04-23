@@ -21,6 +21,7 @@ import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
@@ -102,7 +103,7 @@ public class ACDAgentService {
              * 如果没有AgentService或该AgentService没有坐席或AgentService在排队中，则不发送
              */
             if (ctx.getAgentService() != null && (!ctx.isNoagent()) && !StringUtils.equals(
-                    MainContext.AgentUserStatusEnum.INQUENE.toString(),
+                    AgentUserStatusEnum.INQUENE.toString(),
                     ctx.getAgentService().getStatus())) {
                 // 通知消息到坐席
                 MainContext.getPeerSyncIM().send(MainContext.ReceiverType.AGENT,
@@ -308,13 +309,13 @@ public class ACDAgentService {
              */
             // 获得坐席状态
             AgentStatus agentStatus = null;
-            if (StringUtils.equals(MainContext.AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus()) &&
+            if (StringUtils.equals(AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus()) &&
                     agentUser.getAgentno() != null) {
                 agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentUser.getAgentno(), orgi);
             }
 
             // 设置新AgentUser的状态
-            agentUser.setStatus(MainContext.AgentUserStatusEnum.END.toString());
+            agentUser.setStatus(AgentUserStatusEnum.END.toString());
             if (agentUser.getServicetime() != null) {
                 agentUser.setSessiontimes(System.currentTimeMillis() - agentUser.getServicetime().getTime());
             }
@@ -337,7 +338,7 @@ public class ACDAgentService {
             }
 
             if (service != null) {
-                service.setStatus(MainContext.AgentUserStatusEnum.END.toString());
+                service.setStatus(AgentUserStatusEnum.END.toString());
                 service.setEndtime(new Date());
                 if (service.getServicetime() != null) {
                     service.setSessiontimes(System.currentTimeMillis() - service.getServicetime().getTime());
@@ -389,7 +390,7 @@ public class ACDAgentService {
                     Message outMessage = new Message();
                     outMessage.setAgentStatus(agentStatus);
                     outMessage.setMessage(acdMessageHelper.getServiceFinishMessage(agentUser.getChannel(), agentUser.getSkill(), orgi));
-                    outMessage.setMessageType(MainContext.AgentUserStatusEnum.END.toString());
+                    outMessage.setMessageType(AgentUserStatusEnum.END.toString());
                     outMessage.setCalltype(MainContext.CallType.IN.toString());
                     outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                     outMessage.setAgentUser(agentUser);
@@ -463,7 +464,7 @@ public class ACDAgentService {
             throw new CSKefuException("Invalid agentUser info");
         }
 
-        if (!StringUtils.equals(MainContext.AgentUserStatusEnum.END.toString(), agentUser.getStatus())) {
+        if (!StringUtils.equals(AgentUserStatusEnum.END.toString(), agentUser.getStatus())) {
             /**
              * 未结束聊天，先结束对话，然后删除记录
              */
@@ -516,9 +517,9 @@ public class ACDAgentService {
 
         if (finished == true) {
             // 服务结束
-            agentUser.setStatus(MainContext.AgentUserStatusEnum.END.toString());
-            agentService.setStatus(MainContext.AgentUserStatusEnum.END.toString());
-            agentService.setSessiontype(MainContext.AgentUserStatusEnum.END.toString());
+            agentUser.setStatus(AgentUserStatusEnum.END.toString());
+            agentService.setStatus(AgentUserStatusEnum.END.toString());
+            agentService.setSessiontype(AgentUserStatusEnum.END.toString());
             if (agentStatus == null) {
                 // 没有满足条件的坐席，留言
                 agentService.setLeavemsg(true);
@@ -532,18 +533,18 @@ public class ACDAgentService {
         } else if (agentStatus != null) {
             agentService.setAgent(agentStatus.getAgentno());
             agentService.setSkill(agentUser.getSkill());
-            agentUser.setStatus(MainContext.AgentUserStatusEnum.INSERVICE.toString());
-            agentService.setStatus(MainContext.AgentUserStatusEnum.INSERVICE.toString());
-            agentService.setSessiontype(MainContext.AgentUserStatusEnum.INSERVICE.toString());
+            agentUser.setStatus(AgentUserStatusEnum.INSERVICE.toString());
+            agentService.setStatus(AgentUserStatusEnum.INSERVICE.toString());
+            agentService.setSessiontype(AgentUserStatusEnum.INSERVICE.toString());
             // 设置坐席名字
             agentService.setAgentno(agentStatus.getUserid());
             agentService.setAgentusername(agentStatus.getUsername());
         } else {
             // 不是服务结束，但是没有满足条件的坐席
             // 加入到排队中
-            agentUser.setStatus(MainContext.AgentUserStatusEnum.INQUENE.toString());
-            agentService.setStatus(MainContext.AgentUserStatusEnum.INQUENE.toString());
-            agentService.setSessiontype(MainContext.AgentUserStatusEnum.INQUENE.toString());
+            agentUser.setStatus(AgentUserStatusEnum.INQUENE.toString());
+            agentService.setStatus(AgentUserStatusEnum.INQUENE.toString());
+            agentService.setSessiontype(AgentUserStatusEnum.INQUENE.toString());
         }
 
         if (finished || agentStatus != null) {

@@ -18,6 +18,7 @@ package com.chatopera.cc.controller.apps.service;
 
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.AgentService;
@@ -25,7 +26,6 @@ import com.chatopera.cc.model.AgentServiceSummary;
 import com.chatopera.cc.model.WeiXinUser;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.repository.*;
-import com.chatopera.cc.proxy.AgentUserProxy;
 import com.chatopera.cc.util.Menu;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -49,9 +49,6 @@ public class OnlineUserController extends Handler {
 
     @Autowired
     private AgentServiceRepository agentServiceRes;
-
-    @Autowired
-    private AgentUserProxy agentUserProxy;
 
     @Autowired
     private OnlineUserRepository onlineUserRes;
@@ -87,135 +84,111 @@ public class OnlineUserController extends Handler {
     @Autowired
     private Cache cache;
 
-    @Autowired
-    private AgentUserRepository agentUserRes;
-
-    @RequestMapping("/online/index")
+    @RequestMapping("/online/index.html")
     @Menu(type = "service", subtype = "online", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, String userid, String agentservice, @Valid String channel) {
-        final String orgi = super.getOrgi(request);
-        if (StringUtils.isNotBlank(userid)) {
-            map.put(
-                    "inviteResult",
-                    MainUtils.getWebIMInviteResult(onlineUserRes.findByOrgiAndUserid(orgi, userid)));
-            map.put("tagRelationList", tagRelationRes.findByUserid(userid));
-            map.put("onlineUserHistList", onlineUserHisRes.findByUseridAndOrgi(userid, orgi));
-            map.put(
-                    "agentServicesAvg", onlineUserRes.countByUserForAvagTime(
-                            orgi,
-                            MainContext.AgentUserStatusEnum.END.toString(),
-                            userid));
-
-            List<AgentService> agentServiceList = agentServiceRes.findByUseridAndOrgiOrderByLogindateDesc(
-                    userid, orgi);
-
-            map.put("agentServiceList", agentServiceList);
-            if (agentServiceList.size() > 0) {
-                map.put("serviceCount", Integer
-                        .valueOf(this.agentServiceRes
-                                .countByUseridAndOrgiAndStatus(userid, orgi,
-                                        MainContext.AgentUserStatusEnum.END.toString())));
-
-                AgentService agentService = agentServiceList.get(0);
-                if (StringUtils.isNotBlank(agentservice)) {
-                    for (AgentService as : agentServiceList) {
-                        if (as.getId().equals(agentservice)) {
-                            agentService = as;
-                            break;
-                        }
-                    }
-                }
-
-                if (agentService != null) {
-                    List<AgentServiceSummary> summaries = serviceSummaryRes.findByAgentserviceidAndOrgi(
-                            agentService.getId(), orgi);
-                    if (summaries.size() > 0) {
-                        map.put("summary", summaries.get(0));
-                    }
-
-                }
-
-                agentUserContactsRes.findOneByUseridAndOrgi(userid, orgi)
-                        .ifPresent(p -> {
-                            map.put("contacts", contactsRes.findById(p.getContactsid()).orElse(null));
-                        });
-                AgentService service = agentServiceRes.findByIdAndOrgi(agentservice, orgi);
-                if (service != null) {
-                    map.addAttribute("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
-                }
-                map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, MainContext.ModelType.SUMMARY.toString()));
-                map.put("curAgentService", agentService);
-
-
-                map.put("agentUserMessageList", chatMessageRepository.findByAgentserviceidAndOrgi(agentService.getId(), orgi,
-                        new PageRequest(0, 50, Direction.DESC, "updatetime")));
-            }
-
-            if (MainContext.ChannelType.WEIXIN.toString().equals(channel)) {
-                List<WeiXinUser> weiXinUserList = weiXinUserRes.findByOpenidAndOrgi(userid, orgi);
-                if (weiXinUserList.size() > 0) {
-                    WeiXinUser weiXinUser = weiXinUserList.get(0);
-                    map.put("weiXinUser", weiXinUser);
-                }
-            } else if (MainContext.ChannelType.WEBIM.toString().equals(channel)) {
-                onlineUserRes.findById(userid).ifPresent(onlineUser -> map.put("onlineUser", onlineUser));
-            }
-
-            cache.findOneAgentUserByUserIdAndOrgi(userid, orgi).ifPresent(agentUser -> {
-                map.put("agentUser", agentUser);
-            });
-
-
+        if (StringUtils.isBlank(userid)) {
+            return request(super.createAppsTempletResponse("/apps/service/online/index"));
         }
+
+        final String orgi = super.getOrgi(request);
+        map.put("inviteResult", MainUtils.getWebIMInviteResult(onlineUserRes.findByOrgiAndUserid(orgi, userid)));
+        map.put("tagRelationList", tagRelationRes.findByUserid(userid));
+        map.put("onlineUserHistList", onlineUserHisRes.findByUseridAndOrgi(userid, orgi));
+        map.put("agentServicesAvg", onlineUserRes.countByUserForAvagTime(orgi, AgentUserStatusEnum.END.toString(), userid));
+
+        List<AgentService> agentServiceList = agentServiceRes.findByUseridAndOrgiOrderByLogindateDesc(userid, orgi);
+
+        map.put("agentServiceList", agentServiceList);
+        if (agentServiceList.size() > 0) {
+            int count = this.agentServiceRes.countByUseridAndOrgiAndStatus(userid, orgi, AgentUserStatusEnum.END.toString());
+            map.put("serviceCount", count);
+
+            AgentService agentService = agentServiceList.get(0);
+            if (StringUtils.isNotBlank(agentservice)) {
+                for (AgentService as : agentServiceList) {
+                    if (as.getId().equals(agentservice)) {
+                        agentService = as;
+                        break;
+                    }
+                }
+            }
+
+            if (agentService != null) {
+                List<AgentServiceSummary> summaries = serviceSummaryRes.findByAgentserviceidAndOrgi(
+                        agentService.getId(), orgi);
+                if (summaries.size() > 0) {
+                    map.put("summary", summaries.get(0));
+                }
+
+            }
+
+            agentUserContactsRes.findOneByUseridAndOrgi(userid, orgi)
+                    .ifPresent(p -> map.put("contacts", contactsRes.findById(p.getContactsid()).orElse(null)));
+
+            AgentService service = agentServiceRes.findByIdAndOrgi(agentservice, orgi);
+            if (service != null) {
+                map.addAttribute("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
+            }
+            map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, MainContext.ModelType.SUMMARY.toString()));
+            map.put("curAgentService", agentService);
+
+
+            map.put("agentUserMessageList", chatMessageRepository.findByAgentserviceidAndOrgi(agentService.getId(), orgi,
+                    PageRequest.of(0, 50, Direction.DESC, "updatetime")));
+        }
+
+        if (MainContext.ChannelType.WEIXIN.toString().equals(channel)) {
+            List<WeiXinUser> weiXinUserList = weiXinUserRes.findByOpenidAndOrgi(userid, orgi);
+            if (weiXinUserList.size() > 0) {
+                WeiXinUser weiXinUser = weiXinUserList.get(0);
+                map.put("weiXinUser", weiXinUser);
+            }
+        } else if (MainContext.ChannelType.WEBIM.toString().equals(channel)) {
+            onlineUserRes.findById(userid).ifPresent(onlineUser -> map.put("onlineUser", onlineUser));
+        }
+
+        cache.findOneAgentUserByUserIdAndOrgi(userid, orgi).ifPresent(agentUser -> {
+            map.put("agentUser", agentUser);
+        });
         return request(super.createAppsTempletResponse("/apps/service/online/index"));
     }
 
-    @RequestMapping("/online/chatmsg")
+    @RequestMapping("/online/chatmsg.html")
     @Menu(type = "service", subtype = "chatmsg", admin = true)
     public ModelAndView onlinechat(ModelMap map, HttpServletRequest request, String id, String title) {
         AgentService agentService = agentServiceRes.getOne(id);
         map.put("curAgentService", agentService);
-        cache.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), super.getOrgi(request)).ifPresent(p -> {
-            map.put("curragentuser", p);
-        });
+        String orgi = super.getOrgi(request);
+        cache.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), orgi)
+                .ifPresent(p -> map.put("curragentuser", p));
 
         if (StringUtils.isNotBlank(title)) {
             map.put("title", title);
         }
 
-        map.put(
-                "summaryTags",
-                tagRes.findByOrgiAndTagtype(super.getOrgi(request), MainContext.ModelType.SUMMARY.toString()));
+        map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, MainContext.ModelType.SUMMARY.toString()));
 
-        if (agentService != null) {
-            List<AgentServiceSummary> summaries = serviceSummaryRes.findByAgentserviceidAndOrgi(
-                    agentService.getId(), super.getOrgi(request));
-            if (summaries.size() > 0) {
-                map.put("summary", summaries.get(0));
-            }
-
+        List<AgentServiceSummary> summaries = serviceSummaryRes.findByAgentserviceidAndOrgi(agentService.getId(), orgi);
+        if (summaries.size() > 0) {
+            map.put("summary", summaries.get(0));
         }
 
-        map.put(
-                "agentUserMessageList",
-                chatMessageRepository.findByAgentserviceidAndOrgi(agentService.getId(), super.getOrgi(request),
-                        new PageRequest(0, 50, Direction.DESC,
-                                "updatetime")));
+        PageRequest pageRequest = PageRequest.of(0, 50, Direction.DESC,
+                "updatetime");
+        map.put("agentUserMessageList", chatMessageRepository.findByAgentserviceidAndOrgi(agentService.getId(), orgi, pageRequest));
 
         return request(super.pageTplResponse("/apps/service/online/chatmsg"));
     }
 
-    @RequestMapping("/trace")
-    @Menu(type = "service", subtype = "trace", admin = false)
-    public ModelAndView trace(
-            final ModelMap map, final HttpServletRequest request,
-            final @Valid String sessionid,
-            final @Valid String userid) {
+    @RequestMapping("/trace.html")
+    @Menu(type = "service", subtype = "trace")
+    public ModelAndView trace(final ModelMap map, final HttpServletRequest request,
+                              final @Valid String sessionid, final @Valid String userid) {
         logger.info("[trace] online user {}, sessionid {}", userid, sessionid);
         if (StringUtils.isNotBlank(sessionid)) {
-            map.addAttribute(
-                    "traceHisList", userEventRes.findBySessionidAndOrgi(sessionid, super.getOrgi(request),
-                            new PageRequest(0, 100)));
+            PageRequest page = PageRequest.of(0, 100);
+            map.addAttribute("traceHisList", userEventRes.findBySessionidAndOrgi(sessionid, super.getOrgi(request), page));
         }
         return request(super.pageTplResponse("/apps/service/online/trace"));
     }

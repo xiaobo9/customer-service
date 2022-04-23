@@ -19,6 +19,7 @@ package com.chatopera.cc.controller.apps;
 import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.*;
@@ -185,7 +186,7 @@ public class AppsController extends Handler {
         map.put(
                 "agentUserCount", onlineUserRes.countByAgentForAgentUser(
                         super.getOrgi(request),
-                        MainContext.AgentUserStatusEnum.INSERVICE.toString(),
+                        AgentUserStatusEnum.INSERVICE.toString(),
                         super.getUser(request).getId(),
                         MainUtils.getStartTime(),
                         MainUtils.getEndTime()));
@@ -193,7 +194,7 @@ public class AppsController extends Handler {
         map.put(
                 "agentServicesCount", onlineUserRes.countByAgentForAgentUser(
                         super.getOrgi(request),
-                        MainContext.AgentUserStatusEnum.END.toString(),
+                        AgentUserStatusEnum.END.toString(),
                         super.getUser(request).getId(),
                         MainUtils.getStartTime(),
                         MainUtils.getEndTime()));
@@ -201,7 +202,7 @@ public class AppsController extends Handler {
         map.put(
                 "agentServicesAvg", onlineUserRes.countByAgentForAvagTime(
                         super.getOrgi(request),
-                        MainContext.AgentUserStatusEnum.END.toString(),
+                        AgentUserStatusEnum.END.toString(),
                         super.getUser(request).getId(),
                         MainUtils.getStartTime(),
                         MainUtils.getEndTime()));

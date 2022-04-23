@@ -18,6 +18,7 @@ package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
@@ -103,7 +104,7 @@ public class AgentServiceProxy {
                 agentServiceRes.findByUseridAndOrgiAndStatus(
                         agentService.getUserid(),
                         orgi,
-                        MainContext.AgentUserStatusEnum.END.toString(),
+                        AgentUserStatusEnum.END.toString(),
                         defaultSort
                 )
         );
@@ -247,7 +248,7 @@ public class AgentServiceProxy {
                     .valueOf(agentServiceRes
                             .countByUseridAndOrgiAndStatus(agentUser
                                             .getUserid(), logined.getOrgi(),
-                                    MainContext.AgentUserStatusEnum.END.toString())));
+                                    AgentUserStatusEnum.END.toString())));
             view.addObject("tagRelationList", tagRelationRes.findByUserid(agentUser.getUserid()));
         }
 

@@ -18,6 +18,7 @@ package com.chatopera.cc.proxy;
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.exception.EntityNotFoundException;
@@ -147,7 +148,7 @@ public class AgentUserProxy {
             } else {
                 // 创建新的AgentUser
                 agentUser = createAgentUserWithContactAndAgentAndChannelAndStatus(
-                        onlineUser, contact, logined, channel, MainContext.AgentUserStatusEnum.INSERVICE.toString(),
+                        onlineUser, contact, logined, channel, AgentUserStatusEnum.INSERVICE.toString(),
                         logined);
             }
         }

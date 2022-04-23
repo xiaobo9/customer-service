@@ -20,6 +20,7 @@ import com.chatopera.cc.acd.ACDQueueService;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.compose4j.Functional;
 import com.chatopera.compose4j.Middleware;
 import org.apache.commons.lang.StringUtils;
@@ -49,7 +50,7 @@ public class ACDVisServiceMw implements Middleware<ACDComposeContext> {
          */
         if (StringUtils.isNotBlank(ctx.getAgentUser().getStatus())) {
             // 该AgentUser已经在数据库中
-            switch (MainContext.AgentUserStatusEnum.toValue(ctx.getAgentUser().getStatus())) {
+            switch (AgentUserStatusEnum.toValue(ctx.getAgentUser().getStatus())) {
                 case INQUENE:
                     logger.info("[apply] agent user is in queue");
                     int queueIndex = acdQueueService.getQueueIndex(

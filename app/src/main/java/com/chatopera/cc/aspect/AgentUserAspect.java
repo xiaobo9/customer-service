@@ -16,7 +16,7 @@
 
 package com.chatopera.cc.aspect;
 
-import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
@@ -94,17 +94,16 @@ public class AgentUserAspect {
         final AgentUser updated = (AgentUser) joinPoint.getArgs()[0];
         final String orgi = (String) joinPoint.getArgs()[1];
         Object proceed = joinPoint.proceed(); // after things are done.
-        logger.info(
-                "[linkAgentUser] agentUser: status {}, userId {}, agentno {}, orgi {}", updated.getStatus(),
+        logger.info("[linkAgentUser] agentUser: status {}, userId {}, agentno {}, orgi {}", updated.getStatus(),
                 updated.getUserid(), updated.getAgentno(), orgi);
-        if (StringUtils.equals(updated.getStatus(), MainContext.AgentUserStatusEnum.END.toString())) {
+        if (StringUtils.equals(updated.getStatus(), AgentUserStatusEnum.END.toString())) {
             // 从集合中删除
             redisCommand.removeSetVal(
                     RedisKey.getInServAgentUsersByAgentnoAndOrgi(updated.getAgentno(), orgi), updated.getUserid());
-        } else if (StringUtils.equals(updated.getStatus(), MainContext.AgentUserStatusEnum.INSERVICE.toString())) {
+        } else if (StringUtils.equals(updated.getStatus(), AgentUserStatusEnum.INSERVICE.toString())) {
             redisCommand.insertSetVal(
                     RedisKey.getInServAgentUsersByAgentnoAndOrgi(updated.getAgentno(), orgi), updated.getUserid());
-        } else if (StringUtils.equals(updated.getStatus(), MainContext.AgentUserStatusEnum.INQUENE.toString())) {
+        } else if (StringUtils.equals(updated.getStatus(), AgentUserStatusEnum.INQUENE.toString())) {
             logger.info("[linkAgentUser] ignored inque agent user, haven't resolve one agent yet.");
         } else {
             logger.warn("[linkAgentUser] unexpected condition.");

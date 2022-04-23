@@ -22,6 +22,7 @@ import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.EntityNotFoundException;
@@ -38,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
@@ -46,7 +46,8 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.text.ParseException;
@@ -92,9 +93,6 @@ public class ChatServiceController extends Handler {
     private UserRepository userRes;
 
     @Autowired
-    private OrgiSkillRelRepository orgiSkillRelService;
-
-    @Autowired
     private UserProxy userProxy;
 
     @Autowired
@@ -112,45 +110,42 @@ public class ChatServiceController extends Handler {
     @Autowired
     private LeaveMsgProxy leaveMsgProxy;
 
-    @RequestMapping("/history/index")
+    @RequestMapping("/history/index.html")
     @Menu(type = "service", subtype = "history", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, final String username, final String channel, final String servicetype, final String allocation, final String servicetimetype, final String begin, final String end) {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
-        Page<AgentService> page = agentServiceRes.findAll(new Specification<AgentService>() {
-            @Override
-            public Predicate toPredicate(Root<AgentService> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-                List<Predicate> list = new ArrayList<Predicate>();
-                Expression<String> exp = root.<String>get("skill");
-                list.add(exp.in(organs.keySet()));
-                if (StringUtils.isNotBlank(username)) {
-                    list.add(cb.equal(root.get("username").as(String.class), username));
-                }
-                if (StringUtils.isNotBlank(channel)) {
-                    list.add(cb.equal(root.get("channel").as(String.class), channel));
-                }
-                if (StringUtils.isNotBlank(servicetype) && StringUtils.isNotBlank(allocation)) {
-                    list.add(cb.equal(root.get(servicetype).as(String.class), allocation));
-                }
-                if (StringUtils.isNotBlank(servicetimetype)) {
-                    try {
-                        if (StringUtils.isNotBlank(begin) && begin.matches("[\\d]{4}-[\\d]{2}-[\\d]{2}")) {
-                            list.add(cb.greaterThanOrEqualTo(
-                                    root.get(servicetimetype).as(Date.class),
-                                    DateFormatEnum.DAY.parse(begin)));
-                        }
-                        if (StringUtils.isNotBlank(end) && end.matches("[\\d]{4}-[\\d]{2}-[\\d]{2}")) {
-                            list.add(cb.lessThanOrEqualTo(
-                                    root.get(servicetimetype).as(Date.class),
-                                    DateFormatEnum.DAY_TIME.parse(end + " 23:59:59")));
-                        }
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                }
-                Predicate[] p = new Predicate[list.size()];
-                return cb.and(list.toArray(p));
+        Page<AgentService> page = agentServiceRes.findAll((Specification<AgentService>) (root, query, cb) -> {
+            List<Predicate> list = new ArrayList<>();
+            Expression<String> exp = root.get("skill");
+            list.add(exp.in(organs.keySet()));
+            if (StringUtils.isNotBlank(username)) {
+                list.add(cb.equal(root.get("username").as(String.class), username));
             }
+            if (StringUtils.isNotBlank(channel)) {
+                list.add(cb.equal(root.get("channel").as(String.class), channel));
+            }
+            if (StringUtils.isNotBlank(servicetype) && StringUtils.isNotBlank(allocation)) {
+                list.add(cb.equal(root.get(servicetype).as(String.class), allocation));
+            }
+            if (StringUtils.isNotBlank(servicetimetype)) {
+                try {
+                    if (StringUtils.isNotBlank(begin) && begin.matches("[\\d]{4}-[\\d]{2}-[\\d]{2}")) {
+                        list.add(cb.greaterThanOrEqualTo(
+                                root.get(servicetimetype).as(Date.class),
+                                DateFormatEnum.DAY.parse(begin)));
+                    }
+                    if (StringUtils.isNotBlank(end) && end.matches("[\\d]{4}-[\\d]{2}-[\\d]{2}")) {
+                        list.add(cb.lessThanOrEqualTo(
+                                root.get(servicetimetype).as(Date.class),
+                                DateFormatEnum.DAY_TIME.parse(end + " 23:59:59")));
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            Predicate[] p = new Predicate[list.size()];
+            return cb.and(list.toArray(p));
         }, super.page(request, Direction.DESC, "createtime"));
         map.put("agentServiceList", page);
         map.put("username", username);
@@ -166,25 +161,21 @@ public class ChatServiceController extends Handler {
         return request(super.createAppsTempletResponse("/apps/service/history/index"));
     }
 
-    @RequestMapping("/current/index")
+    @RequestMapping("/current/index.html")
     @Menu(type = "service", subtype = "current", admin = true)
     public ModelAndView current(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
-        map.put(
-                "agentServiceList", agentServiceRes.findByOrgiAndStatusAndAgentskillIn(
-                        super.getOrgi(request),
-                        MainContext.AgentUserStatusEnum.INSERVICE.toString(),
-                        organs.keySet(),
-                        new PageRequest(
-                                super.getP(request),
-                                super.getPs(request), Direction.DESC,
-                                "createtime")));
+        map.put("agentServiceList", agentServiceRes.findByOrgiAndStatusAndAgentskillIn(
+                super.getOrgi(request),
+                AgentUserStatusEnum.INSERVICE.toString(),
+                organs.keySet(),
+                super.page(request, Direction.DESC, "createtime")));
 
         return request(super.createAppsTempletResponse("/apps/service/current/index"));
     }
 
-    @RequestMapping("/current/trans")
+    @RequestMapping("/current/trans.html")
     @Menu(type = "service", subtype = "current", admin = true)
     public ModelAndView trans(ModelMap map, HttpServletRequest request, @Valid String id) {
         Organ targetOrgan = super.getOrgan(request);
@@ -227,7 +218,7 @@ public class ChatServiceController extends Handler {
         return request(super.pageTplResponse("/apps/service/current/transfer"));
     }
 
-    @RequestMapping(value = "/transfer/save")
+    @RequestMapping(value = "/transfer/save.html")
     @Menu(type = "apps", subtype = "transfersave")
     public ModelAndView transfersave(HttpServletRequest request, @Valid String id, @Valid String agentno, @Valid String memo) {
         if (StringUtils.isNotBlank(id)) {
@@ -243,7 +234,7 @@ public class ChatServiceController extends Handler {
                 agentUser.setAgentno(agentno);
                 agentUser.setAgentname(targetAgent.getUname());
                 agentUserRepository.save(agentUser);
-                if (MainContext.AgentUserStatusEnum.INSERVICE.toString().equals(
+                if (AgentUserStatusEnum.INSERVICE.toString().equals(
                         agentUser.getStatus())) {
                     // 转接 ， 发送消息给 目标坐席
                     AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
@@ -319,7 +310,7 @@ public class ChatServiceController extends Handler {
         return request(super.pageTplResponse("redirect:/service/current/index.html"));
     }
 
-    @RequestMapping("/current/end")
+    @RequestMapping("/current/end.html")
     @Menu(type = "service", subtype = "current", admin = true)
     public ModelAndView end(ModelMap map, HttpServletRequest request, @Valid String id) throws Exception {
         if (StringUtils.isNotBlank(id)) {
@@ -331,7 +322,7 @@ public class ChatServiceController extends Handler {
                 if (agentUser != null) {
                     acdAgentService.finishAgentUser(agentUser, user.getOrgi());
                 }
-                agentService.setStatus(MainContext.AgentUserStatusEnum.END.toString());
+                agentService.setStatus(AgentUserStatusEnum.END.toString());
                 agentServiceRes.save(agentService);
             }
         }
@@ -347,7 +338,7 @@ public class ChatServiceController extends Handler {
      * @return
      * @throws Exception
      */
-    @RequestMapping("/current/invite")
+    @RequestMapping("/current/invite.html")
     @Menu(type = "service", subtype = "current", admin = true)
     public ModelAndView currentinvite(
             ModelMap map,
@@ -398,13 +389,13 @@ public class ChatServiceController extends Handler {
     }
 
 
-    @RequestMapping("/quene/index")
+    @RequestMapping("/quene/index.html")
     @Menu(type = "service", subtype = "filter", admin = true)
     public ModelAndView quene(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Page<AgentUser> agentUserList = agentUserRes.findByOrgiAndStatusAndSkillIn(
-                super.getOrgi(request), MainContext.AgentUserStatusEnum.INQUENE.toString(), organs.keySet(),
+                super.getOrgi(request), AgentUserStatusEnum.INQUENE.toString(), organs.keySet(),
                 super.page(request, Direction.DESC, "createtime"));
         List<String> skillGroups = new ArrayList<String>();
         for (AgentUser agentUser : agentUserList.getContent()) {
@@ -431,7 +422,7 @@ public class ChatServiceController extends Handler {
         return request(super.createAppsTempletResponse("/apps/service/quene/index"));
     }
 
-    @RequestMapping("/quene/transfer")
+    @RequestMapping("/quene/transfer.html")
     @Menu(type = "service", subtype = "quenetransfer", admin = true)
     public ModelAndView transfer(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String skillid) {
 
@@ -471,11 +462,11 @@ public class ChatServiceController extends Handler {
         return request(super.pageTplResponse("/apps/service/quene/transfer"));
     }
 
-    @RequestMapping("/quene/transfer/save")
+    @RequestMapping("/quene/transfer/save.html")
     @Menu(type = "service", subtype = "quenetransfer", admin = true)
     public ModelAndView transferSave(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String skillid) {
         AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, super.getOrgi(request));
-        if (agentUser != null && agentUser.getStatus().equals(MainContext.AgentUserStatusEnum.INQUENE.toString())) {
+        if (agentUser != null && agentUser.getStatus().equals(AgentUserStatusEnum.INQUENE.toString())) {
             agentUser.setAgentno(null);
             agentUser.setSkill(skillid);
             agentUserRes.save(agentUser);
@@ -486,13 +477,13 @@ public class ChatServiceController extends Handler {
         return request(super.pageTplResponse("redirect:/service/quene/index.html"));
     }
 
-    @RequestMapping("/quene/invite")
+    @RequestMapping("/quene/invite.html")
     @Menu(type = "service", subtype = "invite", admin = true)
     public ModelAndView invite(ModelMap map, HttpServletRequest request, @Valid String id) throws Exception {
         final User logined = super.getUser(request);
         final String orgi = logined.getOrgi();
         AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, super.getOrgi(request));
-        if (agentUser != null && agentUser.getStatus().equals(MainContext.AgentUserStatusEnum.INQUENE.toString())) {
+        if (agentUser != null && agentUser.getStatus().equals(AgentUserStatusEnum.INQUENE.toString())) {
             acdAgentService.assignVisitorAsInvite(logined.getId(), agentUser, orgi);
         }
         return request(super.pageTplResponse("redirect:/service/quene/index.html"));
@@ -505,7 +496,7 @@ public class ChatServiceController extends Handler {
      * @param request
      * @return
      */
-    @RequestMapping("/agent/index")
+    @RequestMapping("/agent/index.html")
     @Menu(type = "service", subtype = "onlineagent", admin = true)
     public ModelAndView agent(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
@@ -532,7 +523,7 @@ public class ChatServiceController extends Handler {
      * @param id
      * @return
      */
-    @RequestMapping("/agent/offline")
+    @RequestMapping("/agent/offline.html")
     @Menu(type = "service", subtype = "offline", admin = true)
     public ModelAndView offline(ModelMap map, HttpServletRequest request, @Valid String id) {
 
@@ -555,7 +546,7 @@ public class ChatServiceController extends Handler {
      * @param request
      * @return
      */
-    @RequestMapping("/user/index")
+    @RequestMapping("/user/index.html")
     @Menu(type = "service", subtype = "userlist", admin = true)
     public ModelAndView user(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
@@ -578,7 +569,7 @@ public class ChatServiceController extends Handler {
         return request(super.createAppsTempletResponse("/apps/service/user/index"));
     }
 
-    @RequestMapping("/leavemsg/index")
+    @RequestMapping("/leavemsg/index.html")
     @Menu(type = "service", subtype = "leavemsg", admin = true)
     public ModelAndView leavemsg(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
@@ -595,7 +586,7 @@ public class ChatServiceController extends Handler {
         return request(super.createAppsTempletResponse("/apps/service/leavemsg/index"));
     }
 
-    @RequestMapping("/leavemsg/delete")
+    @RequestMapping("/leavemsg/delete.html")
     @Menu(type = "service", subtype = "leavemsg", admin = true)
     public ModelAndView leavemsg(ModelMap map, HttpServletRequest request, @Valid String id) {
         if (StringUtils.isNotBlank(id)) {

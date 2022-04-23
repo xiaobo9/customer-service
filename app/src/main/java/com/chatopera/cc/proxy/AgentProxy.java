@@ -4,6 +4,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.ThumbnailUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.apps.UploadService;
 import com.chatopera.cc.exception.CSKefuException;
@@ -191,7 +192,7 @@ public class AgentProxy {
         outMessage.setMessage(sf.getFileUrl());
 
         if (agentUser != null && !StringUtils.equals(
-                agentUser.getStatus(), MainContext.AgentUserStatusEnum.END.toString())) {
+                agentUser.getStatus(), AgentUserStatusEnum.END.toString())) {
             // 发送消息
             outMessage.setFilename(multipart.getOriginalFilename());
             outMessage.setFilesize((int) multipart.getSize());

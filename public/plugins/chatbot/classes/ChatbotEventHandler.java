@@ -247,7 +247,7 @@ public class ChatbotEventHandler {
                 MainContext.getCache().deleteAgentUserByUserIdAndOrgi(p, orgi);
                 MainContext.getCache().deleteOnlineUserByIdAndOrgi(user, orgi);
 
-                p.setStatus(MainContext.AgentUserStatusEnum.END.toString());
+                p.setStatus(AgentUserStatusEnum.END.toString());
                 onlineUser.setStatus(MainContext.OnlineUserStatusEnum.OFFLINE.toString());
 
                 getAgentUserRes().save(p);

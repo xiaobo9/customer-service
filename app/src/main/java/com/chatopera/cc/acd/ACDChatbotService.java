@@ -17,6 +17,7 @@
 package com.chatopera.cc.acd;
 
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.model.AgentService;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.persistence.repository.AgentServiceRepository;
@@ -52,7 +53,7 @@ public class ACDChatbotService {
             if (agentService.getServicetime() != null) {
                 agentService.setSessiontimes(System.currentTimeMillis() - agentService.getServicetime().getTime());
             }
-            agentService.setStatus(MainContext.AgentUserStatusEnum.END.toString());
+            agentService.setStatus(AgentUserStatusEnum.END.toString());
         } else {
             agentService.setServicetime(now);
             agentService.setLogindate(now);
@@ -75,7 +76,7 @@ public class ACDChatbotService {
             agentService.setUserid(agentUser.getUserid());
             agentService.setAiid(agentUser.getAgentno());
             agentService.setAiservice(true);
-            agentService.setStatus(MainContext.AgentUserStatusEnum.INSERVICE.toString());
+            agentService.setStatus(AgentUserStatusEnum.INSERVICE.toString());
 
             agentService.setAppid(agentUser.getAppid());
             agentService.setLeavemsg(false);

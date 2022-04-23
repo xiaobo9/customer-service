@@ -17,6 +17,7 @@ package com.chatopera.cc.acd;
 
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.model.AgentReport;
 import com.chatopera.cc.model.AgentStatus;
@@ -115,8 +116,8 @@ public class ACDWorkMonitor {
             currentOrgan.setId(organ);
             Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, orgi);
 
-            report.setUsers(agentServiceRes.countByOrgiAndStatusAndAgentskillIn(orgi, MainContext.AgentUserStatusEnum.INSERVICE.toString(), organs.keySet()));
-            report.setInquene(agentUserRes.countByOrgiAndStatusAndSkillIn(orgi, MainContext.AgentUserStatusEnum.INQUENE.toString(), organs.keySet()));
+            report.setUsers(agentServiceRes.countByOrgiAndStatusAndAgentskillIn(orgi, AgentUserStatusEnum.INSERVICE.toString(), organs.keySet()));
+            report.setInquene(agentUserRes.countByOrgiAndStatusAndSkillIn(orgi, AgentUserStatusEnum.INQUENE.toString(), organs.keySet()));
         } else {
             // 服务中
             report.setUsers(cache.getInservAgentUsersSizeByOrgi(orgi));

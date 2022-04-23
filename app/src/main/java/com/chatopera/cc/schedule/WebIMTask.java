@@ -20,6 +20,7 @@ import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.peer.PeerSyncIM;
@@ -82,7 +83,7 @@ public class WebIMTask {
                 if (sessionConfig.isSessiontimeout()) {        //设置了启用 超时提醒
                     final List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLastmessageLessThanAndStatusAndOrgi(
                             MainUtils.getLastTime(sessionConfig.getTimeout()),
-                            MainContext.AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
+                            AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
                         cache.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
@@ -121,7 +122,7 @@ public class WebIMTask {
                 } else if (sessionConfig.isResessiontimeout()) {    //未启用超时提醒，只设置了超时断开
                     List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLastmessageLessThanAndStatusAndOrgi(
                             MainUtils.getLastTime(sessionConfig.getRetimeout()),
-                            MainContext.AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
+                            AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
                         cache.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
@@ -147,7 +148,7 @@ public class WebIMTask {
                 if (sessionConfig.isQuene()) {    // 启用排队超时功能，超时断开
                     List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLogindateLessThanAndStatusAndOrgi(
                             MainUtils.getLastTime(sessionConfig.getQuenetimeout()),
-                            MainContext.AgentUserStatusEnum.INQUENE.toString(), sessionConfig.getOrgi());
+                            AgentUserStatusEnum.INQUENE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
                         cache.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
@@ -179,7 +180,7 @@ public class WebIMTask {
                 if (sessionConfig != null && MainContext.getContext() != null && sessionConfig.isAgentreplaytimeout()) {
                     List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLastgetmessageLessThanAndStatusAndOrgi(
                             MainUtils.getLastTime(sessionConfig.getAgenttimeout()),
-                            MainContext.AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
+                            AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
                         cache.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
@@ -210,7 +211,7 @@ public class WebIMTask {
     public void onlineuser() {
         final Page<OnlineUser> pages = onlineUserRes.findByStatusAndCreatetimeLessThan(
                 MainContext.OnlineUserStatusEnum.ONLINE.toString(),
-                MainUtils.getLastTime(60), new PageRequest(0, 1000));
+                MainUtils.getLastTime(60), PageRequest.of(0, 1000));
         if (pages.getContent().size() > 0) {
             for (final OnlineUser onlineUser : pages.getContent()) {
                 try {
@@ -294,18 +295,18 @@ public class WebIMTask {
                 // 通知坐席
                 if (agentUser != null && StringUtils.isNotBlank(agentUser.getAgentno())) {
                     peerSyncIM.send(MainContext.ReceiverType.AGENT, MainContext.ChannelType.WEBIM,
-                                    agentUser.getAppid(),
-                                    MainContext.MessageType.MESSAGE, agentUser.getAgentno(), outMessage, true);
+                            agentUser.getAppid(),
+                            MainContext.MessageType.MESSAGE, agentUser.getAgentno(), outMessage, true);
                 }
 
                 // 通知访客
                 if (StringUtils.isNotBlank(chatMessage.getTouser())) {
                     peerSyncIM.send(MainContext.ReceiverType.VISITOR,
-                                    MainContext.ChannelType.toValue(agentUser.getChannel()),
-                                    agentUser.getAppid(),
-                                    MainContext.MessageType.MESSAGE,
-                                    agentUser.getUserid(),
-                                    outMessage, true);
+                            MainContext.ChannelType.toValue(agentUser.getChannel()),
+                            agentUser.getAppid(),
+                            MainContext.MessageType.MESSAGE,
+                            agentUser.getUserid(),
+                            outMessage, true);
                 }
             }
         }
