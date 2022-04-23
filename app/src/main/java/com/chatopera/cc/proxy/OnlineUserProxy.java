@@ -17,6 +17,7 @@
 package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.basic.Constants;
+import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.Cache;
@@ -496,7 +497,7 @@ public class OnlineUserProxy {
                 onlineUser.setLogintime(now);
 
                 // 地理信息
-                String ip = MainUtils.getIpAddr(request);
+                String ip = IPUtils.getIpAddress(request);
                 onlineUser.setIp(ip);
                 IP ipdata = IPTools.getInstance().findGeography(ip);
                 onlineUser.setCountry(ipdata.getCountry());

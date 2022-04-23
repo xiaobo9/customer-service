@@ -139,8 +139,9 @@ public class SystemConfigController extends Handler {
     @RequestMapping("/stopimserver")
     @Menu(type = "admin", subtype = "stopimserver", access = false, admin = true)
     public ModelAndView stopimserver(ModelMap map, HttpServletRequest request, @Valid String confirm) throws SQLException {
-        boolean execute;
-        if (execute = MainUtils.secConfirm(secRes, super.getOrgi(request), confirm)) {
+        List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));
+        boolean execute = MainUtils.secConfirm(confirm, secretConfig);
+        if (execute) {
             server.stop();
             MainContext.setIMServerStatus(false);
         }
@@ -172,8 +173,9 @@ public class SystemConfigController extends Handler {
     @RequestMapping("/stop")
     @Menu(type = "admin", subtype = "stop", access = false, admin = true)
     public ModelAndView stop(ModelMap map, HttpServletRequest request, @Valid String confirm) throws SQLException {
-        boolean execute = false;
-        if (execute = MainUtils.secConfirm(secRes, super.getOrgi(request), confirm)) {
+        List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));
+        boolean execute = MainUtils.secConfirm(confirm, secretConfig);
+        if (execute) {
             server.stop();
             MainContext.setIMServerStatus(false);
             System.exit(0);

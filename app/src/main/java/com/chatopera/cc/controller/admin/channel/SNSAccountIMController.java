@@ -128,8 +128,9 @@ public class SNSAccountIMController extends Handler {
     @RequestMapping("/delete.html")
     @Menu(type = "weixin", subtype = "delete")
     public ModelAndView delete(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String confirm) {
-        boolean execute;
-        if (execute = MainUtils.secConfirm(secRes, super.getOrgi(request), confirm)) {
+        List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));
+        boolean execute = MainUtils.secConfirm(confirm, secretConfig);
+        if (execute) {
             SNSAccount snsAccount = snsAccountRes.findByIdAndOrgi(id, super.getOrgi(request));
             if (snsAccountRes != null) {
                 snsAccountRes.delete(snsAccount);

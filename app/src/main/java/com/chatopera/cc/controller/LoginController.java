@@ -118,9 +118,8 @@ public class LoginController extends Handler {
                     if (cookie != null && StringUtils.isNotBlank(cookie.getName()) && StringUtils.isNotBlank(
                             cookie.getValue())) {
                         if (cookie.getName().equals(Constants.CSKEFU_SYSTEM_COOKIES_FLAG)) {
-                            String flagid;
                             try {
-                                flagid = MainUtils.decryption(cookie.getValue());
+                                String flagid = MainUtils.decryption(cookie.getValue());
                                 if (StringUtils.isNotBlank(flagid)) {
                                     User user = userRepository.findById(flagid).orElse(null);
                                     if (user != null) {
@@ -143,9 +142,7 @@ public class LoginController extends Handler {
             view.addObject("msg", msg);
         }
         SystemConfig systemConfig = MainUtils.getSystemConfig();
-        if (systemConfig.isEnableregorgi()) {
-            view.addObject("show", true);
-        }
+        view.addObject("show", systemConfig.isEnableregorgi());
         view.addObject("systemConfig", systemConfig);
 
         if (StringUtils.isNotBlank(tongjiBaiduSiteKey) && !StringUtils.equalsIgnoreCase(tongjiBaiduSiteKey, "placeholder")) {

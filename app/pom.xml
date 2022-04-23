@@ -5,9 +5,9 @@
     <artifactId>app</artifactId>
     <packaging>jar</packaging>
     <name>app</name>
-    <description>春松客服：多渠道智能客服系统</description>
+    <description>customer service</description>
     <parent>
-        <groupId>com.chatopera.cc</groupId>
+        <groupId>com.github.xiaobo9.customer-service</groupId>
         <artifactId>parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>

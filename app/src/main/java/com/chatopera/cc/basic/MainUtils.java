@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.googlecode.aviator.AviatorEvaluator;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConversionException;
@@ -500,9 +499,8 @@ public class MainUtils {
     /**
      * @param str
      * @return
-     * @throws NoSuchAlgorithmException
      */
-    public static String encryption(final String str) throws NoSuchAlgorithmException {
+    public static String encryption(final String str) {
         BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
         textEncryptor.setPassword(MainContext.getSystemSecrityPassword());
         return textEncryptor.encrypt(str);
@@ -520,9 +518,8 @@ public class MainUtils {
     }
 
     public static String getTopic(final String snsid, final String msgtype, final String eventype, final String eventkey, final String msg) {
-        StringBuffer strb = new StringBuffer();
-        strb.append(snsid);
-        strb.append(".").append(msgtype);
+        StringBuilder strb = new StringBuilder()
+                .append(snsid).append(".").append(msgtype);
         if (msgtype.equals("text")) {
             strb.append(".").append(msg);
         } else if (msgtype.equals("exchange")) {
@@ -537,7 +534,7 @@ public class MainUtils {
     }
 
     public static String getTopic(String snsid, String msgtype, String eventype) {
-        StringBuffer strb = new StringBuffer();
+        StringBuilder strb = new StringBuilder();
         strb.append(snsid);
         strb.append(".").append(msgtype);
         if (msgtype.equals("text")) {
@@ -561,7 +558,7 @@ public class MainUtils {
         Elements pngs = document.select("img[src]");
         for (Element element : pngs) {
             String imgUrl = element.attr("src");
-            if (imgUrl.indexOf("/res/image") >= 0) {
+            if (imgUrl.contains("/res/image")) {
                 element.attr("class", "ukefu-media-image");
             }
         }
@@ -601,21 +598,18 @@ public class MainUtils {
     }
 
     public static String processEmoti(String message) {
-        Pattern pattern = Pattern.compile("\\[([\\d]*?)\\]");
-        SystemConfig systemConfig = MainContext.getCache().findOneSystemByIdAndOrgi(
-                "systemConfig", Constants.SYSTEM_ORGI);
+        Pattern pattern = Pattern.compile("\\[([\\d]*?)]");
+        SystemConfig systemConfig = MainContext.getCache().findOneSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI);
 
         Matcher matcher = pattern.matcher(message);
         StringBuffer strb = new StringBuffer();
         while (matcher.find()) {
+            String name = matcher.group(1);
             if (systemConfig != null && StringUtils.isNotBlank(systemConfig.getIconstr())) {
-                matcher.appendReplacement(
-                        strb,
-                        "<img src='" + systemConfig.getIconstr() + "/im/js/kindeditor/plugins/emoticons/images/" + matcher.group(
-                                1) + ".png'>");
+                String s = "<img src='" + systemConfig.getIconstr() + "/im/js/kindeditor/plugins/emoticons/images/" + name + ".png'>";
+                matcher.appendReplacement(strb, s);
             } else {
-                matcher.appendReplacement(
-                        strb, "<img src='/im/js/kindeditor/plugins/emoticons/images/" + matcher.group(1) + ".png'>");
+                matcher.appendReplacement(strb, "<img src='/im/js/kindeditor/plugins/emoticons/images/" + name + ".png'>");
             }
         }
         matcher.appendTail(strb);
@@ -625,40 +619,9 @@ public class MainUtils {
         return strb.toString().replaceAll("[\\ud800\\udc00-\\udbff\\udfff\\ud800-\\udfff]", "[表情]");
     }
 
-    public static String getIpAddr(HttpServletRequest request) {
-        String ip = request.getHeader("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
-    }
-
-    public static String getIpAddr(HttpHeaders headers, String remoteAddr) {
-        String ip = headers.get("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = headers.get("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = headers.get("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = remoteAddr;
-        }
-        return ip;
-    }
-
-    public static boolean secConfirm(SecretRepository secRes, String orgi, String confirm) {
-        /**
-         * 先调用 IMServer
-         */
+    public static boolean secConfirm(String confirm, List<Secret> secretConfig) {
+        // 先调用 IMServer
         boolean execute = false;
-        List<Secret> secretConfig = secRes.findByOrgi(orgi);
         if (StringUtils.isNotBlank(confirm)) {
             if (secretConfig != null && secretConfig.size() > 0) {
                 Secret secret = secretConfig.get(0);

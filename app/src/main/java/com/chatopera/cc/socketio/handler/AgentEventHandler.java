@@ -18,10 +18,7 @@ package com.chatopera.cc.socketio.handler;
 
 import com.alibaba.fastjson.JSONObject;
 import com.chatopera.cc.activemq.BrokerPublisher;
-import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.DateFormatEnum;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.basic.*;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.model.AgentUser;
@@ -103,7 +100,7 @@ public class AgentEventHandler {
 
             // 工作工作效率
             InetSocketAddress address = (InetSocketAddress) client.getRemoteAddress();
-            String ip = MainUtils.getIpAddr(client.getHandshakeData().getHttpHeaders(), address.getHostString());
+            String ip = IPUtils.getIpAddress(client.getHandshakeData().getHttpHeaders(), address.getHostString());
 
             WorkSessionRepository workSessionRepository = MainContext.getContext().getBean(WorkSessionRepository.class);
             int count = workSessionRepository.countByAgentAndDatestrAndOrgi(

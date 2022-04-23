@@ -20,11 +20,8 @@ import com.chatopera.cc.acd.ACDServiceRouter;
 import com.chatopera.cc.acd.ACDVisitorDispatcher;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
+import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainContext.CallType;
-import com.chatopera.cc.basic.MainContext.ChannelType;
-import com.chatopera.cc.basic.MainContext.MessageType;
-import com.chatopera.cc.basic.MainContext.ReceiverType;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.model.Contacts;
 import com.chatopera.cc.model.CousultInvite;
@@ -34,7 +31,6 @@ import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.AgentStatusMessage;
 import com.chatopera.cc.socketio.message.ChatMessage;
-import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.socketio.util.HumanUtils;
 import com.chatopera.cc.socketio.util.IMServiceUtils;
 import com.chatopera.cc.util.IP;
@@ -50,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.Date;
 
 public class IMEventHandler {
     private final static Logger logger = LoggerFactory.getLogger(IMEventHandler.class);
@@ -112,7 +107,7 @@ public class IMEventHandler {
 
             if (StringUtils.isNotBlank(user)) {
                 InetSocketAddress address = (InetSocketAddress) client.getRemoteAddress();
-                String ip = MainUtils.getIpAddr(client.getHandshakeData().getHttpHeaders(), address.getHostString());
+                String ip = IPUtils.getIpAddress(client.getHandshakeData().getHttpHeaders(), address.getHostString());
 
                 /**
                  * 加入到 缓存列表

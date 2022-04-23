@@ -19,10 +19,7 @@ package com.chatopera.cc.controller.apps;
 
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.acd.ACDWorkMonitor;
-import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.ThumbnailUtils;
+import com.chatopera.cc.basic.*;
 import com.chatopera.cc.cache.Cache;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.EntityNotFoundException;
@@ -265,7 +262,7 @@ public class IMController extends Handler {
                 userHistory.setAppid(id);
                 userHistory.setSessionid(sessionid);
 
-                String ip = MainUtils.getIpAddr(request);
+                String ip = IPUtils.getIpAddress(request);
                 userHistory.setHostname(ip);
                 userHistory.setIp(ip);
                 IP ipdata = IPTools.getInstance().findGeography(ip);
@@ -802,7 +799,7 @@ public class IMController extends Handler {
         if (StringUtils.isNotBlank(type)) {
             map.addAttribute("type", type);
         }
-        IP ipdata = IPTools.getInstance().findGeography(MainUtils.getIpAddr(request));
+        IP ipdata = IPTools.getInstance().findGeography(IPUtils.getIpAddress(request));
         map.addAttribute("skillGroups", OnlineUserProxy.organ(invite.getOrgi(), ipdata, invite, true));
 
         if (consult) {
