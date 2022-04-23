@@ -19,6 +19,7 @@ package com.chatopera.cc.basic.resource;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.freemarker.FreeMarkerTplUtils;
 import com.chatopera.cc.model.JobDetail;
 import com.chatopera.cc.model.MetadataTable;
 import com.chatopera.cc.persistence.impl.BatchDataProcess;
@@ -64,9 +65,9 @@ public class BatchResource extends Resource {
         if (metadataTable != null && !StringUtils.isBlank(this.jobDetail.getBatchtype()) && this.jobDetail.getBatchtype().equals("plan")) {
             if (!StringUtils.isBlank(this.jobDetail.getImptype())) {
                 if (this.jobDetail.getImptype().equals("local")) {
-                    tempFile = new File(MainUtils.getTemplet(this.jobDetail.getImpurl(), new HashMap<String, Object>()));
+                    tempFile = new File(FreeMarkerTplUtils.getTemplate(this.jobDetail.getImpurl(), new HashMap<String, Object>()));
                 } else if (this.jobDetail.getImptype().equals("remote")) {
-                    FileUtils.copyURLToFile(new URL(MainUtils.getTemplet(this.jobDetail.getImpurl(), new HashMap<String, Object>())), tempFile = File.createTempFile("UKeFu-CallOut-Temp", ".xls"));
+                    FileUtils.copyURLToFile(new URL(FreeMarkerTplUtils.getTemplate(this.jobDetail.getImpurl(), new HashMap<String, Object>())), tempFile = File.createTempFile("UKeFu-CallOut-Temp", ".xls"));
                 }
             }
             if (tempFile.exists()) {

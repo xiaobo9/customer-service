@@ -57,7 +57,7 @@ public class AreaController extends Handler{
     @Menu(type = "admin" , subtype = "area")
     public ModelAndView index(ModelMap map , HttpServletRequest request) throws IOException {
     	map.addAttribute("areaList", areaRepository.findByOrgi(super.getOrgi(request)));
-    	return request(super.createAdminTempletResponse("/admin/area/index"));
+    	return request(super.createAdminTemplateResponse("/admin/area/index"));
     }
     
     @RequestMapping("/add.html")

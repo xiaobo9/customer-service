@@ -64,7 +64,7 @@ public class AgentSkillController extends Handler{
     		
 //    		map.addAttribute("userList", userRepository.findBySkill(skill));
     	}
-        return request(super.createAdminTempletResponse("/admin/skill/index"));
+        return request(super.createAdminTemplateResponse("/admin/skill/index"));
     }
     
     @RequestMapping("/add.html")

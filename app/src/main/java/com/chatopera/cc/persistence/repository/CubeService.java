@@ -18,6 +18,7 @@ package com.chatopera.cc.persistence.repository;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.freemarker.FreeMarkerTplUtils;
 import com.chatopera.cc.model.ColumnProperties;
 import com.chatopera.cc.util.bi.CubeReportData;
 import com.chatopera.cc.util.bi.model.FirstTitle;
@@ -54,12 +55,12 @@ public class CubeService {
         schemaFile = new File(mdxFileDir, MainUtils.getUUID() + ".xml");
 
         if (isContentStr) {
-            FileUtils.write(schemaFile, MainUtils.getTemplet(this.xml, this.requestValues), "UTF-8");    //使用系统默认编码
+            FileUtils.write(schemaFile, FreeMarkerTplUtils.getTemplate(this.xml, this.requestValues), "UTF-8");    //使用系统默认编码
         } else {
             StringWriter writer = new StringWriter();
             InputStream stream = CubeService.class.getClassLoader().getResourceAsStream(SCHEMA_DATA_PATH + this.xml);
             IOUtils.copy(stream, writer, "UTF-8");
-            FileUtils.write(schemaFile, MainUtils.getTemplet(writer.toString(), this.requestValues), "UTF-8");    //使用系统默认编码
+            FileUtils.write(schemaFile, FreeMarkerTplUtils.getTemplate(writer.toString(), this.requestValues), "UTF-8");    //使用系统默认编码
         }
     }
 

@@ -60,7 +60,7 @@ public class TemplateController extends Handler {
     @Menu(type = "admin", subtype = "template", access = false, admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
         map.addAttribute("sysDicList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_DIC));
-        return request(super.createAdminTempletResponse("/admin/system/template/index"));
+        return request(super.createAdminTemplateResponse("/admin/system/template/index"));
     }
 
     @RequestMapping("/expall")
@@ -99,7 +99,7 @@ public class TemplateController extends Handler {
     public ModelAndView list(ModelMap map, HttpServletRequest request, @Valid String type) {
         map.addAttribute("sysDic", dicRes.findById(type).orElseThrow(() -> new RuntimeException("not found")));
         map.addAttribute("templateList", templateRes.findByTemplettypeAndOrgi(type, super.getOrgi(request)));
-        return request(super.createAdminTempletResponse("/admin/system/template/list"));
+        return request(super.createAdminTemplateResponse("/admin/system/template/list"));
     }
 
     @RequestMapping("/add")

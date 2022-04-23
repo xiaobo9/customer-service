@@ -26,8 +26,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.googlecode.aviator.AviatorEvaluator;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConversionException;
@@ -51,7 +49,10 @@ import javax.validation.constraints.NotNull;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -778,28 +779,6 @@ public class MainUtils {
     }
 
     /**
-     * @throws IOException
-     * @throws TemplateException
-     */
-    @SuppressWarnings("deprecation")
-    public static String getTemplet(String templet, Map<String, Object> values) throws IOException, TemplateException {
-        StringWriter writer = new StringWriter();
-        Configuration cfg = null;
-        freemarker.template.Template template = null;
-        String retValue = templet;
-        if (templet != null && templet.length() > 0 && templet.indexOf("$") >= 0) {
-            cfg = new Configuration();
-            TempletLoader loader = new TempletLoader(templet);
-            cfg.setTemplateLoader(loader);
-            cfg.setDefaultEncoding("UTF-8");
-            template = cfg.getTemplate("");
-            template.process(values, writer);
-            retValue = writer.toString();
-        }
-        return retValue;
-    }
-
-    /**
      * 发送邮件
      *
      * @param email
@@ -810,7 +789,7 @@ public class MainUtils {
      */
     public static void sendMail(String email, String cc, String subject, String content, List<String> filenames) throws Exception {
         SystemConfig config = MainUtils.getSystemConfig();
-        if (config != null && config.isEnablemail() && config.getEmailid() != null) {
+        if (config.isEnablemail() && config.getEmailid() != null) {
             SystemMessage systemMessage = MainContext.getContext().getBean(
                     SystemMessageRepository.class).findByIdAndOrgi(config.getEmailid(), config.getOrgi());
             MailSender sender = new MailSender(

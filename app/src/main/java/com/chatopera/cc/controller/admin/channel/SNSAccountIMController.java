@@ -74,7 +74,7 @@ public class SNSAccountIMController extends Handler {
         if (StringUtils.isNotBlank(execute) && execute.equals("false")) {
             map.addAttribute("execute", execute);
         }
-        return request(super.createAdminTempletResponse("/admin/channel/im/index"));
+        return request(super.createAdminTemplateResponse("/admin/channel/im/index"));
     }
 
     @RequestMapping("/add.html")

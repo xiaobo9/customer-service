@@ -60,7 +60,7 @@ public class SystemMessageController extends Handler {
         });
 
         map.addAttribute("emailList", emails);
-        return request(super.createAdminTempletResponse("/admin/email/index"));
+        return request(super.createAdminTemplateResponse("/admin/email/index"));
     }
 
     @RequestMapping("/email/add")
@@ -123,7 +123,7 @@ public class SystemMessageController extends Handler {
     @Menu(type = "setting", subtype = "sms")
     public ModelAndView smsindex(ModelMap map, HttpServletRequest request) throws IOException {
         map.addAttribute("smsList", systemMessageRepository.findByMsgtypeAndOrgi("sms", super.getOrgi(request), super.page(request)));
-        return request(super.createAdminTempletResponse("/admin/sms/index"));
+        return request(super.createAdminTemplateResponse("/admin/sms/index"));
     }
 
     @RequestMapping("/sms/add")

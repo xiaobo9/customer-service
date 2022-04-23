@@ -88,7 +88,7 @@ public class WebIMController extends Handler {
             map.addAttribute("import", request.getServerPort());
             map.addAttribute("snsAccount", snsAccountRes.findBySnsidAndOrgi(snsid, super.getOrgi(request)));
         }
-        return request(super.createAdminTempletResponse("/admin/webim/index"));
+        return request(super.createAdminTemplateResponse("/admin/webim/index"));
     }
 
     /**
@@ -150,7 +150,7 @@ public class WebIMController extends Handler {
         map.addAttribute("snsAccount", snsAccountRes.findBySnsidAndOrgi(snsid, super.getOrgi(request)));
 
         map.put("serviceAiList", serviceAiRes.findByOrgi(super.getOrgi(request)));
-        return request(super.createAdminTempletResponse("/admin/webim/profile"));
+        return request(super.createAdminTemplateResponse("/admin/webim/profile"));
     }
 
     @RequestMapping("/profile/save.html")
@@ -249,7 +249,7 @@ public class WebIMController extends Handler {
         }
         map.addAttribute("import", request.getServerPort());
         map.addAttribute("snsAccount", snsAccountRes.findBySnsidAndOrgi(snsid, super.getOrgi(request)));
-        return request(super.createAdminTempletResponse("/admin/webim/invote"));
+        return request(super.createAdminTemplateResponse("/admin/webim/invote"));
     }
 
     @RequestMapping("/invote/save.html")

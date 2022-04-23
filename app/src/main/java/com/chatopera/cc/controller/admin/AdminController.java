@@ -116,13 +116,7 @@ public class AdminController extends Handler {
     @Menu(type = "admin", subtype = "content")
     public ModelAndView content(ModelMap map, HttpServletRequest request) {
         aggValues(map, request);
-        return request(super.createAdminTempletResponse("/admin/content"));
-    	/*if(super.getUser(request).isSuperuser()) {
-    		aggValues(map, request);
-        	return request(super.createAdminTempletResponse("/admin/content"));
-    	}else {
-    		return request(super.createAdminTempletResponse("/admin/user/index"));
-    	}*/
+        return request(super.createAdminTemplateResponse("/admin/content"));
     }
 
     @RequestMapping("/admin/auth/infoacq")

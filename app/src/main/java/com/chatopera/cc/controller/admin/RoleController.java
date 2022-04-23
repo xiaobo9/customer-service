@@ -89,7 +89,7 @@ public class RoleController extends Handler {
                 map.addAttribute("userRoleList", userRoleRes.findByOrgiAndRole(super.getOrgi(), roleData, super.page(request)));
             }
         }
-        return request(super.createAdminTempletResponse("/admin/role/index"));
+        return request(super.createAdminTemplateResponse("/admin/role/index"));
     }
 
     @RequestMapping("/add.html")

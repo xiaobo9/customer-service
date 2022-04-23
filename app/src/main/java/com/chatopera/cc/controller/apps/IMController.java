@@ -28,6 +28,8 @@ import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.SystemConfigService;
+import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.util.RichMediaUtils;
 import com.chatopera.cc.util.*;
 import freemarker.template.TemplateException;
@@ -75,6 +77,9 @@ import java.util.Optional;
 @EnableAsync
 public class IMController extends Handler {
     private final static Logger logger = LoggerFactory.getLogger(IMController.class);
+
+    @Autowired
+    private SystemConfigService configService;
 
     @Autowired
     private ACDWorkMonitor acdWorkMonitor;
@@ -186,8 +191,8 @@ public class IMController extends Handler {
             }
             view.addObject("webimexist", webimexist);
 
-            SystemConfig systemConfig = MainUtils.getSystemConfig();
-            if (systemConfig != null && systemConfig.isEnablessl()) {
+            SystemConfig systemConfig = configService.getSystemConfig();
+            if (systemConfig.isEnablessl()) {
                 view.addObject("schema", "https");
                 if (request.getServerPort() == 80) {
                     view.addObject("port", 443);

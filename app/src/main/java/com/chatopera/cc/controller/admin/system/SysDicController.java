@@ -49,7 +49,7 @@ public class SysDicController extends Handler {
     @Menu(type = "admin", subtype = "sysdic")
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
         map.addAttribute("sysDicList", sysDicRes.findByParentid("0", super.page(request, Direction.DESC, "createtime")));
-        return request(super.createAdminTempletResponse("/admin/system/sysdic/index"));
+        return request(super.createAdminTemplateResponse("/admin/system/sysdic/index"));
     }
 
     @RequestMapping("/add")
@@ -121,7 +121,7 @@ public class SysDicController extends Handler {
     public ModelAndView dicitem(ModelMap map, HttpServletRequest request, @Valid String id) {
         map.addAttribute("sysDic", sysDicRes.findById(id).orElseThrow(() -> new RuntimeException("not found")));
         map.addAttribute("sysDicList", sysDicRes.findByParentid(id, super.page(request, Direction.DESC, "createtime")));
-        return request(super.createAdminTempletResponse("/admin/system/sysdic/dicitem"));
+        return request(super.createAdminTemplateResponse("/admin/system/sysdic/dicitem"));
     }
 
     @RequestMapping("/dicitem/add")

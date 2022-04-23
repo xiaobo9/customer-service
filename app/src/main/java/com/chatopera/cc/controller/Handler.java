@@ -380,7 +380,7 @@ public class Handler {
      * @param page
      * @return
      */
-    public Viewport createAdminTempletResponse(String page) {
+    public Viewport createAdminTemplateResponse(String page) {
         return new Viewport("/admin/include/tpl", page);
     }
 

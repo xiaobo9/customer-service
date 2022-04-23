@@ -73,7 +73,7 @@ public class UsersController extends Handler {
         Page<User> users = userProxy.findUserInOrgans(organs.keySet(), super.page(request, Sort.Direction.ASC, "createtime"));
         map.addAttribute("userList", users);
 
-        return request(super.createAdminTempletResponse("/admin/user/index"));
+        return request(super.createAdminTemplateResponse("/admin/user/index"));
     }
 
     @RequestMapping("/add.html")

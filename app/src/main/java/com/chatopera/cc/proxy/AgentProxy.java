@@ -6,7 +6,7 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.ThumbnailUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.Cache;
-import com.chatopera.cc.controller.apps.UploadService;
+import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.peer.PeerSyncIM;

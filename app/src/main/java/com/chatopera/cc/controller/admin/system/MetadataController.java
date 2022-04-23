@@ -79,7 +79,7 @@ public class MetadataController extends Handler {
     @Menu(type = "admin", subtype = "metadata", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request) throws SQLException {
         map.addAttribute("metadataList", metadataRes.findAll(super.page(request)));
-        return request(super.createAdminTempletResponse("/admin/system/metadata/index"));
+        return request(super.createAdminTemplateResponse("/admin/system/metadata/index"));
     }
 
     @RequestMapping("/edit")
@@ -176,7 +176,7 @@ public class MetadataController extends Handler {
         map.addAttribute("propertiesList", tablePropertiesRes.findByDbtableid(id));
         map.addAttribute("tbid", id);
         map.addAttribute("table", metadataRes.findById(id).orElseThrow(() -> new RuntimeException("not found")));
-        return request(super.createAdminTempletResponse("/admin/system/metadata/table"));
+        return request(super.createAdminTemplateResponse("/admin/system/metadata/table"));
     }
 
     @RequestMapping("/imptb")

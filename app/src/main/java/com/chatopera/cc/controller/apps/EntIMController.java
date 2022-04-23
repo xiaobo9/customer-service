@@ -28,6 +28,7 @@ import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.AttachmentProxy;
 import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.cc.util.Menu;

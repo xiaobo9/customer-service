@@ -24,12 +24,10 @@ import com.chatopera.cc.basic.auth.AuthToken;
 import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.model.SystemConfig;
 import com.chatopera.cc.model.User;
-import com.chatopera.cc.model.UserRole;
 import com.chatopera.cc.persistence.repository.UserRepository;
-import com.chatopera.cc.persistence.repository.UserRoleRepository;
 import com.chatopera.cc.proxy.AgentProxy;
-import com.chatopera.cc.proxy.AgentSessionProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.LoginService;
+import com.chatopera.cc.service.SystemConfigService;
 import com.chatopera.cc.util.Menu;
 import org.apache.commons.lang.StringUtils;
 import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
@@ -52,8 +50,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -65,10 +61,13 @@ public class LoginController extends Handler {
     private final static Logger logger = LoggerFactory.getLogger(LoginController.class);
 
     @Autowired
-    private UserRepository userRepository;
+    private LoginService service;
 
     @Autowired
-    private UserRoleRepository userRoleRes;
+    private SystemConfigService configService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private AuthToken authToken;
@@ -77,19 +76,10 @@ public class LoginController extends Handler {
     private AgentProxy agentProxy;
 
     @Autowired
-    private AgentSessionProxy agentSessionProxy;
-
-    @Autowired
-    private UserProxy userProxy;
-
-    @Autowired
     private ACDWorkMonitor acdWorkMonitor;
 
     @Value("${tongji.baidu.sitekey}")
     private String tongjiBaiduSiteKey;
-
-    @Value("${ads.login.banner}")
-    private String adsLoginBanner;
 
     /**
      * 登录页面
@@ -141,16 +131,12 @@ public class LoginController extends Handler {
         if (StringUtils.isNotBlank(msg)) {
             view.addObject("msg", msg);
         }
-        SystemConfig systemConfig = MainUtils.getSystemConfig();
+        SystemConfig systemConfig = configService.getSystemConfig();
         view.addObject("show", systemConfig.isEnableregorgi());
         view.addObject("systemConfig", systemConfig);
 
         if (StringUtils.isNotBlank(tongjiBaiduSiteKey) && !StringUtils.equalsIgnoreCase(tongjiBaiduSiteKey, "placeholder")) {
             view.addObject("tongjiBaiduSiteKey", tongjiBaiduSiteKey);
-        }
-
-        if (StringUtils.isNotBlank(adsLoginBanner) && StringUtils.equalsIgnoreCase(adsLoginBanner, "on")) {
-            view.addObject("adsLoginBanner", "on");
         }
 
         return view;
@@ -178,7 +164,7 @@ public class LoginController extends Handler {
         ModelAndView view = new ModelAndView("redirect:/");
         HttpSession session = request.getSession(true);
         if (session.getAttribute(Constants.USER_SESSION_NAME) != null) {
-            SystemConfig systemConfig = MainUtils.getSystemConfig();
+            SystemConfig systemConfig = configService.getSystemConfig();
             view.addObject("show", systemConfig.isEnableregorgi());
             view.addObject("systemConfig", systemConfig);
             return view;
@@ -241,7 +227,7 @@ public class LoginController extends Handler {
                 view.addObject("msg", "0");
             }
         }
-        SystemConfig systemConfig = MainUtils.getSystemConfig();
+        SystemConfig systemConfig = configService.getSystemConfig();
         view.addObject("show", systemConfig.isEnableregorgi());
         view.addObject("systemConfig", systemConfig);
         return view;
@@ -256,41 +242,19 @@ public class LoginController extends Handler {
      * @return
      */
     private ModelAndView processLogin(final HttpServletRequest request, @NotNull final User loginUser, String referer) {
-        // 设置登录用户的状态
-        loginUser.setLogin(true);
-        // 更新redis session信息，用以支持sso
-        agentSessionProxy.updateUserSession(loginUser.getId(), MainUtils.getContextID(request.getSession().getId()), loginUser.getOrgi());
-        loginUser.setSessionid(MainUtils.getContextID(request.getSession().getId()));
-
         ModelAndView view = new ModelAndView();
         if (StringUtils.isNotBlank(referer)) {
             view = new ModelAndView("redirect:" + referer);
         } else {
             view = new ModelAndView("redirect:/");
         }
-
         // 登录成功 判断是否进入多租户页面
-        SystemConfig systemConfig = MainUtils.getSystemConfig();
+        SystemConfig systemConfig = configService.getSystemConfig();
         if (systemConfig.isEnabletneant() && systemConfig.isTenantconsole() && !loginUser.isAdmin()) {
             view = new ModelAndView("redirect:/apps/tenant/index");
         }
-        List<UserRole> userRoleList = userRoleRes.findByOrgiAndUser(loginUser.getOrgi(), loginUser);
-        if (userRoleList != null && userRoleList.size() > 0) {
-            for (UserRole userRole : userRoleList) {
-                loginUser.getRoleList().add(userRole.getRole());
-            }
-        }
 
-        // 获取用户部门以及下级部门
-        userProxy.attachOrgansPropertiesForUser(loginUser);
-
-        // 添加角色信息
-        userProxy.attachRolesMap(loginUser);
-
-        loginUser.setLastlogintime(new Date());
-        if (StringUtils.isNotBlank(loginUser.getId())) {
-            userRepository.save(loginUser);
-        }
+        service.processLogin(loginUser, request.getSession().getId());
 
         super.setUser(request, loginUser);
         return view;

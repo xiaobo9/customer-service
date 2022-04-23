@@ -111,7 +111,7 @@ public class OrganController extends Handler {
         map.addAttribute("areaList", areaRepository.findByOrgi(super.getOrgi()));
         map.addAttribute("roleList", roleRepository.findByOrgi(super.getOrgi()));
         map.put("msg", msg);
-        return request(super.createAdminTempletResponse("/admin/organ/index"));
+        return request(super.createAdminTemplateResponse("/admin/organ/index"));
     }
 
     @RequestMapping("/add.html")

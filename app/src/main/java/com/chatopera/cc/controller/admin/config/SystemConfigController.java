@@ -133,7 +133,7 @@ public class SystemConfigController extends Handler {
         if (StringUtils.isNotBlank(request.getParameter("msg"))) {
             map.addAttribute("msg", request.getParameter("msg"));
         }
-        return request(super.createAdminTempletResponse("/admin/config/index"));
+        return request(super.createAdminTemplateResponse("/admin/config/index"));
     }
 
     @RequestMapping("/stopimserver")
