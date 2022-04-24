@@ -464,7 +464,7 @@ public class ChatServiceController extends Handler {
 
     @RequestMapping("/quene/transfer/save.html")
     @Menu(type = "service", subtype = "quenetransfer", admin = true)
-    public ModelAndView transferSave(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String skillid) {
+    public ModelAndView queueTransferSave(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String skillid) {
         AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, super.getOrgi(request));
         if (agentUser != null && agentUser.getStatus().equals(AgentUserStatusEnum.INQUENE.toString())) {
             agentUser.setAgentno(null);

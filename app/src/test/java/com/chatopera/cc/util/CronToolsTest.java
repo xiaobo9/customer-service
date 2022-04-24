@@ -24,11 +24,8 @@ import java.util.Date;
 public class CronToolsTest {
 
     @Test
-    public void getFinalFireTime() {
-        try {
-            System.out.println(DateFormatEnum.DAY_TIME.format(CronTools.getFinalFireTime("0 0/40 0/1 * * ?", new Date())));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+    public void getFinalFireTime() throws ParseException {
+        Date fireTime = CronTools.getFinalFireTime("0 0/40 0/1 * * ?", new Date());
+        System.out.println(DateFormatEnum.DAY_TIME.format(fireTime));
     }
 }

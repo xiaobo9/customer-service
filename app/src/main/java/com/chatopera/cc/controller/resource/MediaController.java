@@ -48,6 +48,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/res")
@@ -104,15 +105,16 @@ public class MediaController extends Handler {
     @RequestMapping("/url")
     @Menu(type = "resouce", subtype = "image", access = true)
     public void url(HttpServletResponse response, @Valid String url) throws IOException {
-        byte[] data = new byte[1024];
-        int length;
+        if (StringUtils.isBlank(url)) {
+            return;
+        }
         OutputStream out = response.getOutputStream();
-        if (StringUtils.isNotBlank(url)) {
-            InputStream input = new URL(url).openStream();
+        int length;
+        byte[] data = new byte[1024];
+        try (InputStream input = new URL(url).openStream()) {
             while ((length = input.read(data)) > 0) {
                 out.write(data, 0, length);
             }
-            input.close();
         }
     }
 
@@ -121,7 +123,7 @@ public class MediaController extends Handler {
     public ModelAndView upload(ModelMap map, @RequestParam(value = "imgFile", required = false) MultipartFile multipart) throws IOException {
         ModelAndView view = request(super.pageTplResponse("/public/upload"));
         UploadStatus notify;
-        if (multipart != null && multipart.getOriginalFilename().lastIndexOf(".") > 0) {
+        if (multipart != null && Objects.requireNonNull(multipart.getOriginalFilename()).lastIndexOf(".") > 0) {
             String fileid = MainUtils.getUUID();
             StreamingFile sf = new StreamingFile();
             sf.setId(fileid);

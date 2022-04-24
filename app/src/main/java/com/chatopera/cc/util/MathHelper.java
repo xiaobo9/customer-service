@@ -30,27 +30,27 @@ public class MathHelper {
      * @param denominator
      * @return
      */
-    public static String float_percentage_formatter(final int molecule, final int denominator) {
+    public static String floatPercentageFormatter(final int molecule, final int denominator) {
         String r = String.format(FLOAT_PERCENTAGE_FORMATTER, 100 * ((float) molecule / denominator));
-        if (FLOAT_PERCENTAGE_INVALID.equals(r))
+        if (FLOAT_PERCENTAGE_INVALID.equals(r)) {
             r = FLOAT_PERCENTAGE_ZERO;
+        }
         return r;
     }
 
 
-    public static String formatSecondsBetweenTwoDates(Date pre, Date d){
-        if(d == null)
+    public static String formatSecondsBetweenTwoDates(Date pre, Date d) {
+        if (d == null)
             d = new Date();
         return MathHelper.formatSeconds(((d.getTime() - pre.getTime()) / 1000));
     }
 
-    public static String formatSeconds(Long timeInLong){
+    public static String formatSeconds(Long timeInLong) {
         Long l = new Long(timeInLong);
         return MathHelper.formatSeconds(l.intValue());
     }
 
-    public static String formatSeconds(int timeInSeconds)
-    {
+    public static String formatSeconds(int timeInSeconds) {
         int hours = timeInSeconds / 3600;
         int secondsLeft = timeInSeconds - hours * 3600;
         int minutes = secondsLeft / 60;

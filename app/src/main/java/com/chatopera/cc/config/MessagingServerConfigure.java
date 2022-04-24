@@ -36,9 +36,7 @@ import java.util.Properties;
 
 @org.springframework.context.annotation.Configuration
 public class MessagingServerConfigure {
-    @Value("${uk.im.server.host}")
-    private String host;
-
+    public static final int MAX_WORK_THREADS = 1000;
     @Value("${uk.im.server.port}")
     private Integer port;
 
@@ -48,8 +46,8 @@ public class MessagingServerConfigure {
     @Value("${web.upload-path}")
     private String path;
 
-    @Value("${uk.im.server.threads}")
-    private String threads;
+    @Value("${uk.im.server.threads:20}")
+    private int threads;
 
     private SocketIOServer server;
 
@@ -66,21 +64,20 @@ public class MessagingServerConfigure {
         File sslFile = new File(path, "ssl/https.properties");
         if (sslFile.exists()) {
             Properties sslProperties = new Properties();
-            FileInputStream in = new FileInputStream(sslFile);
-            sslProperties.load(in);
-            in.close();
+            try (FileInputStream in = new FileInputStream(sslFile)) {
+                sslProperties.load(in);
+            }
             String keyStore = sslProperties.getProperty("key-store");
             String storePassword = sslProperties.getProperty("key-store-password");
             if (StringUtils.isNotBlank(keyStore) && StringUtils.isNotBlank(storePassword)) {
                 config.setKeyStorePassword(MainUtils.decryption(storePassword));
-                InputStream stream = new FileInputStream(new File(path, "ssl/" + keyStore));
-                config.setKeyStore(stream);
+                try (InputStream stream = new FileInputStream(new File(path, "ssl/" + keyStore))) {
+                    config.setKeyStore(stream);
+                }
             }
         }
 
-
-        int workThreads = StringUtils.isNotBlank(threads) && threads.matches("[\\d]{1,6}") ? Integer.parseInt(threads) : 100;
-        config.setWorkerThreads(workThreads);
+        config.setWorkerThreads(threads <= MAX_WORK_THREADS ? threads : MAX_WORK_THREADS);
         config.setAuthorizationListener(data -> true);
         SocketConfig socketConfig = config.getSocketConfig();
         socketConfig.setReuseAddress(true);

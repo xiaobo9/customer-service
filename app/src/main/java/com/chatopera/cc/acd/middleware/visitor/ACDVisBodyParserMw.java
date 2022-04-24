@@ -187,6 +187,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
                     break;
                 case END:
                     logger.info("[handler] should not happen for new onlineUser service request.");
+                    break;
                 default:
             }
             ctx.setChannelMessage(ctx.getAgentUser());

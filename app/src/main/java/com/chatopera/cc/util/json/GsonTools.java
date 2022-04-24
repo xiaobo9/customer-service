@@ -49,7 +49,7 @@ public class GsonTools {
      * @param <R>
      * @return
      */
-    public static <T, R> JsonArray toJSON(final List<R> objs) {
+    public static <T, R> JsonArray toJSONArray(final List<R> objs) {
         JsonArray ja = new JsonArray();
         for (final R item : objs) {
             ja.add((JsonObject) toJson(item));

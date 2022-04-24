@@ -284,14 +284,6 @@ public class TableProperties implements java.io.Serializable,Cloneable{
 	public void setSortindex(int sortindex) {
 		this.sortindex = sortindex;
 	}
-	public TableProperties clone(){
-		try {
-			return (TableProperties) super.clone();
-		} catch (CloneNotSupportedException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 	public boolean isSystemfield() {
 		return systemfield;
 	}

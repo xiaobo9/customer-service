@@ -28,200 +28,191 @@ import java.util.Map;
 
 
 public class CubeReportData implements ReportData, Cloneable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3987533346101055742L;
-	private Exception exception ;
-	private Level row ;
-	private Level col ;
-	private int pageSize ;
-	private int page ;
-	private long numFound = 0 ;
-	private RequestData reqdata;
-	private QueryText queryText ;
-	private Map<String , Object> options ;
-	private long queryTime ;
-	private long total ;
-	
-	private Date createTime;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 3987533346101055742L;
+    private Exception exception;
+    private Level row;
+    private Level col;
+    private int pageSize;
+    private int page;
+    private long numFound = 0;
+    private RequestData reqdata;
+    private QueryText queryText;
+    private Map<String, Object> options;
+    private long queryTime;
+    private long total;
 
-	private List<List<ValueData>> data ;
-	private String viewData ;
-	
-	public void setRow(Level row) {
-		this.row = row;
-	}
+    private Date createTime;
 
-	public void setCol(Level col) {
-		this.col = col;
-	}
+    private List<List<ValueData>> data;
+    private String viewData;
 
-	public void setData(List<List<ValueData>> data) {
-		this.data = data;
-	}
+    public void setRow(Level row) {
+        this.row = row;
+    }
 
-	@Override
-	public Level getRow() {
-		return row;
-	}
+    public void setCol(Level col) {
+        this.col = col;
+    }
 
-	@Override
-	public Level getCol() {
-		return col;
-	}
+    public void setData(List<List<ValueData>> data) {
+        this.data = data;
+    }
 
-	@Override
-	public List<List<ValueData>> getData() {
-		return data;
-	}
+    @Override
+    public Level getRow() {
+        return row;
+    }
 
-	public String getViewData() {
-		return viewData;
-	}
+    @Override
+    public Level getCol() {
+        return col;
+    }
 
-	public void setViewData(String viewData) {
-		this.viewData = viewData;
-	}
-	public ReportData clone(){
-		try {
-			return (ReportData) super.clone() ;
-		} catch (CloneNotSupportedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null ;
-	}
+    @Override
+    public List<List<ValueData>> getData() {
+        return data;
+    }
 
-	public long getNumFound() {
-		return numFound;
-	}
+    public String getViewData() {
+        return viewData;
+    }
 
-	public void setNumFound(long l) {
-		this.numFound = l;
-	}
+    public void setViewData(String viewData) {
+        this.viewData = viewData;
+    }
 
-	public int getPageSize() {
-		return pageSize;
-	}
+    public long getNumFound() {
+        return numFound;
+    }
 
-	public void setPageSize(int pageSize) {
-		this.pageSize = pageSize;
-	}
+    public void setNumFound(long l) {
+        this.numFound = l;
+    }
 
-	@Override
-	public void exchangeColRow() {
-		Level temp = this.col ; 
-		this.col = this.row ;
-		this.row = temp ;
-		int colspan = this.col.getColspan() ;
-		this.col.setColspan(this.col.getRowspan()) ;
-		this.col.setRowspan(colspan) ;
-		
-		colspan = this.row.getColspan() ;
-		this.row.setColspan(this.row.getRowspan()) ;
-		this.row.setRowspan(colspan) ;
-		
- 		List<List<ValueData>> tempList = new ArrayList<List<ValueData>>();
-		for(int i=0 ; i<data.size() ; i++){
-			for(int j=0 ; j<data.get(i).size() ; j++){
-				if(tempList.size()<=j){
-					tempList.add(new ArrayList<ValueData>()) ;
-				}
-				if(tempList.get(j)!=null){
-					tempList.get(j).add(data.get(i).get(j)) ;
-				}
-			}
-		}
-		this.data.clear();
-		this.data = tempList ;
-	}
+    public int getPageSize() {
+        return pageSize;
+    }
 
-	@Override
-	public void merge(ReportData data) {
-		this.col.getChilderen().addAll(data.getCol().getChilderen()) ;
-		if(this.row!=null && this.row.getTitle()!=null && data.getRow()!=null && data.getRow().getTitle()!=null){
-			List<?> titles = this.row.getTitle().get(this.row.getTitle().size()-1) ;
-			List<?> otitles = data.getRow().getTitle().get(data.getRow().getTitle().size()-1) ;
-			for(int i=0 ; i<titles.size() ; i++){
-				for(int j=0 ; j<otitles.size() ; j++){
-					if(titles.get(i).toString().equals(otitles.get(j).toString())){
-						this.data.get(i).addAll(data.getData().get(j)) ;
-						break ;
-					}
-				}
-			}
-		}
-		this.col.init();
-	}
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+    }
 
-	@Override
-	public Date getDate() {
-		// TODO Auto-generated method stub
-		return createTime;
-	}
+    @Override
+    public void exchangeColRow() {
+        Level temp = this.col;
+        this.col = this.row;
+        this.row = temp;
+        int colspan = this.col.getColspan();
+        this.col.setColspan(this.col.getRowspan());
+        this.col.setRowspan(colspan);
 
-	public Exception getException() {
-		return exception;
-	}
+        colspan = this.row.getColspan();
+        this.row.setColspan(this.row.getRowspan());
+        this.row.setRowspan(colspan);
 
-	public void setException(Exception exception) {
-		this.exception = exception;
-	}
+        List<List<ValueData>> tempList = new ArrayList<List<ValueData>>();
+        for (int i = 0; i < data.size(); i++) {
+            for (int j = 0; j < data.get(i).size(); j++) {
+                if (tempList.size() <= j) {
+                    tempList.add(new ArrayList<ValueData>());
+                }
+                if (tempList.get(j) != null) {
+                    tempList.get(j).add(data.get(i).get(j));
+                }
+            }
+        }
+        this.data.clear();
+        this.data = tempList;
+    }
 
-	@Override
-	public void setRequestData(RequestData data) {
-		reqdata = data;
-	}
+    @Override
+    public void merge(ReportData data) {
+        this.col.getChilderen().addAll(data.getCol().getChilderen());
+        if (this.row != null && this.row.getTitle() != null && data.getRow() != null && data.getRow().getTitle() != null) {
+            List<?> titles = this.row.getTitle().get(this.row.getTitle().size() - 1);
+            List<?> otitles = data.getRow().getTitle().get(data.getRow().getTitle().size() - 1);
+            for (int i = 0; i < titles.size(); i++) {
+                for (int j = 0; j < otitles.size(); j++) {
+                    if (titles.get(i).toString().equals(otitles.get(j).toString())) {
+                        this.data.get(i).addAll(data.getData().get(j));
+                        break;
+                    }
+                }
+            }
+        }
+        this.col.init();
+    }
 
-	@Override
-	public RequestData getRequestData() {
-		return reqdata;
-	}
+    @Override
+    public Date getDate() {
+        // TODO Auto-generated method stub
+        return createTime;
+    }
 
-	public int getPage() {
-		return page;
-	}
+    public Exception getException() {
+        return exception;
+    }
 
-	public void setPage(int page) {
-		this.page = page;
-	}
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
 
-	public QueryText getQueryText() {
-		return queryText;
-	}
+    @Override
+    public void setRequestData(RequestData data) {
+        reqdata = data;
+    }
 
-	public void setQueryText(QueryText queryText) {
-		this.queryText = queryText;
-	}
+    @Override
+    public RequestData getRequestData() {
+        return reqdata;
+    }
 
-	public Map<String, Object> getOptions() {
-		return options;
-	}
+    public int getPage() {
+        return page;
+    }
 
-	public void setOptions(Map<String, Object> options) {
-		this.options = options;
-	}
+    public void setPage(int page) {
+        this.page = page;
+    }
 
-	public long getQueryTime() {
-		return queryTime;
-	}
+    public QueryText getQueryText() {
+        return queryText;
+    }
 
-	public void setQueryTime(long queryTime) {
-		this.queryTime = queryTime;
-	}
+    public void setQueryText(QueryText queryText) {
+        this.queryText = queryText;
+    }
 
-	public long getTotal() {
-		return total;
-	}
+    public Map<String, Object> getOptions() {
+        return options;
+    }
 
-	public void setTotal(long total) {
-		this.total = total;
-	}
+    public void setOptions(Map<String, Object> options) {
+        this.options = options;
+    }
 
-	@Override
-	public void setDate(Date createtime) {
-		// TODO Auto-generated method stub
-		this.createTime = createtime;
-	}
+    public long getQueryTime() {
+        return queryTime;
+    }
+
+    public void setQueryTime(long queryTime) {
+        this.queryTime = queryTime;
+    }
+
+    public long getTotal() {
+        return total;
+    }
+
+    public void setTotal(long total) {
+        this.total = total;
+    }
+
+    @Override
+    public void setDate(Date createtime) {
+        // TODO Auto-generated method stub
+        this.createTime = createtime;
+    }
 }
