@@ -31,14 +31,11 @@ import com.chatopera.cc.persistence.repository.StreamingFileRepository;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.elasticsearch.index.query.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -53,9 +50,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 
 @Controller
-@SessionAttributes
 public class Handler {
-    private static final Logger logger = LoggerFactory.getLogger(Handler.class);
 
     @Autowired
     private JpaBlobHelper jpaBlobHelper;
@@ -73,8 +68,6 @@ public class Handler {
     public final static int PAGE_SIZE_TW = 20;
     public final static int PAGE_SIZE_FV = 50;
     public final static int PAGE_SIZE_HA = 100;
-
-    private long startTime = System.currentTimeMillis();
 
     public User getUser(HttpServletRequest request) {
         User user = (User) request.getSession(true).getAttribute(Constants.USER_SESSION_NAME);
@@ -486,14 +479,6 @@ public class Handler {
         return getOrgi();
     }
 
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
-
     /**
      * 使用Blob保存文件
      *
@@ -511,6 +496,5 @@ public class Handler {
         streamingFileRes.save(sf);
         return fileid;
     }
-
 
 }

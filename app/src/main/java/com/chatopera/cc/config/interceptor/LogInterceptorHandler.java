@@ -34,6 +34,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.Enumeration;
 
@@ -46,6 +47,7 @@ import java.util.Enumeration;
 @Component
 public class LogInterceptorHandler implements HandlerInterceptor {
     private final RequestLogRepository requestLogRes;
+    private static final ThreadLocal<Date> startTime = new ThreadLocal<>();
 
     public LogInterceptorHandler(RequestLogRepository requestLogRes) {
         this.requestLogRes = requestLogRes;
@@ -54,76 +56,103 @@ public class LogInterceptorHandler implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (handler instanceof HandlerMethod) {
-            HandlerMethod handlerMethod = (HandlerMethod) handler;
-            Object bean = handlerMethod.getBean();
+            Object bean = ((HandlerMethod) handler).getBean();
             if (bean instanceof Handler) {
-                ((Handler) bean).setStartTime(System.currentTimeMillis());
+                startTime.set(new Date());
             }
         }
         return true;
     }
 
     @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView arg3) throws Exception {
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView view) throws Exception {
         String requestURI = request.getRequestURI();
-        if (StringUtils.isBlank(requestURI) ||
-                requestURI.startsWith("/message/ping") ||
-                requestURI.startsWith("/res/css") ||
-                requestURI.startsWith("/error") ||
-                requestURI.startsWith("/im/")) {
+        if (notNeedLog(requestURI)) {
             return;
         }
 
-        if (!(handler instanceof HandlerMethod)) {
-            return;
+        // 像 preHandle 一样判断是否进行处理
+        if (handler instanceof HandlerMethod) {
+            HandlerMethod handlerMethod = (HandlerMethod) handler;
+            Object bean = handlerMethod.getBean();
+
+            if ((bean instanceof Handler)) {
+                log(request, handlerMethod, bean);
+            }
         }
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-        Object bean = handlerMethod.getBean();
-        RequestMapping obj = handlerMethod.getMethod().getAnnotation(RequestMapping.class);
+    }
+
+    private void log(HttpServletRequest request, HandlerMethod handlerMethod, Object bean) {
+        Method method = handlerMethod.getMethod();
 
         RequestLog log = new RequestLog();
+        Date start = startTime.get();
+        log.setStarttime(start);
         log.setEndtime(new Date());
-        log.setUrl(requestURI);
-        log.setHostname(request.getRemoteHost());
+        log.setQuerytime(System.currentTimeMillis() - start.getTime());
+
+        log.setUrl(request.getRequestURI());
+        // 避免可能的性能问题，不记录客户端主机名
+        // log.setHostname(request.getRemoteHost());
+        log.setIp(request.getRemoteAddr());
+
         log.setType(MainContext.LogType.REQUEST.toString());
 
-        if (obj != null) {
-            log.setName(obj.name());
-        }
         log.setMethodname(handlerMethod.toString());
-        log.setIp(request.getRemoteAddr());
         log.setClassname(bean.getClass().toString());
-        if (bean instanceof Handler && ((Handler) bean).getStartTime() != 0) {
-            log.setQuerytime(System.currentTimeMillis() - ((Handler) bean).getStartTime());
-        }
 
         User user = (User) request.getSession(true).getAttribute(Constants.USER_SESSION_NAME);
+        writeUserInfo2Log(user, log);
+
+        writeAnnotationInfos2Log(method, log);
+
+        log.setParameters(parameters(request));
+        requestLogRes.save(log);
+    }
+
+    private void writeUserInfo2Log(User user, RequestLog log) {
         if (user != null) {
             log.setUserid(user.getId());
             log.setUsername(user.getUsername());
             log.setUsermail(user.getEmail());
             log.setOrgi(user.getOrgi());
         }
-        StringBuilder str = new StringBuilder();
-        Enumeration<String> names = request.getParameterNames();
-        while (names.hasMoreElements()) {
-            String paraName = names.nextElement();
-            if (paraName.contains("password")) {
-                str.append(paraName).append("=").append(MainUtils.encryption(request.getParameter(paraName))).append(",");
-            } else {
-                str.append(paraName).append("=").append(request.getParameter(paraName)).append(",");
-            }
-        }
+    }
 
-        Menu menu = handlerMethod.getMethod().getAnnotation(Menu.class);
+    private void writeAnnotationInfos2Log(Method method, RequestLog log) {
+        RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
+        if (requestMapping != null) {
+            log.setName(requestMapping.name());
+        }
+        Menu menu = method.getAnnotation(Menu.class);
         if (menu != null) {
             log.setFuntype(menu.type());
             log.setFundesc(menu.subtype());
             log.setName(menu.name());
         }
+    }
 
-        log.setParameters(str.toString());
-        requestLogRes.save(log);
+    private String parameters(HttpServletRequest request) {
+        StringBuilder builder = new StringBuilder();
+        Enumeration<String> names = request.getParameterNames();
+        while (names.hasMoreElements()) {
+            String name = names.nextElement();
+            String value = request.getParameter(name);
+            if (name.contains("password")) {
+                builder.append(name).append("=").append(MainUtils.encryption(value)).append(",");
+            } else {
+                builder.append(name).append("=").append(value).append(",");
+            }
+        }
+        return builder.toString();
+    }
+
+    private boolean notNeedLog(String requestURI) {
+        return StringUtils.isBlank(requestURI) ||
+                requestURI.startsWith("/message/ping") ||
+                requestURI.startsWith("/res/css") ||
+                requestURI.startsWith("/error") ||
+                requestURI.startsWith("/im/");
     }
 
 }
