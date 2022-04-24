@@ -46,8 +46,8 @@ import java.util.Enumeration;
 @Slf4j
 @Component
 public class LogInterceptorHandler implements HandlerInterceptor {
+    private static final String REQUEST_START_TIME = "REQUEST_START_TIME";
     private final RequestLogRepository requestLogRes;
-    private static final ThreadLocal<Date> startTime = new ThreadLocal<>();
 
     public LogInterceptorHandler(RequestLogRepository requestLogRes) {
         this.requestLogRes = requestLogRes;
@@ -58,7 +58,7 @@ public class LogInterceptorHandler implements HandlerInterceptor {
         if (handler instanceof HandlerMethod) {
             Object bean = ((HandlerMethod) handler).getBean();
             if (bean instanceof Handler) {
-                startTime.set(new Date());
+                request.setAttribute(REQUEST_START_TIME, new Date());
             }
         }
         return true;
@@ -86,7 +86,7 @@ public class LogInterceptorHandler implements HandlerInterceptor {
         Method method = handlerMethod.getMethod();
 
         RequestLog log = new RequestLog();
-        Date start = startTime.get();
+        Date start = (Date) request.getAttribute(REQUEST_START_TIME);
         log.setStarttime(start);
         log.setEndtime(new Date());
         log.setQuerytime(System.currentTimeMillis() - start.getTime());
