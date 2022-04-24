@@ -4,11 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ErrorProperties;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +18,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Basic global error {@link Controller}, rendering {@link ErrorAttributes}. More specific
@@ -89,18 +89,7 @@ public class MyErrorController implements ErrorController {
         return false;
     }
 
-    private List<ErrorViewResolver> sortErrorViewResolvers(
-            List<ErrorViewResolver> resolvers) {
-        List<ErrorViewResolver> sorted = new ArrayList<>();
-        if (resolvers != null) {
-            sorted.addAll(resolvers);
-            AnnotationAwareOrderComparator.sortIfNecessary(sorted);
-        }
-        return sorted;
-    }
-
-    protected Map<String, Object> getErrorAttributes(HttpServletRequest request,
-                                                     boolean includeStackTrace) {
+    protected Map<String, Object> getErrorAttributes(HttpServletRequest request, boolean includeStackTrace) {
         WebRequest webRequest = new ServletWebRequest(request);
         return this.errorAttributes.getErrorAttributes(webRequest, includeStackTrace);
     }
@@ -114,8 +103,7 @@ public class MyErrorController implements ErrorController {
     }
 
     protected HttpStatus getStatus(HttpServletRequest request) {
-        Integer statusCode = (Integer) request
-                .getAttribute("javax.servlet.error.status_code");
+        Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
         if (statusCode == null) {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
