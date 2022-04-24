@@ -18,7 +18,6 @@ package com.chatopera.cc.config.filter;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.model.User;
-import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import javax.servlet.*;
@@ -26,46 +25,41 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class DelegateRequestMatchingFilter implements Filter {
-    private final RequestMatcher[] ignoredRequests;
+public class AdminAccessFilter implements Filter {
+    private final RequestMatcher[] needAccessFilterMatchers;
 
-    public DelegateRequestMatchingFilter(RequestMatcher... matcher) {
-        this.ignoredRequests = matcher;
+    public AdminAccessFilter(RequestMatcher... needAccessFilterMatchers) {
+        this.needAccessFilterMatchers = needAccessFilterMatchers;
     }
 
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
-        boolean matchAnyRoles = false;
-        for (RequestMatcher anyRequest : ignoredRequests) {
-            if (anyRequest.matches(request)) {
-                matchAnyRoles = true;
+        boolean notNeedAccessFilter = true;
+        for (RequestMatcher matcher : needAccessFilterMatchers) {
+            if (matcher.matches(request)) {
+                notNeedAccessFilter = false;
             }
+        }
+        if (notNeedAccessFilter) {
+            // 不需要访问控制的资源，继续调用
+            chain.doFilter(req, resp);
+            return;
         }
         User user = (User) request.getSession().getAttribute(Constants.USER_SESSION_NAME);
-        if (matchAnyRoles) {
-            if (user != null && (user.isAdmin())) {
-                chain.doFilter(req, resp);
-            } else {
-                // 重定向到 无权限执行操作的页面
-                HttpServletResponse response = (HttpServletResponse) resp;
-                response.sendRedirect("/?msg=security");
-            }
-        } else {
-            try {
-                chain.doFilter(req, resp);
-            } catch (ClientAbortException ex) {
-                //Tomcat异常，不做处理
-            }
+        if (user == null || !user.isAdmin()) {
+            // 重定向到 无权限执行操作的页面
+            HttpServletResponse response = (HttpServletResponse) resp;
+            response.sendRedirect("/?msg=security");
+            return;
         }
+        chain.doFilter(req, resp);
     }
 
     @Override
     public void destroy() {
-
     }
 
     @Override
     public void init(FilterConfig arg0) throws ServletException {
-
     }
 }

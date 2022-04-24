@@ -78,29 +78,35 @@ public class Handler {
 
     public User getUser(HttpServletRequest request) {
         User user = (User) request.getSession(true).getAttribute(Constants.USER_SESSION_NAME);
-        if (user == null) {
-            String authorization = request.getHeader("authorization");
-            if (StringUtils.isBlank(authorization) && request.getCookies() != null) {
-                for (Cookie cookie : request.getCookies()) {
-                    if (cookie.getName().equals("authorization")) {
-                        authorization = cookie.getValue();
-                        break;
-                    }
+        if (user != null) {
+            user.setSessionid(MainUtils.getContextID(request.getSession().getId()));
+            return user;
+        }
+        String authorization = request.getHeader("authorization");
+        if (StringUtils.isBlank(authorization) && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals("authorization")) {
+                    authorization = cookie.getValue();
+                    break;
                 }
             }
-            if (StringUtils.isNotBlank(authorization)) {
-                user = authToken.findUserByAuth(authorization);
-            }
-            if (user == null) {
-                user = new User();
-                user.setId(MainUtils.getContextID(request.getSession().getId()));
-                user.setUsername(Constants.GUEST_USER + "_" + MainUtils.genIDByKey(user.getId()));
-                user.setOrgi(Constants.SYSTEM_ORGI);
-                user.setSessionid(user.getId());
-            }
-        } else {
-            user.setSessionid(MainUtils.getContextID(request.getSession().getId()));
         }
+        if (StringUtils.isNotBlank(authorization)) {
+            user = authToken.findUserByAuth(authorization);
+        }
+        if (user == null) {
+            user = newGuestUser(request);
+        }
+        return user;
+    }
+
+    protected User newGuestUser(HttpServletRequest request) {
+        User user;
+        user = new User();
+        user.setId(MainUtils.getContextID(request.getSession().getId()));
+        user.setUsername(Constants.GUEST_USER + "_" + MainUtils.genIDByKey(user.getId()));
+        user.setOrgi(Constants.SYSTEM_ORGI);
+        user.setSessionid(user.getId());
         return user;
     }
 

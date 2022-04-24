@@ -14,23 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.config;
+package com.chatopera.cc.config.converter;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.core.convert.converter.Converter;
 
+import javax.annotation.Nullable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class StringToDateConverter implements Converter<String, Date> {
-    private static final String dateFormat      = "yyyy-MM-dd HH:mm:ss";
+    private static final String dateFormat = "yyyy-MM-dd HH:mm:ss";
     private static final String shortDateFormat = "yyyy-MM-dd";
 
-    /** 
-     * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-     */
     @Override
-    public Date convert(String source) {
+    public Date convert(@Nullable String source) {
         if (StringUtils.isBlank(source)) {
             return null;
         }
@@ -43,16 +41,14 @@ public class StringToDateConverter implements Converter<String, Date> {
                 } else {
                     formatter = new SimpleDateFormat(shortDateFormat);
                 }
-                Date dtDate = formatter.parse(source);
-                return dtDate;
-            } else if (source.matches("^\\d+$")) {
-                Long lDate = new Long(source);
-                return new Date(lDate);
+                return formatter.parse(source);
+            }
+            if (source.matches("^\\d+$")) {
+                return new Date(new Long(source));
             }
         } catch (Exception e) {
-            throw new RuntimeException(String.format("parser %s to Date callOutFail", source));
+            throw new RuntimeException(String.format("parser {%s} to Date", source), e);
         }
-        throw new RuntimeException(String.format("parser %s to Date callOutFail", source));
+        throw new RuntimeException(String.format("parser {%s} to Date", source));
     }
-
 }

@@ -16,6 +16,7 @@
  */
 package com.chatopera.cc.config;
 
+import com.chatopera.cc.config.converter.StringToDateConverter;
 import com.chatopera.cc.config.interceptor.CrossInterceptorHandler;
 import com.chatopera.cc.config.interceptor.LogInterceptorHandler;
 import com.chatopera.cc.config.interceptor.UserInterceptorHandler;

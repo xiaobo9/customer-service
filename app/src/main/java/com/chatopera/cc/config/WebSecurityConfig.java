@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.config;
 
+import com.chatopera.cc.config.filter.AdminAccessFilter;
 import com.chatopera.cc.config.filter.ApiRequestMatchingFilter;
 import com.chatopera.cc.config.filter.CsrfHeaderFilter;
-import com.chatopera.cc.config.filter.DelegateRequestMatchingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,49 +28,32 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-import javax.servlet.Filter;
-
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.addFilterAfter(tokenInfoTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class)
-                .antMatcher("*/*").authorizeRequests()
-                .anyRequest().permitAll()
+        http.addFilterAfter(adminAccessFilter(), BasicAuthenticationFilter.class)
+                .antMatcher("*/*").authorizeRequests().anyRequest().permitAll()
                 .and()
                 .addFilterAfter(csrfHeaderFilter(), BasicAuthenticationFilter.class)
-                .addFilterAfter(apiTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class);
+                .addFilterAfter(apiRequestMatchingFilter(), BasicAuthenticationFilter.class);
     }
 
     @Bean
-    public Filter tokenInfoTokenFilterSecurityInterceptor() throws Exception {
-        RequestMatcher autconfig = new AntPathRequestMatcher("/autoconfig/**");
-        RequestMatcher configprops = new AntPathRequestMatcher("/configprops/**");
-        RequestMatcher beans = new AntPathRequestMatcher("/beans/**");
-        RequestMatcher dump = new AntPathRequestMatcher("/dump/**");
-        RequestMatcher env = new AntPathRequestMatcher("/env/**");
-        RequestMatcher info = new AntPathRequestMatcher("/info/**");
-        RequestMatcher mappings = new AntPathRequestMatcher("/mappings/**");
-        RequestMatcher trace = new AntPathRequestMatcher("/trace/**");
+    public AdminAccessFilter adminAccessFilter() {
+        RequestMatcher actuator = new AntPathRequestMatcher("/actuator/**");
         RequestMatcher druid = new AntPathRequestMatcher("/druid/**");
-
-        /**
-         * Bypass actuator api
-         */
-//        RequestMatcher health = new AntPathRequestMatcher("/health/**");
-//        RequestMatcher metrics = new AntPathRequestMatcher("/metrics/**");
-//        return new DelegateRequestMatchingFilter(autconfig , configprops , beans , dump , env , health , info , mappings , metrics , trace, druid);
-        return new DelegateRequestMatchingFilter(autconfig, configprops, beans, dump, env, mappings, trace, druid);
+        return new AdminAccessFilter(actuator, druid);
     }
 
     @Bean
-    public Filter apiTokenFilterSecurityInterceptor() throws Exception {
-        return new ApiRequestMatchingFilter(new AntPathRequestMatcher("/api/**"));
+    public ApiRequestMatchingFilter apiRequestMatchingFilter() {
+        return new ApiRequestMatchingFilter();
     }
 
-    private Filter csrfHeaderFilter() {
+    private CsrfHeaderFilter csrfHeaderFilter() {
         return new CsrfHeaderFilter();
     }
 }

@@ -39,20 +39,17 @@ public class Base62 {
         // 6 digit binary can indicate 62 letter & number from 0-9a-zA-Z
         int binaryLength = 6 * 6;
         long binaryLengthFixer = Long.valueOf(StringUtils.repeat("1", binaryLength), BINARY);
-        for (int i = 0; i < 4; ) {
-            String subString = StringUtils.substring(md5Hex, i * 8, (i + 1) * 8);
-            subString = Long.toBinaryString(Long.valueOf(subString, 16) & binaryLengthFixer);
-            subString = StringUtils.leftPad(subString, binaryLength, "0");
-            StringBuilder sbBuilder = new StringBuilder();
-            for (int j = 0; j < 6; j++) {
-                String subString2 = StringUtils.substring(subString, j * 6, (j + 1) * 6);
-                int charIndex = Integer.valueOf(subString2, BINARY) & NUMBER_61;
-                sbBuilder.append(DIGITS[charIndex]);
-            }
-			return sbBuilder.toString();
-		}
-        // if all 4 possibilities are already exists
-        return null;
+
+        String subString = StringUtils.substring(md5Hex, 0, 8);
+        subString = Long.toBinaryString(Long.valueOf(subString, 16) & binaryLengthFixer);
+        subString = StringUtils.leftPad(subString, binaryLength, "0");
+        StringBuilder sbBuilder = new StringBuilder();
+        for (int j = 0; j < 6; j++) {
+            String subString2 = StringUtils.substring(subString, j * 6, (j + 1) * 6);
+            int charIndex = Integer.valueOf(subString2, BINARY) & NUMBER_61;
+            sbBuilder.append(DIGITS[charIndex]);
+        }
+        return sbBuilder.toString();
     }
 
 }

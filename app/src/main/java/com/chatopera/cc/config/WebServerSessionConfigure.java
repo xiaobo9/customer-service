@@ -22,12 +22,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.session.config.annotation.web.http.EnableSpringHttpSession;
 import org.springframework.session.data.redis.RedisFlushMode;
 import org.springframework.session.data.redis.RedisOperationsSessionRepository;
+
+import java.time.Duration;
 
 /**
  * maxInactiveIntervalInSeconds: 设置 Session 失效时间，
@@ -78,15 +82,9 @@ public class WebServerSessionConfigure {
 
     @Bean
     public RedisTemplate<Object, Object> sessionRedisTemplate() {
-        JedisConnectionFactory factory = new JedisConnectionFactory();
-        factory.setHostName(host);
-        factory.setPort(port);
-        factory.setDatabase(sessionDb);
-        if (StringUtils.isNotBlank(pass)) {
-            factory.setPassword(pass);
-        }
-        factory.setTimeout(timeout);
+        JedisConnectionFactory factory = new JedisConnectionFactory(redisConfig(sessionDb), jedisConfig());
         factory.afterPropertiesSet();
+
         RedisTemplate<Object, Object> template = new RedisTemplate<Object, Object>();
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
@@ -94,22 +92,12 @@ public class WebServerSessionConfigure {
         return template;
     }
 
-
     /**
      * 存储AuthToken
-     *
-     * @return
      */
     @Bean
     public AuthRedisTemplate authRedisTemplate() {
-        JedisConnectionFactory factory = new JedisConnectionFactory();
-        factory.setHostName(host);
-        factory.setPort(port);
-        factory.setDatabase(tokenDb);
-        if (StringUtils.isNotBlank(pass)) {
-            factory.setPassword(pass);
-        }
-        factory.setTimeout(timeout);
+        JedisConnectionFactory factory = new JedisConnectionFactory(redisConfig(tokenDb), jedisConfig());
         factory.afterPropertiesSet();
 
         AuthRedisTemplate template = new AuthRedisTemplate();
@@ -119,4 +107,21 @@ public class WebServerSessionConfigure {
         return template;
     }
 
+    private RedisStandaloneConfiguration redisConfig(int database) {
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+        config.setHostName(host);
+        config.setPort(port);
+        config.setDatabase(database);
+        if (StringUtils.isNotBlank(pass)) {
+            config.setPassword(pass);
+        }
+        return config;
+    }
+
+    private JedisClientConfiguration jedisConfig() {
+        return JedisClientConfiguration.builder()
+                .connectTimeout(Duration.ofMillis(timeout))
+                .readTimeout(Duration.ofMillis(timeout))
+                .build();
+    }
 }
