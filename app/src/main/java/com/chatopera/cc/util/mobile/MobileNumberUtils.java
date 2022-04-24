@@ -32,6 +32,26 @@ public class MobileNumberUtils {
     public static final String CONFIG_MOBILE_DATA = "/config/mobile.data";
     private static boolean isInited = false;
 
+    /**
+     * 根据呼入号码 找到对应 城市 , 需要传入的号码是 手机号 或者 固话号码，位数为 11位
+     *
+     * @param phoneNumber phone number
+     * @return address
+     */
+    public static MobileAddress getAddress(String phoneNumber) {
+        initIfNeed();
+
+        String code = "";
+        if (!StringUtils.isBlank(phoneNumber) && phoneNumber.length() > 10) {
+            if (phoneNumber.startsWith("0")) {
+                code = phoneNumber.substring(0, 4);
+            } else if (phoneNumber.startsWith("1")) {
+                code = phoneNumber.substring(0, 7);
+            }
+        }
+        return mobileAddressMap.get(code);
+    }
+
     public static int init() throws IOException {
         URL resource = MobileNumberUtils.class.getResource(CONFIG_MOBILE_DATA);
         if (resource == null) {
@@ -68,13 +88,7 @@ public class MobileNumberUtils {
         return mobileAddressMap.size();
     }
 
-    /**
-     * 根据呼入号码 找到对应 城市 , 需要传入的号码是 手机号 或者 固话号码，位数为 11位
-     *
-     * @param phoneNumber phone number
-     * @return address
-     */
-    public static MobileAddress getAddress(String phoneNumber) {
+    private static void initIfNeed() {
         if (!isInited) {
             try {
                 MobileNumberUtils.init();
@@ -82,15 +96,5 @@ public class MobileNumberUtils {
                 logger.error("getAddress error: ", e);
             }
         }
-
-        String code = "";
-        if (!StringUtils.isBlank(phoneNumber) && phoneNumber.length() > 10) {
-            if (phoneNumber.startsWith("0")) {
-                code = phoneNumber.substring(0, 4);
-            } else if (phoneNumber.startsWith("1")) {
-                code = phoneNumber.substring(0, 7);
-            }
-        }
-        return mobileAddressMap.get(code);
     }
 }

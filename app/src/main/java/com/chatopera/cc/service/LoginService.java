@@ -12,6 +12,7 @@ import com.chatopera.cc.proxy.AgentSessionProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.common.collect.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -75,4 +76,19 @@ public class LoginService {
         }
     }
 
+    public String validUser(User user) {
+        User tempUser = userRepository.findByUsernameAndDatastatus(user.getUsername(), false);
+        if (tempUser != null) {
+            return "username_exist";
+        }
+        tempUser = userRepository.findByEmailAndDatastatus(user.getEmail(), false);
+        if (tempUser != null) {
+            return "email_exist";
+        }
+        tempUser = userRepository.findByMobileAndDatastatus(user.getMobile(), false);
+        if (tempUser != null) {
+            return "mobile_exist";
+        }
+        return "";
+    }
 }

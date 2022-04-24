@@ -16,25 +16,19 @@
  */
 package com.chatopera.cc.config;
 
+import com.chatopera.cc.config.filter.ApiRequestMatchingFilter;
+import com.chatopera.cc.config.filter.CsrfHeaderFilter;
+import com.chatopera.cc.config.filter.DelegateRequestMatchingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.WebUtils;
 
 import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
@@ -42,15 +36,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.addFilterAfter(tokenInfoTokenFilterSecurityInterceptor() , BasicAuthenticationFilter.class)
-	        .antMatcher("*/*").authorizeRequests()
-	        .anyRequest().permitAll()
-	        .and().addFilterAfter(csrfHeaderFilter(), BasicAuthenticationFilter.class)
-	        .addFilterAfter(apiTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class);
+        http.addFilterAfter(tokenInfoTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class)
+                .antMatcher("*/*").authorizeRequests()
+                .anyRequest().permitAll()
+                .and()
+                .addFilterAfter(csrfHeaderFilter(), BasicAuthenticationFilter.class)
+                .addFilterAfter(apiTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class);
     }
+
     @Bean
-    public Filter tokenInfoTokenFilterSecurityInterceptor() throws Exception
-    {
+    public Filter tokenInfoTokenFilterSecurityInterceptor() throws Exception {
         RequestMatcher autconfig = new AntPathRequestMatcher("/autoconfig/**");
         RequestMatcher configprops = new AntPathRequestMatcher("/configprops/**");
         RequestMatcher beans = new AntPathRequestMatcher("/beans/**");
@@ -67,38 +62,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //        RequestMatcher health = new AntPathRequestMatcher("/health/**");
 //        RequestMatcher metrics = new AntPathRequestMatcher("/metrics/**");
 //        return new DelegateRequestMatchingFilter(autconfig , configprops , beans , dump , env , health , info , mappings , metrics , trace, druid);
-        return new DelegateRequestMatchingFilter(autconfig , configprops , beans , dump , env , mappings , trace, druid);
+        return new DelegateRequestMatchingFilter(autconfig, configprops, beans, dump, env, mappings, trace, druid);
     }
-    
+
     @Bean
-    public Filter apiTokenFilterSecurityInterceptor() throws Exception
-    {
+    public Filter apiTokenFilterSecurityInterceptor() throws Exception {
         return new ApiRequestMatchingFilter(new AntPathRequestMatcher("/api/**"));
     }
-    
+
     private Filter csrfHeaderFilter() {
-        return new OncePerRequestFilter() {
-
-            @Override
-            protected void doFilterInternal(HttpServletRequest request,
-                                            HttpServletResponse response,
-                                            FilterChain filterChain) throws ServletException, IOException {
-
-                CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-                if (csrf != null) {
-                    Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
-                    String token = csrf.getToken();
-                    if (cookie == null || token != null
-                            && !token.equals(cookie.getValue())) {
-
-                        // Token is being added to the XSRF-TOKEN cookie.
-                        cookie = new Cookie("XSRF-TOKEN", token);
-                        cookie.setPath("/");
-                        response.addCookie(cookie);
-                    }
-                }
-                filterChain.doFilter(request, response);
-            }
-        };
+        return new CsrfHeaderFilter();
     }
 }

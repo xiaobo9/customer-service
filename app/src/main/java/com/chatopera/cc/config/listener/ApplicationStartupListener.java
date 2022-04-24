@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.config;
+package com.chatopera.cc.config.listener;
 
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.model.Favorites;
@@ -28,23 +28,24 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ApplicationStartupListener implements ApplicationListener<ContextRefreshedEvent> {
-	
-    @Autowired ElasticsearchTemplate elasticSearchTemplate;
+
+    @Autowired
+    ElasticsearchTemplate elasticSearchTemplate;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-    	if (!elasticSearchTemplate.indexExists(WorkOrders.class)) {
+        if (!elasticSearchTemplate.indexExists(WorkOrders.class)) {
             elasticSearchTemplate.createIndex(WorkOrders.class);
         }
-    	if (!elasticSearchTemplate.indexExists(Favorites.class)) {
+        if (!elasticSearchTemplate.indexExists(Favorites.class)) {
             elasticSearchTemplate.createIndex(Favorites.class);
         }
-    	try {
-    		elasticSearchTemplate.getMapping(WorkOrders.class);
+        try {
+            elasticSearchTemplate.getMapping(WorkOrders.class);
         } catch (ElasticsearchException e) {
-        	elasticSearchTemplate.putMapping(Favorites.class);
-        	elasticSearchTemplate.putMapping(WorkOrders.class);
+            elasticSearchTemplate.putMapping(Favorites.class);
+            elasticSearchTemplate.putMapping(WorkOrders.class);
         }
-    	MainContext.setTemplet(elasticSearchTemplate);
+        MainContext.setTemplet(elasticSearchTemplate);
     }
 }

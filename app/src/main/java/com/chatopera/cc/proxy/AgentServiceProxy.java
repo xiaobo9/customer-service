@@ -244,11 +244,10 @@ public class AgentServiceProxy {
             attacheChannelInfo(view, agentUser, agentService, logined);
 
             // 标签，快捷回复等
-            view.addObject("serviceCount", Integer
-                    .valueOf(agentServiceRes
-                            .countByUseridAndOrgiAndStatus(agentUser
-                                            .getUserid(), logined.getOrgi(),
-                                    AgentUserStatusEnum.END.toString())));
+            view.addObject("serviceCount", agentServiceRes
+                    .countByUseridAndOrgiAndStatus(agentUser
+                                    .getUserid(), logined.getOrgi(),
+                            AgentUserStatusEnum.END.toString()));
             view.addObject("tagRelationList", tagRelationRes.findByUserid(agentUser.getUserid()));
         }
 

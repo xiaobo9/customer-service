@@ -23,42 +23,41 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * 线程池 ， 作业调度平台
- * @author iceworld
  *
+ * @author iceworld
  */
 @Configuration
 public class ExecutorConfig {
-	private static int CORE_POOL_SIZE = 7;
-	private static int MAX_POOL_SIZE = 100;
+    private static int CORE_POOL_SIZE = 7;
+    private static int MAX_POOL_SIZE = 100;
 
-	/**
-	 * 作业平台使用的线程池
-	 * @return
-	 */
-	@Bean(name = "webimTaskExecutor")
-	public ThreadPoolTaskExecutor common() {
+    /**
+     * 作业平台使用的线程池
+     */
+    @Bean(name = "webimTaskExecutor")
+    public ThreadPoolTaskExecutor common() {
 
-		ThreadPoolTaskExecutor poolTaskExecutor = new ThreadPoolTaskExecutor();
-		// 线程池维护线程的最少数量
-		poolTaskExecutor.setCorePoolSize(CORE_POOL_SIZE);
-		// 线程池维护线程的最大数量
-		poolTaskExecutor.setMaxPoolSize(MAX_POOL_SIZE);
-		// 线程池所使用的缓冲队列
-		poolTaskExecutor.setQueueCapacity(200);
-		// 线程池维护线程所允许的空闲时间
-		poolTaskExecutor.setKeepAliveSeconds(30000);
-		poolTaskExecutor.setWaitForTasksToCompleteOnShutdown(true);
-		poolTaskExecutor.setThreadNamePrefix("cs-webim-task-");
+        ThreadPoolTaskExecutor poolTaskExecutor = new ThreadPoolTaskExecutor();
+        // 线程池维护线程的最少数量
+        poolTaskExecutor.setCorePoolSize(CORE_POOL_SIZE);
+        // 线程池维护线程的最大数量
+        poolTaskExecutor.setMaxPoolSize(MAX_POOL_SIZE);
+        // 线程池所使用的缓冲队列
+        poolTaskExecutor.setQueueCapacity(200);
+        // 线程池维护线程所允许的空闲时间
+        poolTaskExecutor.setKeepAliveSeconds(30000);
+        poolTaskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+        poolTaskExecutor.setThreadNamePrefix("cs-webim-task-");
 
-		return poolTaskExecutor;
-	}
+        return poolTaskExecutor;
+    }
 
     @Bean(name = "scheduleTaskExecutor")
-    public ThreadPoolTaskScheduler schedule(){
+    public ThreadPoolTaskScheduler schedule() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(CORE_POOL_SIZE);
         taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
         taskScheduler.setThreadNamePrefix("cs-schedule-");
-        return  taskScheduler;
+        return taskScheduler;
     }
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.config;
+package com.chatopera.cc.config.filter;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.model.User;
@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class DelegateRequestMatchingFilter implements Filter {
-    private RequestMatcher[] ignoredRequests;
+    private final RequestMatcher[] ignoredRequests;
 
     public DelegateRequestMatchingFilter(RequestMatcher... matcher) {
         this.ignoredRequests = matcher;

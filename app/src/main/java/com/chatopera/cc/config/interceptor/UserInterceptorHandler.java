@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.interceptor;
+package com.chatopera.cc.config.interceptor;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
@@ -28,6 +28,7 @@ import com.chatopera.cc.util.Menu;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
+import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -38,9 +39,15 @@ import javax.servlet.http.HttpSession;
 import java.io.Serializable;
 
 @Slf4j
+@Component
 public class UserInterceptorHandler extends HandlerInterceptorAdapter {
-    private static UserProxy userProxy;
-    private static Integer webimport;
+    private final UserProxy userProxy;
+    private final MessagingServerConfigure messagingServerConfigure;
+
+    public UserInterceptorHandler(UserProxy userProxy, MessagingServerConfigure messagingServerConfigure) {
+        this.userProxy = userProxy;
+        this.messagingServerConfigure = messagingServerConfigure;
+    }
 
     @Override
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, Object handler) throws Exception {
@@ -57,7 +64,7 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
                 // 每次刷新用户的组织机构、角色和权限
                 // TODO 此处代码执行频率高，但是并不是每次都要执行，存在很多冗余
                 // 待用更好的方法实现
-                UserProxy userProxy = getUserProxy();
+                UserProxy userProxy = this.userProxy;
                 userProxy.attachOrgansPropertiesForUser(user);
                 userProxy.attachRolesMap(user);
 
@@ -111,7 +118,7 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
         if (StringUtils.isNotBlank(infoace)) {
             view.addObject("infoace", infoace);        //进入信息采集模式
         }
-        view.addObject("webimport", getWebimport());
+        view.addObject("webimport", messagingServerConfigure.getWebIMPort());
         view.addObject("sessionid", MainUtils.getContextID(session.getId()));
 
         view.addObject("models", MainContext.getModules());
@@ -142,18 +149,4 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
         view.addObject("ip", request.getRemoteAddr());
     }
 
-    private static Integer getWebimport() {
-        if (webimport == null) {
-            webimport = MainContext.getContext().getBean(MessagingServerConfigure.class).getWebIMPort();
-        }
-        return webimport;
-    }
-
-
-    private static UserProxy getUserProxy() {
-        if (userProxy == null) {
-            userProxy = MainContext.getContext().getBean(UserProxy.class);
-        }
-        return userProxy;
-    }
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.interceptor;
+package com.chatopera.cc.config.interceptor;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
@@ -26,6 +26,7 @@ import com.chatopera.cc.persistence.repository.RequestLogRepository;
 import com.chatopera.cc.util.Menu;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -42,9 +43,13 @@ import java.util.Enumeration;
  * @author admin
  */
 @Slf4j
+@Component
 public class LogInterceptorHandler implements HandlerInterceptor {
+    private final RequestLogRepository requestLogRes;
 
-    private static RequestLogRepository requestLogRes;
+    public LogInterceptorHandler(RequestLogRepository requestLogRes) {
+        this.requestLogRes = requestLogRes;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -118,13 +123,7 @@ public class LogInterceptorHandler implements HandlerInterceptor {
         }
 
         log.setParameters(str.toString());
-        getRequestLogRes().save(log);
+        requestLogRes.save(log);
     }
 
-    private static RequestLogRepository getRequestLogRes() {
-        if (requestLogRes == null) {
-            requestLogRes = MainContext.getContext().getBean(RequestLogRepository.class);
-        }
-        return requestLogRes;
-    }
 }

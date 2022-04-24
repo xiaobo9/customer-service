@@ -311,36 +311,18 @@ public class LoginController extends Handler {
     @RequestMapping("/addAdmin.html")
     @Menu(type = "apps", subtype = "user", access = true)
     public ModelAndView addAdmin(HttpServletRequest request, @Valid User user) {
-        String msg = validUser(user);
+        String msg = service.validUser(user);
         if (StringUtils.isNotBlank(msg)) {
             return request(super.pageTplResponse("redirect:/register.html?msg=" + msg));
         }
-        {
-            user.setUname(user.getUsername());
-            user.setAdmin(true);
-            if (StringUtils.isNotBlank(user.getPassword())) {
-                user.setPassword(MainUtils.md5(user.getPassword()));
-            }
-            user.setOrgi(super.getOrgi());
-            userRepository.save(user);
+        user.setUname(user.getUsername());
+        user.setAdmin(true);
+        if (StringUtils.isNotBlank(user.getPassword())) {
+            user.setPassword(MainUtils.md5(user.getPassword()));
         }
+        user.setOrgi(super.getOrgi());
+        userRepository.save(user);
         return this.processLogin(request, user, "");
     }
 
-    private String validUser(User user) {
-
-        User tempUser = userRepository.findByUsernameAndDatastatus(user.getUsername(), false);
-        if (tempUser != null) {
-            return "username_exist";
-        }
-        tempUser = userRepository.findByEmailAndDatastatus(user.getEmail(), false);
-        if (tempUser != null) {
-            return "email_exist";
-        }
-        tempUser = userRepository.findByMobileAndDatastatus(user.getMobile(), false);
-        if (tempUser != null) {
-            return "mobile_exist";
-        }
-        return "";
-    }
 }

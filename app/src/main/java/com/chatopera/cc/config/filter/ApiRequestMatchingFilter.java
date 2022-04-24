@@ -14,13 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.config;
+package com.chatopera.cc.config.filter;
 
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.auth.AuthToken;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -30,9 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class ApiRequestMatchingFilter implements Filter {
-    private static final Logger logger = LoggerFactory.getLogger(ApiRequestMatchingFilter.class);
 
-    private RequestMatcher[] ignoredRequests;
+    private final RequestMatcher[] ignoredRequests;
     private static AuthToken authToken;
 
 
@@ -79,12 +76,10 @@ public class ApiRequestMatchingFilter implements Filter {
 
     @Override
     public void destroy() {
-
     }
 
     @Override
     public void init(FilterConfig arg0) throws ServletException {
-
     }
 
     private static AuthToken getAuthToken() {
