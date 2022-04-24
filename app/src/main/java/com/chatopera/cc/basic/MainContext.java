@@ -19,7 +19,7 @@ package com.chatopera.cc.basic;
 
 import com.chatopera.cc.basic.resource.ActivityResource;
 import com.chatopera.cc.basic.resource.BatchResource;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.util.DateConverter;
@@ -53,7 +53,7 @@ public class MainContext {
 
     private static RedisCommand redisCommand;
 
-    private static Cache cache;
+    private static CacheService cacheService;
 
     private static PeerSyncIM peerSyncIM;
 
@@ -1030,11 +1030,11 @@ public class MainContext {
      *
      * @return
      */
-    public final static Cache getCache() {
-        if (cache == null) {
-            cache = getContext().getBean(Cache.class);
+    public final static CacheService getCache() {
+        if (cacheService == null) {
+            cacheService = getContext().getBean(CacheService.class);
         }
-        return cache;
+        return cacheService;
     }
 
     public final static PeerSyncIM getPeerSyncIM() {

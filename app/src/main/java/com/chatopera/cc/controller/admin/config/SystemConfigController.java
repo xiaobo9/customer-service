@@ -19,6 +19,7 @@ package com.chatopera.cc.controller.admin.config;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.Dict;
 import com.chatopera.cc.model.Secret;
@@ -36,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,9 +57,6 @@ import java.util.Properties;
 @RequestMapping("/admin/config")
 public class SystemConfigController extends Handler {
 
-    @Value("${uk.im.server.port}")
-    private Integer port;
-
     @Value("${web.upload-path}")
     private String path;
 
@@ -68,7 +65,6 @@ public class SystemConfigController extends Handler {
 
     @Autowired
     private SystemConfigRepository systemConfigRes;
-
 
     @Autowired
     private SystemMessageRepository systemMessageRes;
@@ -79,7 +75,10 @@ public class SystemConfigController extends Handler {
     @Autowired
     private TemplateRepository templateRes;
 
-    @RequestMapping("/index")
+    @Autowired
+    private CacheService cacheService;
+
+    @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "config", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String execute) throws SQLException {
         map.addAttribute("server", server);
@@ -136,9 +135,9 @@ public class SystemConfigController extends Handler {
         return request(super.createAdminTemplateResponse("/admin/config/index"));
     }
 
-    @RequestMapping("/stopimserver")
-    @Menu(type = "admin", subtype = "stopimserver", access = false, admin = true)
-    public ModelAndView stopimserver(ModelMap map, HttpServletRequest request, @Valid String confirm) throws SQLException {
+    @RequestMapping("/stopimserver.html")
+    @Menu(type = "admin", subtype = "stopimserver", admin = true)
+    public ModelAndView stopimserver(HttpServletRequest request, @Valid String confirm) {
         List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));
         boolean execute = MainUtils.secConfirm(confirm, secretConfig);
         if (execute) {
@@ -148,31 +147,26 @@ public class SystemConfigController extends Handler {
         return request(super.pageTplResponse("redirect:/admin/config/index.html?execute=" + execute));
     }
 
-    @RequestMapping("/startentim")
-    @Menu(type = "admin", subtype = "startentim", access = false, admin = true)
-    public ModelAndView startentim(ModelMap map, HttpServletRequest request) throws SQLException {
+    @RequestMapping("/startentim.html")
+    @Menu(type = "admin", subtype = "startentim", admin = true)
+    public ModelAndView startentim() throws SQLException {
         MainContext.enableModule(Constants.CSKEFU_MODULE_ENTIM);
         return request(super.pageTplResponse("redirect:/admin/config/index.html"));
     }
 
-    @RequestMapping("/stopentim")
-    @Menu(type = "admin", subtype = "stopentim", access = false, admin = true)
-    public ModelAndView stopentim(ModelMap map, HttpServletRequest request) throws SQLException {
+    @RequestMapping("/stopentim.html")
+    @Menu(type = "admin", subtype = "stopentim", admin = true)
+    public ModelAndView stopentim() throws SQLException {
         MainContext.removeModule(Constants.CSKEFU_MODULE_ENTIM);
         return request(super.pageTplResponse("redirect:/admin/config/index.html"));
     }
 
     /**
      * 危险操作，请谨慎调用 ， WebLogic/WebSphere/Oracle等中间件服务器禁止调用
-     *
-     * @param map
-     * @param request
-     * @return
-     * @throws SQLException
      */
-    @RequestMapping("/stop")
-    @Menu(type = "admin", subtype = "stop", access = false, admin = true)
-    public ModelAndView stop(ModelMap map, HttpServletRequest request, @Valid String confirm) throws SQLException {
+    @RequestMapping("/stop.html")
+    @Menu(type = "admin", subtype = "stop", admin = true)
+    public ModelAndView stop(HttpServletRequest request, @Valid String confirm) throws SQLException {
         List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));
         boolean execute = MainUtils.secConfirm(confirm, secretConfig);
         if (execute) {
@@ -184,11 +178,10 @@ public class SystemConfigController extends Handler {
     }
 
 
-    @RequestMapping("/save")
+    @RequestMapping("/save.html")
     @Menu(type = "admin", subtype = "save", admin = true)
     public ModelAndView save(
-            ModelMap map, HttpServletRequest request,
-            @Valid SystemConfig config, BindingResult result,
+            ModelMap map, HttpServletRequest request, @Valid SystemConfig config,
             @RequestParam(value = "keyfile", required = false) MultipartFile keyfile,
             @RequestParam(value = "loginlogo", required = false) MultipartFile loginlogo,
             @RequestParam(value = "consolelogo", required = false) MultipartFile consolelogo,
@@ -201,48 +194,50 @@ public class SystemConfigController extends Handler {
             config.setJkspassword(null);
         }
         if (systemConfig == null) {
+            systemConfig = config;
             config.setCreater(super.getUser(request).getId());
             config.setCreatetime(new Date());
-            systemConfig = config;
         } else {
             MainUtils.copyProperties(config, systemConfig);
         }
+        File sslDir = new File(path, "ssl");
         if (config.isEnablessl()) {
-            if (keyfile != null && keyfile.getBytes() != null && keyfile.getBytes().length > 0 && keyfile.getOriginalFilename() != null && keyfile.getOriginalFilename().length() > 0) {
-                FileUtils.writeByteArrayToFile(new File(path, "ssl/" + keyfile.getOriginalFilename()), keyfile.getBytes());
-                systemConfig.setJksfile(keyfile.getOriginalFilename());
-                File sslFilePath = new File(path, "ssl/https.properties");
-                FileUtils.forceMkdirParent(sslFilePath);
-                Properties prop = new Properties();
-                FileOutputStream oFile = new FileOutputStream(sslFilePath);//true表示追加打开
-                prop.setProperty("key-store-password", MainUtils.encryption(systemConfig.getJkspassword()));
-                prop.setProperty("key-store", systemConfig.getJksfile());
-                prop.store(oFile, "SSL Properties File");
-                oFile.close();
+            if (keyfile != null) {
+                byte[] bytes = keyfile.getBytes();
+                String filename = keyfile.getOriginalFilename();
+                if (bytes.length > 0 && filename != null && filename.length() > 0) {
+                    FileUtils.forceMkdirParent(sslDir);
+                    FileUtils.writeByteArrayToFile(new File(sslDir, filename), bytes);
+                    systemConfig.setJksfile(filename);
+                    Properties prop = new Properties();
+                    try (FileOutputStream oFile = new FileOutputStream(new File(sslDir, "https.properties"))) {
+                        prop.setProperty("key-store-password", MainUtils.encryption(systemConfig.getJkspassword()));
+                        prop.setProperty("key-store", systemConfig.getJksfile());
+                        prop.store(oFile, "SSL Properties File");
+                    }
+                }
             }
-        } else if (new File(path, "ssl").exists()) {
-            File[] sslFiles = new File(path, "ssl").listFiles();
-            for (File sslFile : sslFiles) {
-                sslFile.delete();
+        } else {
+            if (sslDir.exists()) {
+                FileUtils.cleanDirectory(sslDir);
             }
         }
 
-        if (loginlogo != null && StringUtils.isNotBlank(loginlogo.getOriginalFilename()) && loginlogo.getOriginalFilename().lastIndexOf(".") > 0) {
+        if (validLogoFile(loginlogo)) {
             systemConfig.setLoginlogo(super.saveImageFileWithMultipart(loginlogo));
         }
-        if (consolelogo != null && StringUtils.isNotBlank(
-                consolelogo.getOriginalFilename()) && consolelogo.getOriginalFilename().lastIndexOf(".") > 0) {
+        if (validLogoFile(consolelogo)) {
             systemConfig.setConsolelogo(super.saveImageFileWithMultipart(consolelogo));
         }
-        if (favlogo != null && StringUtils.isNotBlank(
-                favlogo.getOriginalFilename()) && favlogo.getOriginalFilename().lastIndexOf(".") > 0) {
+        if (validLogoFile(favlogo)) {
             systemConfig.setFavlogo(super.saveImageFileWithMultipart(favlogo));
         }
 
+        String orgi = super.getOrgi(request);
         if (secret != null && StringUtils.isNotBlank(secret.getPassword())) {
-            List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));
             String repassword = request.getParameter("repassword");
             if (StringUtils.isNotBlank(repassword) && repassword.equals(secret.getPassword())) {
+                List<Secret> secretConfig = secRes.findByOrgi(orgi);
                 if (secretConfig != null && secretConfig.size() > 0) {
                     Secret tempSecret = secretConfig.get(0);
                     String oldpass = request.getParameter("oldpass");
@@ -255,7 +250,7 @@ public class SystemConfigController extends Handler {
                         msg = "3";
                     }
                 } else {
-                    secret.setOrgi(super.getOrgi(request));
+                    secret.setOrgi(orgi);
                     secret.setCreater(super.getUser(request).getId());
                     secret.setCreatetime(new Date());
                     secret.setPassword(MainUtils.md5(secret.getPassword()));
@@ -270,9 +265,13 @@ public class SystemConfigController extends Handler {
         }
         systemConfigRes.save(systemConfig);
 
-        MainContext.getCache().putSystemByIdAndOrgi("systemConfig", super.getOrgi(request), systemConfig);
+        cacheService.putSystemByIdAndOrgi("systemConfig", orgi, systemConfig);
         map.addAttribute("imServerStatus", MainContext.getIMServerStatus());
 
         return request(super.pageTplResponse("redirect:/admin/config/index.html?msg=" + msg));
+    }
+
+    private boolean validLogoFile(MultipartFile file) {
+        return file != null && StringUtils.isNotBlank(file.getOriginalFilename()) && file.getOriginalFilename().lastIndexOf(".") > 0;
     }
 }

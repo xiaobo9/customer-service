@@ -19,7 +19,7 @@ import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
@@ -96,7 +96,7 @@ public class AgentUserProxy {
     private AgentUserContactsRepository agentUserContactsRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AgentStatusRepository agentStatusRes;
@@ -459,7 +459,7 @@ public class AgentUserProxy {
      * @throws CSKefuException
      */
     public AgentUser resolveAgentUser(final String userid, final String agentuserid, final String orgi) throws CSKefuException {
-        Optional<AgentUser> opt = cache.findOneAgentUserByUserIdAndOrgi(userid, orgi);
+        Optional<AgentUser> opt = cacheService.findOneAgentUserByUserIdAndOrgi(userid, orgi);
         if (!opt.isPresent()) {
             return agentUserRes.findById(agentuserid).orElseThrow(()->new EntityNotFoundException("Invalid transfer request, agent user not exist."));
 
@@ -475,7 +475,7 @@ public class AgentUserProxy {
      * @param orgi
      */
     public synchronized void updateAgentStatus(AgentStatus agentStatus, String orgi) {
-        int users = cache.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), orgi);
+        int users = cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), orgi);
         agentStatus.setUsers(users);
         agentStatus.setUpdatetime(new Date());
         agentStatusRes.save(agentStatus);

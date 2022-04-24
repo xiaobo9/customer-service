@@ -17,7 +17,7 @@
 package com.chatopera.cc.aspect;
 
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
 import com.chatopera.cc.model.AgentUser;
@@ -45,7 +45,7 @@ public class AgentUserAspect {
     private final static Logger logger = LoggerFactory.getLogger(AgentUserAspect.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private RedisCommand redisCommand;
@@ -69,7 +69,7 @@ public class AgentUserAspect {
         agentAuditProxy.updateAgentUserAudits(agentUser);
 
         // 同步缓存
-        cache.putAgentUserByOrgi(agentUser, agentUser.getOrgi());
+        cacheService.putAgentUserByOrgi(agentUser, agentUser.getOrgi());
     }
 
     @After("execution(* com.chatopera.cc.persistence.repository.AgentUserRepository.delete(..))")
@@ -78,8 +78,8 @@ public class AgentUserAspect {
         logger.info(
                 "[delete] agentUser id {}, agentno {}, userId {}", agentUser.getId(), agentUser.getAgentno(),
                 agentUser.getUserid());
-        cache.deleteAgentUserAuditByOrgiAndId(agentUser.getOrgi(), agentUser.getId());
-        cache.deleteAgentUserByUserIdAndOrgi(agentUser, agentUser.getOrgi());
+        cacheService.deleteAgentUserAuditByOrgiAndId(agentUser.getOrgi(), agentUser.getId());
+        cacheService.deleteAgentUserByUserIdAndOrgi(agentUser, agentUser.getOrgi());
     }
 
     /**

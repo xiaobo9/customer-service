@@ -18,7 +18,7 @@ package com.chatopera.cc.controller.api.auth;
 
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.auth.AuthToken;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.model.UserRole;
@@ -58,7 +58,7 @@ public class ApiLoginController extends Handler {
     private UserRoleRepository userRoleRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AuthToken authToken;

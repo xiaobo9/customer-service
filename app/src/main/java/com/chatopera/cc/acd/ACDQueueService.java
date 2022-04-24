@@ -16,7 +16,7 @@
 
 package com.chatopera.cc.acd;
 
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.AgentUser;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -32,12 +32,12 @@ public class ACDQueueService {
 
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @SuppressWarnings("unchecked")
     public int getQueueIndex(String agent, String orgi, String skill) {
         int queneUsers = 0;
-        Map<String, AgentUser> map = cache.getAgentUsersInQueByOrgi(orgi);
+        Map<String, AgentUser> map = cacheService.getAgentUsersInQueByOrgi(orgi);
 
         for (final Map.Entry<String, AgentUser> entry : map.entrySet()) {
             if (StringUtils.isNotBlank(skill)) {

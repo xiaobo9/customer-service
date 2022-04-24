@@ -19,9 +19,8 @@ package com.chatopera.cc.acd.middleware.visitor;
 import com.chatopera.cc.acd.ACDQueueService;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.AgentUserContacts;
 import com.chatopera.cc.model.Contacts;
@@ -51,7 +50,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
     private ContactsRepository contactsRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AgentUserProxy agentUserProxy;
@@ -78,7 +77,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
          * NOTE AgentUser代表一次会话记录，在上一个会话结束，并且由坐席人员点击"清除"后，会从数据库中删除
          * 此处查询到的，可能是之前的会话。其状态需要验证，所以不一定是由TA来服务本次会话。
          */
-        AgentUser agentUser = cache.findOneAgentUserByUserIdAndOrgi(ctx.getOnlineUserId(), ctx.getOrgi()).orElseGet(
+        AgentUser agentUser = cacheService.findOneAgentUserByUserIdAndOrgi(ctx.getOnlineUserId(), ctx.getOrgi()).orElseGet(
                 () -> {
                     /**
                      * NOTE 新创建的AgentUser不需要设置Status和Agentno

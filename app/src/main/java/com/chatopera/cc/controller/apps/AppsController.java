@@ -20,7 +20,7 @@ import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
@@ -69,7 +69,7 @@ public class AppsController extends Handler {
     private OrgiSkillRelRepository orgiSkillRelService;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private UserProxy userProxy;
@@ -142,7 +142,7 @@ public class AppsController extends Handler {
         aggValues(map, request);
 
         // 获取agentStatus
-        map.put("agentStatus", cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), orgi));
+        map.put("agentStatus", cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), orgi));
         return request(super.createAppsTempletResponse("/apps/desktop/index"));
     }
 
@@ -295,10 +295,10 @@ public class AppsController extends Handler {
             super.setUser(request, u);
             //切换成非坐席 判断是否坐席 以及 是否有对话
             if (!user.isAgent()) {
-                AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                         (super.getUser(request)).getId(), super.getOrgi(request));
 
-                if (!(agentStatus == null && cache.getInservAgentUsersSizeByAgentnoAndOrgi(
+                if (!(agentStatus == null && cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(
                         super.getUser(request).getId(), super.getOrgi(request)) == 0)) {
                     if (StringUtils.isBlank(index)) {
                         return request(super.pageTplResponse("redirect:/apps/content.html?msg=t1"));

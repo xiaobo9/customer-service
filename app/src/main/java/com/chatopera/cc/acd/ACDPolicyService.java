@@ -17,10 +17,9 @@
 package com.chatopera.cc.acd;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.SessionConfig;
@@ -44,7 +43,7 @@ public class ACDPolicyService {
     private final static Logger logger = LoggerFactory.getLogger(ACDPolicyService.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private SessionConfigRepository sessionConfigRes;
@@ -63,10 +62,10 @@ public class ACDPolicyService {
     @SuppressWarnings("unchecked")
     public List<SessionConfig> initSessionConfigList() {
         List<SessionConfig> sessionConfigList;
-        if ((sessionConfigList = cache.findOneSessionConfigListByOrgi(Constants.SYSTEM_ORGI)) == null) {
+        if ((sessionConfigList = cacheService.findOneSessionConfigListByOrgi(Constants.SYSTEM_ORGI)) == null) {
             sessionConfigList = sessionConfigRes.findAll();
             if (sessionConfigList != null && sessionConfigList.size() > 0) {
-                cache.putSessionConfigListByOrgi(sessionConfigList, Constants.SYSTEM_ORGI);
+                cacheService.putSessionConfigListByOrgi(sessionConfigList, Constants.SYSTEM_ORGI);
             }
         }
         return sessionConfigList;
@@ -80,12 +79,12 @@ public class ACDPolicyService {
      */
     public SessionConfig initSessionConfig(String organid, final String orgi) {
         SessionConfig sessionConfig;
-        if ((sessionConfig = cache.findOneSessionConfigByOrgi(organid, orgi)) == null) {
+        if ((sessionConfig = cacheService.findOneSessionConfigByOrgi(organid, orgi)) == null) {
             sessionConfig = sessionConfigRes.findByOrgiAndSkill(orgi, organid);
             if (sessionConfig == null) {
                 sessionConfig = new SessionConfig();
             } else {
-                cache.putSessionConfigByOrgi(sessionConfig, organid, orgi);
+                cacheService.putSessionConfigByOrgi(sessionConfig, organid, orgi);
             }
         }
 
@@ -142,7 +141,7 @@ public class ACDPolicyService {
                 agentUser.getAgentno(), orgi, agentUser.getSkill(), agentUser.getUserid()
         );
         List<AgentStatus> agentStatuses = new ArrayList<>();
-        Map<String, AgentStatus> map = cache.findAllReadyAgentStatusByOrgi(orgi);
+        Map<String, AgentStatus> map = cacheService.findAllReadyAgentStatusByOrgi(orgi);
 
         // DEBUG
         if (map.size() > 0) {

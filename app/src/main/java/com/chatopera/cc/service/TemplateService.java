@@ -1,7 +1,7 @@
 package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.Template;
 import com.chatopera.cc.persistence.repository.TemplateRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -16,14 +16,14 @@ public class TemplateService {
     private TemplateRepository repository;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     public Template getTemplate(String id) {
-        Template template = cache.findOneSystemByIdAndOrgi(id, Constants.SYSTEM_ORGI);
+        Template template = cacheService.findOneSystemByIdAndOrgi(id, Constants.SYSTEM_ORGI);
         if (template == null) {
             // FIXME 并发处理
             template = repository.findByIdAndOrgi(id, Constants.SYSTEM_ORGI);
-            cache.putSystemByIdAndOrgi(id, Constants.SYSTEM_ORGI, template);
+            cacheService.putSystemByIdAndOrgi(id, Constants.SYSTEM_ORGI, template);
         }
         return template;
     }

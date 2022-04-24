@@ -24,7 +24,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.*;
@@ -98,7 +98,7 @@ public class AgentAuditController extends Handler {
     private TagRepository tagRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private PeerSyncIM peerSyncIM;
@@ -388,7 +388,7 @@ public class AgentAuditController extends Handler {
 
             // 列出所有在线的坐席，排除本身
             List<String> userids = new ArrayList<>();
-            final Map<String, AgentStatus> agentStatusMap = cache.findAllReadyAgentStatusByOrgi(orgi);
+            final Map<String, AgentStatus> agentStatusMap = cacheService.findAllReadyAgentStatusByOrgi(orgi);
 
             for (final String o : agentStatusMap.keySet()) {
                 if (!StringUtils.equals(o, agentnoid)) {
@@ -438,7 +438,7 @@ public class AgentAuditController extends Handler {
         if (StringUtils.isNotBlank(organ)) {
             List<String> userids = new ArrayList<>();
 
-            final Map<String, AgentStatus> agentStatusMap = cache.findAllReadyAgentStatusByOrgi(orgi);
+            final Map<String, AgentStatus> agentStatusMap = cacheService.findAllReadyAgentStatusByOrgi(orgi);
 
             for (final String o : agentStatusMap.keySet()) {
                 if (!StringUtils.equals(o, agentid)) {
@@ -502,17 +502,17 @@ public class AgentAuditController extends Handler {
              * 坐席状态
              */
             // 转接目标坐席
-            final AgentStatus transAgentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
+            final AgentStatus transAgentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
 
             // 转接源坐席
-            final AgentStatus currentAgentStatus = cache.findOneAgentStatusByAgentnoAndOrig(currentAgentno, orgi);
+            final AgentStatus currentAgentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(currentAgentno, orgi);
 
             if (StringUtils.equals(
                     AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus())) { //转接 ， 发送消息给 目标坐席
 
                 // 更新当前坐席的服务访客列表
                 if (currentAgentStatus != null) {
-                    cache.deleteOnlineUserIdFromAgentStatusByUseridAndAgentnoAndOrgi(userid, currentAgentno, orgi);
+                    cacheService.deleteOnlineUserIdFromAgentStatusByUseridAndAgentnoAndOrgi(userid, currentAgentno, orgi);
                     agentUserProxy.updateAgentStatus(currentAgentStatus, super.getOrgi(request));
                 }
 

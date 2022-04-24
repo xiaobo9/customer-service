@@ -19,7 +19,7 @@ package com.chatopera.cc.controller.api;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
 import com.chatopera.cc.model.*;
@@ -60,7 +60,7 @@ public class ApiUserController extends Handler {
     private final static Logger logger = LoggerFactory.getLogger(ApiUserController.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private UserProxy userProxy;
@@ -192,7 +192,7 @@ public class ApiUserController extends Handler {
 
                 // 由坐席切换成非坐席 判断是否坐席 以及 是否有对话
                 if (!updated.isAgent()) {
-                    AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                    AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                             previous.getId(), previous.getOrgi());
                     if (agentStatus != null && agentStatus.getUsers() > 0) {
                         resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_SUCC);

@@ -21,7 +21,7 @@ import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.Viewport;
 import com.chatopera.cc.basic.auth.AuthToken;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.api.QueryParams;
 import com.chatopera.cc.model.Organ;
 import com.chatopera.cc.model.StreamingFile;
@@ -64,7 +64,7 @@ public class Handler {
     private StreamingFileRepository streamingFileRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AuthToken authToken;
@@ -320,7 +320,7 @@ public class Handler {
             if (StringUtils.isNotBlank(nickname)) {
                 user.setUsername(nickname);
             } else {
-                Map<String, String> sessionMessage = cache.findOneSystemMapByIdAndOrgi(
+                Map<String, String> sessionMessage = cacheService.findOneSystemMapByIdAndOrgi(
                         request.getSession().getId(), Constants.SYSTEM_ORGI);
                 if (sessionMessage != null) {
                     String struname = sessionMessage.get("username");
@@ -350,7 +350,7 @@ public class Handler {
             if (StringUtils.isNotBlank(nickname)) {
                 user.setUsername(nickname);
             } else {
-                Map<String, String> sessionMessage = cache.findOneSystemMapByIdAndOrgi(
+                Map<String, String> sessionMessage = cacheService.findOneSystemMapByIdAndOrgi(
                         sessionid, Constants.SYSTEM_ORGI);
                 if (sessionMessage != null) {
                     String struname = sessionMessage.get("username");

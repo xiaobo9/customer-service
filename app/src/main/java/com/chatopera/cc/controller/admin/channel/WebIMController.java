@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.controller.admin.channel;
 
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.CousultInvite;
 import com.chatopera.cc.model.Organ;
@@ -70,7 +70,7 @@ public class WebIMController extends Handler {
     private SNSAccountRepository snsAccountRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private UserProxy userProxy;
@@ -132,7 +132,7 @@ public class WebIMController extends Handler {
             inviteData.setConsult_dialog_headimg(super.saveImageFileWithMultipart(agentheadimg));
         }
         inviteRes.save(inviteData);
-        cache.putConsultInviteByOrgi(inviteData.getOrgi(), inviteData);
+        cacheService.putConsultInviteByOrgi(inviteData.getOrgi(), inviteData);
         return request(super.pageTplResponse("redirect:/admin/webim/index.html?snsid=" + inviteData.getSnsaccountid()));
     }
 
@@ -234,7 +234,7 @@ public class WebIMController extends Handler {
             inviteRes.save(inviteData);
         }
 
-        cache.putConsultInviteByOrgi(orgi, inviteData);
+        cacheService.putConsultInviteByOrgi(orgi, inviteData);
         return request(super.pageTplResponse("redirect:/admin/webim/profile.html?snsid=" + inviteData.getSnsaccountid()));
     }
 
@@ -278,7 +278,7 @@ public class WebIMController extends Handler {
         } else {
             inviteRes.save(inviteData);
         }
-        cache.putConsultInviteByOrgi(inviteData.getOrgi(), inviteData);
+        cacheService.putConsultInviteByOrgi(inviteData.getOrgi(), inviteData);
         return request(super.pageTplResponse("redirect:/admin/webim/invote.html?snsid=" + inviteData.getSnsaccountid()));
     }
 

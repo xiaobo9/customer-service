@@ -20,7 +20,7 @@ import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.resource.OutputTextFormat;
 import com.chatopera.cc.basic.resource.Resource;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.JobDetail;
 import com.chatopera.cc.persistence.repository.ReporterRepository;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Fetcher implements Runnable {
 
     private static ReporterRepository reporterRes;
-    private static Cache cache;
+    private static CacheService cacheService;
     private JobDetail job = null;
     private AtomicInteger activeThreads = new AtomicInteger(0);
     private AtomicInteger pages = new AtomicInteger(0); // total pages fetched
@@ -171,9 +171,9 @@ public class Fetcher implements Runnable {
     }
 
 
-    private static Cache getCache() {
-        if (cache == null)
-            cache = MainContext.getContext().getBean(Cache.class);
-        return cache;
+    private static CacheService getCache() {
+        if (cacheService == null)
+            cacheService = MainContext.getContext().getBean(CacheService.class);
+        return cacheService;
     }
 }

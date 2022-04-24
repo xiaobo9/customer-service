@@ -19,7 +19,7 @@ package com.chatopera.cc.controller.apps;
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
@@ -70,7 +70,7 @@ public class AgentSettingsController extends Handler {
     private OrganProxy organProxy;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @RequestMapping("/agent/index.html")
     @Menu(type = "setting", subtype = "sessionconfig")
@@ -128,8 +128,8 @@ public class AgentSettingsController extends Handler {
 
         sessionConfigRes.save(tempSessionConfig);
 
-        cache.putSessionConfigByOrgi(tempSessionConfig, tempSessionConfig.getSkill(), orgi);
-        cache.deleteSessionConfigListByOrgi(orgi);
+        cacheService.putSessionConfigByOrgi(tempSessionConfig, tempSessionConfig.getSkill(), orgi);
+        cacheService.deleteSessionConfigListByOrgi(orgi);
 
         acdPolicyService.initSessionConfigList();
         map.put("sessionConfig", tempSessionConfig);
@@ -157,7 +157,7 @@ public class AgentSettingsController extends Handler {
             BlackEntity tempBlackEntity = blackListRes.findByIdAndOrgi(id, super.getOrgi(request));
             if (tempBlackEntity != null) {
                 blackListRes.delete(tempBlackEntity);
-                cache.deleteSystembyIdAndOrgi(tempBlackEntity.getUserid(), Constants.SYSTEM_ORGI);
+                cacheService.deleteSystembyIdAndOrgi(tempBlackEntity.getUserid(), Constants.SYSTEM_ORGI);
             }
         }
         return request(super.pageTplResponse("redirect:/setting/blacklist.html"));

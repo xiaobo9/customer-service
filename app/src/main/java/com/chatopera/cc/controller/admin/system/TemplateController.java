@@ -18,7 +18,7 @@ package com.chatopera.cc.controller.admin.system;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.Dict;
 import com.chatopera.cc.model.SysDic;
@@ -54,7 +54,7 @@ public class TemplateController extends Handler {
     private SysDicRepository dicRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @RequestMapping("/index")
     @Menu(type = "admin", subtype = "template", access = false, admin = true)
@@ -151,7 +151,7 @@ public class TemplateController extends Handler {
             oldTemplate.setCharttype(template.getCharttype());
             templateRes.save(oldTemplate);
 
-            cache.deleteSystembyIdAndOrgi(template.getId(), super.getOrgi(request));
+            cacheService.deleteSystembyIdAndOrgi(template.getId(), super.getOrgi(request));
         }
         return request(super.pageTplResponse("redirect:/admin/template/list.html?type=" + template.getTemplettype()));
     }
@@ -173,7 +173,7 @@ public class TemplateController extends Handler {
             oldTemplate.setTemplettitle(template.getTemplettitle());
             templateRes.save(oldTemplate);
 
-            cache.deleteSystembyIdAndOrgi(template.getId(), super.getOrgi(request));
+            cacheService.deleteSystembyIdAndOrgi(template.getId(), super.getOrgi(request));
         }
         return request(super.pageTplResponse("redirect:/admin/template/list.html?type=" + template.getTemplettype()));
     }
@@ -184,7 +184,7 @@ public class TemplateController extends Handler {
         if (template != null) {
             templateRes.delete(template);
 
-            cache.deleteSystembyIdAndOrgi(template.getId(), super.getOrgi(request));
+            cacheService.deleteSystembyIdAndOrgi(template.getId(), super.getOrgi(request));
         }
         return request(super.pageTplResponse("redirect:/admin/template/list.html?type=" + template.getTemplettype()));
     }

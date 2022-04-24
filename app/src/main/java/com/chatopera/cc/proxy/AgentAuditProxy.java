@@ -19,7 +19,7 @@ package com.chatopera.cc.proxy;
 import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.exception.CSKefuCacheException;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.AgentUserAudit;
@@ -45,7 +45,7 @@ public class AgentAuditProxy {
     private BrokerPublisher brokerPublisher;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AgentUserProxy agentUserProxy;
@@ -61,7 +61,7 @@ public class AgentAuditProxy {
             HashMap<String, String> subscribers = agentUserProxy.getAgentUserSubscribers(
                     agentUser.getOrgi(), agentUser);
             AgentUserAudit audit = new AgentUserAudit(agentUser.getOrgi(), agentUser.getId(), subscribers);
-            cache.putAgentUserAuditByOrgi(agentUser.getOrgi(), audit);
+            cacheService.putAgentUserAuditByOrgi(agentUser.getOrgi(), audit);
             return audit;
         } catch (CSKefuCacheException e) {
             logger.error("[updateAgentUserAudits] exception", e);

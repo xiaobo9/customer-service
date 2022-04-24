@@ -21,7 +21,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.repository.AgentUserTaskRepository;
@@ -73,7 +73,7 @@ public class WebIMTask {
     private PeerSyncIM peerSyncIM;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Scheduled(fixedDelay = 5000, initialDelay = 20000) // 处理超时消息，每5秒执行一次
     public void task() {
@@ -85,10 +85,10 @@ public class WebIMTask {
                             MainUtils.getLastTime(sessionConfig.getTimeout()),
                             AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cache.findOneAgentUserByUserIdAndOrgi(
+                        cacheService.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
                             if (StringUtils.isNotBlank(p.getAgentno())) {
-                                AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                                AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                                         p.getAgentno(), task.getOrgi());
                                 task.setAgenttimeouttimes(task.getAgenttimeouttimes() + 1);
                                 if (agentStatus != null && (task.getWarnings() == null || task.getWarnings().equals(
@@ -124,9 +124,9 @@ public class WebIMTask {
                             MainUtils.getLastTime(sessionConfig.getRetimeout()),
                             AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cache.findOneAgentUserByUserIdAndOrgi(
+                        cacheService.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
-                            AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                            AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                                     p.getAgentno(), task.getOrgi());
                             if (agentStatus != null && task.getWarningtime() != null && MainUtils.getLastTime(
                                     sessionConfig.getRetimeout()).after(task.getWarningtime())) {    //再次超时未回复
@@ -150,7 +150,7 @@ public class WebIMTask {
                             MainUtils.getLastTime(sessionConfig.getQuenetimeout()),
                             AgentUserStatusEnum.INQUENE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cache.findOneAgentUserByUserIdAndOrgi(
+                        cacheService.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
                             /**
                              * 设置了超时,断开
@@ -182,9 +182,9 @@ public class WebIMTask {
                             MainUtils.getLastTime(sessionConfig.getAgenttimeout()),
                             AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
                     for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cache.findOneAgentUserByUserIdAndOrgi(
+                        cacheService.findOneAgentUserByUserIdAndOrgi(
                                 task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
-                            AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                            AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                                     p.getAgentno(), task.getOrgi());
                             if (agentStatus != null && (task.getReptimes() == null || task.getReptimes().equals("0"))) {
                                 task.setReptimes("1");
@@ -329,10 +329,10 @@ public class WebIMTask {
         allJob.addAll(planTaskList.getContent());
         if (allJob.size() > 0) {
             for (JobDetail jobDetail : allJob) {
-                if (!cache.existJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi())) {
+                if (!cacheService.existJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi())) {
                     jobDetail.setTaskstatus(MainContext.TaskStatusType.QUEUE.getType());
                     jobDetailRes.save(jobDetail);
-                    cache.putJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi(), jobDetail);
+                    cacheService.putJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi(), jobDetail);
                     /**
                      * 加入到作业执行引擎
                      */

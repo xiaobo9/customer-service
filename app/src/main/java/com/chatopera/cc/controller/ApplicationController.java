@@ -20,7 +20,7 @@ import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.Organ;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.repository.ExtensionRepository;
@@ -70,7 +70,7 @@ public class ApplicationController extends Handler {
     private String appCustomerEntity;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Value("${tongji.baidu.sitekey}")
     private String tongjiBaiduSiteKey;
@@ -113,7 +113,7 @@ public class ApplicationController extends Handler {
         view.addObject("appCustomerEntity", appCustomerEntity);
 
         // 在线坐席状态信息
-        view.addObject("agentStatus", cache.findOneAgentStatusByAgentnoAndOrig(logined.getId(), logined.getOrgi()));
+        view.addObject("agentStatus", cacheService.findOneAgentStatusByAgentnoAndOrig(logined.getId(), logined.getOrgi()));
 
         // 呼叫中心信息
         if (MainContext.hasModule(Constants.CSKEFU_MODULE_CALLCENTER) && logined.isCallcenter()) {

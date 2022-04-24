@@ -15,7 +15,7 @@
  */
 package com.chatopera.cc.aspect;
 
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.AgentStatus;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
@@ -34,17 +34,17 @@ public class AgentStatusAspect {
     private final static Logger logger = LoggerFactory.getLogger(AgentStatusAspect.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @After("execution(* com.chatopera.cc.persistence.repository.AgentStatusRepository.save(..))")
     public void save(final JoinPoint joinPoint) {
         final AgentStatus agentStatus = (AgentStatus) joinPoint.getArgs()[0];
-        cache.putAgentStatusByOrgi(agentStatus, agentStatus.getOrgi());
+        cacheService.putAgentStatusByOrgi(agentStatus, agentStatus.getOrgi());
     }
 
     @After("execution(* com.chatopera.cc.persistence.repository.AgentStatusRepository.delete(..))")
     public void delete(final JoinPoint joinPoint) {
         final AgentStatus agentStatus = (AgentStatus) joinPoint.getArgs()[0];
-        cache.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi());
+        cacheService.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi());
     }
 }

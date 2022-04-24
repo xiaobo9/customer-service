@@ -21,7 +21,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.SysDic;
 import com.chatopera.cc.model.User;
@@ -64,23 +64,23 @@ public class AdminController extends Handler {
     private SysDicRepository sysDicRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @RequestMapping("/admin.html")
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
         ModelAndView view = request(super.pageTplResponse("redirect:/"));
         User user = super.getUser(request);
         view.addObject("agentStatusReport", acdWorkMonitor.getAgentReport(user.getOrgi()));
-        view.addObject("agentStatus", cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), user.getOrgi()));
+        view.addObject("agentStatus", cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), user.getOrgi()));
         return view;
     }
 
     private void aggValues(ModelMap map, HttpServletRequest request) {
         String orgi = super.getOrgi(request);
-        map.put("onlineUserCache", cache.getOnlineUserSizeByOrgi(orgi));
+        map.put("onlineUserCache", cacheService.getOnlineUserSizeByOrgi(orgi));
         map.put("onlineUserClients", OnlineUserProxy.webIMClients.size());
         map.put("chatClients", NettyClients.getInstance().size());
-        map.put("systemCaches", cache.getSystemSizeByOrgi(Constants.SYSTEM_ORGI));
+        map.put("systemCaches", cacheService.getSystemSizeByOrgi(Constants.SYSTEM_ORGI));
 
         map.put("agentReport", acdWorkMonitor.getAgentReport(orgi));
         map.put("webIMReport", MainUtils.getWebIMReport(userEventRes.findByOrgiAndCreatetimeRange(super.getOrgi(request), MainUtils.getStartTime(), MainUtils.getEndTime())));

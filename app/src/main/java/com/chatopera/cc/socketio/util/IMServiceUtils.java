@@ -1,7 +1,7 @@
 package com.chatopera.cc.socketio.util;
 
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.proxy.AgentUserProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 public class IMServiceUtils {
     private final static Logger logger = LoggerFactory.getLogger(IMServiceUtils.class);
 
-    private static Cache cache;
+    private static CacheService cacheService;
     private static AgentUserProxy agentUserProxy;
 
     public static void shiftOpsType(final String userId, final String orgi, final MainContext.OptType opsType) {
@@ -36,11 +36,11 @@ public class IMServiceUtils {
      *
      * @return
      */
-    static private Cache getCache() {
-        if (cache == null) {
-            cache = MainContext.getContext().getBean(Cache.class);
+    static private CacheService getCache() {
+        if (cacheService == null) {
+            cacheService = MainContext.getContext().getBean(CacheService.class);
         }
-        return cache;
+        return cacheService;
     }
 
     private static AgentUserProxy getAgentUserProxy() {

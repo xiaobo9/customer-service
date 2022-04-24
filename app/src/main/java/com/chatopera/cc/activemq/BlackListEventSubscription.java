@@ -18,7 +18,7 @@ package com.chatopera.cc.activemq;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.persistence.repository.BlackListRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public class BlackListEventSubscription {
     private final static Logger logger = LoggerFactory.getLogger(BlackListEventSubscription.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private BlackListRepository blackListRes;
@@ -55,7 +55,7 @@ public class BlackListEventSubscription {
             final String orgi = json.getString("orgi");
 
             if (StringUtils.isNotBlank(userId) && StringUtils.isNotBlank(orgi)) {
-                cache.findOneBlackEntityByUserIdAndOrgi(userId, orgi).ifPresent(blackListRes::delete);
+                cacheService.findOneBlackEntityByUserIdAndOrgi(userId, orgi).ifPresent(blackListRes::delete);
             } else {
                 logger.warn("[onMessage] error: invalid payload");
             }

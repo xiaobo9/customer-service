@@ -22,7 +22,7 @@ import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
 import com.chatopera.cc.exception.CSKefuException;
@@ -64,7 +64,7 @@ public class ACDAgentService {
     private PeerSyncIM peerSyncIM;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AgentUserRepository agentUserRes;
@@ -152,7 +152,7 @@ public class ACDAgentService {
             final AgentUser agentUser,
             final String orgi
     ) throws Exception {
-        final AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
+        final AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
         return pickupAgentUserInQueue(agentUser, agentStatus);
     }
 
@@ -184,11 +184,11 @@ public class ACDAgentService {
         }
 
         // 获得所有待服务访客的列表
-        final Map<String, AgentUser> pendingAgentUsers = cache.getAgentUsersInQueByOrgi(orgi);
+        final Map<String, AgentUser> pendingAgentUsers = cacheService.getAgentUsersInQueByOrgi(orgi);
 
         // 本次批量分配访客数目
         Map<String, Integer> assigned = new HashMap<>();
-        int currentAssigned = cache.getInservAgentUsersSizeByAgentnoAndOrgi(
+        int currentAssigned = cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(
                 agentStatus.getAgentno(), agentStatus.getOrgi());
 
         logger.info(
@@ -253,7 +253,7 @@ public class ACDAgentService {
      */
     public AgentService pickupAgentUserInQueue(final AgentUser agentUser, final AgentStatus agentStatus) {
         // 从排队队列移除
-        cache.deleteAgentUserInqueByAgentUserIdAndOrgi(agentUser.getUserid(), agentUser.getOrgi());
+        cacheService.deleteAgentUserInqueByAgentUserIdAndOrgi(agentUser.getUserid(), agentUser.getOrgi());
         AgentService agentService = null;
         // 下面开始处理其加入到服务中的队列
         try {
@@ -311,7 +311,7 @@ public class ACDAgentService {
             AgentStatus agentStatus = null;
             if (StringUtils.equals(AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus()) &&
                     agentUser.getAgentno() != null) {
-                agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentUser.getAgentno(), orgi);
+                agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(agentUser.getAgentno(), orgi);
             }
 
             // 设置新AgentUser的状态
@@ -376,7 +376,7 @@ public class ACDAgentService {
              */
             if (agentStatus != null) {
                 agentStatus.setUsers(
-                        cache.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi()));
+                        cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi()));
                 agentStatusRes.save(agentStatus);
             }
 

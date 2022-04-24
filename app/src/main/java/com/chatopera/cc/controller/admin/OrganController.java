@@ -17,7 +17,7 @@
 package com.chatopera.cc.controller.admin;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.repository.*;
@@ -73,7 +73,7 @@ public class OrganController extends Handler {
     private OrganProxy organProxy;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private UserProxy userProxy;
@@ -222,7 +222,7 @@ public class OrganController extends Handler {
                     /**
                      * 以下更新技能组状态
                      */
-                    AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                    AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                             user.getId(), super.getOrgi());
 
                     // TODO 因为一个用户可以包含在多个技能组中，所以，skill应该对应
@@ -230,7 +230,7 @@ public class OrganController extends Handler {
                     if (agentStatus != null) {
                         userProxy.attachOrgansPropertiesForUser(user);
                         agentStatus.setSkills(user.getSkills());
-                        cache.putAgentStatusByOrgi(agentStatus, super.getOrgi());
+                        cacheService.putAgentStatusByOrgi(agentStatus, super.getOrgi());
                     }
                 }
             }

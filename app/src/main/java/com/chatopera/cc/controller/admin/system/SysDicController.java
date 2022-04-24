@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.controller.admin.system;
 
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.SysDic;
 import com.chatopera.cc.persistence.repository.SysDicRepository;
@@ -43,7 +43,7 @@ public class SysDicController extends Handler {
     private SysDicRepository sysDicRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @RequestMapping("/index")
     @Menu(type = "admin", subtype = "sysdic")
@@ -158,19 +158,19 @@ public class SysDicController extends Handler {
      * @param orgi
      */
     public void reloadSysDicItem(final SysDic dic, final String orgi) {
-        cache.putSysDicByOrgi(dic.getId(), orgi, dic);
+        cacheService.putSysDicByOrgi(dic.getId(), orgi, dic);
         if (StringUtils.isNotBlank(dic.getDicid())) { // 该数据为某词典的子项
             // 首先获得根词典
-            SysDic root = cache.findOneSysDicByIdAndOrgi(dic.getDicid(), orgi);
+            SysDic root = cacheService.findOneSysDicByIdAndOrgi(dic.getDicid(), orgi);
             // 获得其目前的全部子项，此处是从数据库提取
             // 而不是缓存，因为缓存的数据已经旧了
             List<SysDic> sysDicList = sysDicRes.findByDicid(dic.getDicid());
             // 更新其全部子项数据到缓存
-            cache.putSysDicByOrgi(root.getCode(), orgi, sysDicList);
+            cacheService.putSysDicByOrgi(root.getCode(), orgi, sysDicList);
         } else if (dic.getParentid().equals("0")) {
             // 如果该数据为某根词典
             List<SysDic> sysDicList = sysDicRes.findByDicid(dic.getId());
-            cache.putSysDicByOrgi(dic.getCode(), orgi, sysDicList);
+            cacheService.putSysDicByOrgi(dic.getCode(), orgi, sysDicList);
         }
     }
 

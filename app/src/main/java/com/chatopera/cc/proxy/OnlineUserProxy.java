@@ -20,7 +20,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
@@ -52,7 +52,7 @@ public class OnlineUserProxy {
 
     private static OnlineUserRepository onlineUserRes;
     private static UserRepository userRes;
-    private static Cache cache;
+    private static CacheService cacheService;
     private static ConsultInviteRepository consultInviteRes;
     private static OnlineUserHisRepository onlineUserHisRes;
     private static UserTraceRepository userTraceRes;
@@ -859,12 +859,12 @@ public class OnlineUserProxy {
 
     }
 
-    private static Cache getCache() {
-        if (cache == null) {
-            cache = MainContext.getCache();
+    private static CacheService getCache() {
+        if (cacheService == null) {
+            cacheService = MainContext.getCache();
         }
 
-        return cache;
+        return cacheService;
     }
 
     private static ConsultInviteRepository getConsultInviteRes() {

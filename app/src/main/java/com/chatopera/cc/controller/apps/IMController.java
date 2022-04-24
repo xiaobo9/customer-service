@@ -20,7 +20,7 @@ package com.chatopera.cc.controller.apps;
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.*;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
@@ -151,7 +151,7 @@ public class IMController extends Handler {
     private ChatbotRepository chatbotRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @PostConstruct
     private void init() {
@@ -361,7 +361,7 @@ public class IMController extends Handler {
         sessionMessage.put("Sessionsystem_name", system_name);
         sessionMessage.put("sessionid", sessionid);
         sessionMessage.put("uid", uid);
-        cache.putSystemMapByIdAndOrgi(sessionid, Constants.SYSTEM_ORGI, sessionMessage);
+        cacheService.putSystemMapByIdAndOrgi(sessionid, Constants.SYSTEM_ORGI, sessionMessage);
 
         OnlineUser onlineUser = onlineUserRes.findById(userid).orElse(null);
         if (onlineUser != null) {
@@ -390,7 +390,7 @@ public class IMController extends Handler {
     public void inlist(HttpServletResponse response, @PathVariable String id, @Valid String userid) throws IOException {
         response.setHeader("Content-Type", "text/html;charset=utf-8");
         if (StringUtils.isNotBlank(userid)) {
-            BlackEntity black = cache.findOneSystemByIdAndOrgi(userid, Constants.SYSTEM_ORGI);
+            BlackEntity black = cacheService.findOneSystemByIdAndOrgi(userid, Constants.SYSTEM_ORGI);
             if ((black != null && (black.getEndtime() == null || black.getEndtime().after(new Date())))) {
                 response.getWriter().write("in");
             }
@@ -418,7 +418,7 @@ public class IMController extends Handler {
             @Valid String sign,
             final @Valid String client,
             final @Valid String traceid) throws InterruptedException {
-        Optional<BlackEntity> blackOpt = cache.findOneBlackEntityByUserIdAndOrgi(userid, orgi);
+        Optional<BlackEntity> blackOpt = cacheService.findOneBlackEntityByUserIdAndOrgi(userid, orgi);
         if (blackOpt.isPresent() && (blackOpt.get().getEndtime() == null || blackOpt.get().getEndtime().after(new Date()))) {
             logger.info("[online] online user {} is in black list.", userid);
             // 该访客被拉黑
@@ -544,7 +544,7 @@ public class IMController extends Handler {
             @Valid final String purl,
             @Valid final boolean isInvite) throws Exception {
         logger.info("[index] orgi {}, skill {}, agent {}, traceid {}, isInvite {}, exchange {}", orgi, skill, agent, traceid, isInvite, exchange);
-        Map<String, String> sessionMessageObj = cache.findOneSystemMapByIdAndOrgi(sessionid, orgi);
+        Map<String, String> sessionMessageObj = cacheService.findOneSystemMapByIdAndOrgi(sessionid, orgi);
 
         HttpSession session = request.getSession();
         if (sessionMessageObj != null) {
@@ -558,7 +558,7 @@ public class IMController extends Handler {
         }
 
         ModelAndView view = request(super.pageTplResponse("/apps/im/index"));
-        BlackEntity blackEntity = cache.findOneBlackEntityByUserIdAndOrgi(userid, Constants.SYSTEM_ORGI).orElse(null);
+        BlackEntity blackEntity = cacheService.findOneBlackEntityByUserIdAndOrgi(userid, Constants.SYSTEM_ORGI).orElse(null);
         CousultInvite invite = OnlineUserProxy.consult(appid, orgi);
         // appid 或者 用户在黑名单里直接返回
         if (StringUtils.isBlank(appid) || (blackEntity != null && blackEntity.inBlackStatus())) {

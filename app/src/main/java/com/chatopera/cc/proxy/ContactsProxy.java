@@ -13,7 +13,7 @@ package com.chatopera.cc.proxy;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.Contacts;
@@ -43,7 +43,7 @@ public class ContactsProxy {
     private final static Logger logger = LoggerFactory.getLogger(ContactsProxy.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AgentUserRepository agentUserRes;
@@ -104,7 +104,7 @@ public class ContactsProxy {
                     contact.getOrgi())
                     .filter(p -> StringUtils.equals(p.getAgentno(), logined.getId()))
                     .ifPresent(p -> {
-                        if (!cache.existBlackEntityByUserIdAndOrgi(p.getUserid(), logined.getOrgi())) {
+                        if (!cacheService.existBlackEntityByUserIdAndOrgi(p.getUserid(), logined.getOrgi())) {
                             // 访客在线 WebIM，排队或服务中
                             result.add(MainContext.ChannelType.WEBIM);
                         } else {
@@ -123,9 +123,9 @@ public class ContactsProxy {
                 if (opt.isPresent()) {
                     // 联系人存在访客信息
                     // 并且该访客没有被拉黑
-                    if (!cache.existBlackEntityByUserIdAndOrgi(
+                    if (!cacheService.existBlackEntityByUserIdAndOrgi(
                             opt.get().getId(), logined.getOrgi())) {
-                        Optional<AgentUser> agentUserOpt = cache.findOneAgentUserByUserIdAndOrgi(
+                        Optional<AgentUser> agentUserOpt = cacheService.findOneAgentUserByUserIdAndOrgi(
                                 opt.get().getId(), logined.getOrgi());
                         if (agentUserOpt.isPresent()) {
                             AgentUser agentUser = agentUserOpt.get();

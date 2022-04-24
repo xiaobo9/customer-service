@@ -34,9 +34,9 @@ import java.io.Serializable;
 import java.util.*;
 
 @Component
-public class Cache {
+public class CacheService {
 
-    final static private Logger logger = LoggerFactory.getLogger(Cache.class);
+    final static private Logger logger = LoggerFactory.getLogger(CacheService.class);
 
     @Autowired
     private OnlineUserRepository onlineUserRes;

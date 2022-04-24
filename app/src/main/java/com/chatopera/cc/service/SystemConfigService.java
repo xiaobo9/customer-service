@@ -1,7 +1,7 @@
 package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.SystemConfig;
 import com.chatopera.cc.persistence.repository.SystemConfigRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ public class SystemConfigService {
     @Autowired
     private SystemConfigRepository repository;
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     /**
      * 获取系统配置
@@ -25,7 +25,7 @@ public class SystemConfigService {
      */
     @NotNull
     public SystemConfig getSystemConfig() {
-        SystemConfig systemConfig = cache.findOneSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI);
+        SystemConfig systemConfig = cacheService.findOneSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI);
         if (systemConfig == null) {
             systemConfig = repository.findByOrgi(Constants.SYSTEM_ORGI);
         }

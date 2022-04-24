@@ -5,7 +5,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.ThumbnailUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.*;
@@ -48,7 +48,7 @@ public class AgentProxy {
     private SNSAccountRepository snsAccountRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AgentStatusRepository agentStatusRes;
@@ -82,7 +82,7 @@ public class AgentProxy {
 //        agentStatus.setMaxusers(sessionConfig.getMaxuser());
 
         // 更新当前用户状态
-        agentStatus.setUsers(cache.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi()));
+        agentStatus.setUsers(cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi()));
         agentStatus.setStatus(MainContext.AgentStatusEnum.READY.toString());
 
         logger.info("[ready] set agent {}, status {}", agentStatus.getAgentno(), MainContext.AgentStatusEnum.READY);
@@ -324,7 +324,7 @@ public class AgentProxy {
     public AgentStatus resolveAgentStatusByAgentnoAndOrgi(final String agentno, final String orgi, final HashMap<String, String> skills) {
         logger.info("[resolveAgentStatusByAgentnoAndOrgi] agentno {}, skills {}", agentno,
                 String.join("|", skills.keySet()));
-        AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
+        AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);
 
         if (agentStatus == null) {
             agentStatus = agentStatusRes.findOneByAgentnoAndOrgi(agentno, orgi).orElseGet(AgentStatus::new);

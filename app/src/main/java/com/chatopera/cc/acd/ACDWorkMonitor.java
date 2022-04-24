@@ -18,7 +18,7 @@ package com.chatopera.cc.acd;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.AgentReport;
 import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.model.Organ;
@@ -45,7 +45,7 @@ public class ACDWorkMonitor {
     private WorkMonitorRepository workMonitorRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private OrganProxy organProxy;
@@ -80,7 +80,7 @@ public class ACDWorkMonitor {
          */
         AgentReport report = new AgentReport();
 
-        Map<String, AgentStatus> readys = cache.getAgentStatusReadyByOrig(orgi);
+        Map<String, AgentStatus> readys = cacheService.getAgentStatusReadyByOrig(orgi);
 
         int readyNum = 0;
         int busyNum = 0;
@@ -120,9 +120,9 @@ public class ACDWorkMonitor {
             report.setInquene(agentUserRes.countByOrgiAndStatusAndSkillIn(orgi, AgentUserStatusEnum.INQUENE.toString(), organs.keySet()));
         } else {
             // 服务中
-            report.setUsers(cache.getInservAgentUsersSizeByOrgi(orgi));
+            report.setUsers(cacheService.getInservAgentUsersSizeByOrgi(orgi));
             // 等待中
-            report.setInquene(cache.getInqueAgentUsersSizeByOrgi(orgi));
+            report.setInquene(cacheService.getInqueAgentUsersSizeByOrgi(orgi));
         }
 
         // DEBUG

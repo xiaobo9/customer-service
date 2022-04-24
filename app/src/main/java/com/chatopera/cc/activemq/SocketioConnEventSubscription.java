@@ -15,7 +15,7 @@ import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.persistence.repository.AgentStatusRepository;
 import com.google.gson.JsonObject;
@@ -48,7 +48,7 @@ public class SocketioConnEventSubscription {
     private AgentStatusRepository agentStatusRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Value("${application.node.id}")
     private String appNodeId;
@@ -66,7 +66,7 @@ public class SocketioConnEventSubscription {
             JsonParser parser = new JsonParser();
             JsonObject j = parser.parse(payload).getAsJsonObject();
             if (j.has("userId") && j.has("orgi") && j.has("isAdmin")) {
-                final AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                final AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                         j.get("userId").getAsString(),
                         j.get("orgi").getAsString());
                 if (agentStatus != null && (!agentStatus.isConnected())) {
@@ -90,7 +90,7 @@ public class SocketioConnEventSubscription {
                     agentStatus.setUpdatetime(new Date());
 
                     // 设置该坐席状态为离线
-                    cache.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi());
+                    cacheService.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi());
                     agentStatusRes.save(agentStatus);
 
                     // 记录坐席工作日志

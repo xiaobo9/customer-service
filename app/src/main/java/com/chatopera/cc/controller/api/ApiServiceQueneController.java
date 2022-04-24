@@ -20,10 +20,9 @@ import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.model.SessionConfig;
 import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.repository.AgentStatusRepository;
 import com.chatopera.cc.proxy.AgentStatusProxy;
@@ -66,7 +65,7 @@ public class ApiServiceQueneController extends Handler {
     private ACDAgentService acdAgentService;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     /**
      * 获取队列统计信息，包含当前队列服务中的访客数，排队人数，坐席数
@@ -119,7 +118,7 @@ public class ApiServiceQueneController extends Handler {
             /**
              * 更新当前用户状态
              */
-            agentStatus.setUsers(cache.getInservAgentUsersSizeByAgentnoAndOrgi(
+            agentStatus.setUsers(cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(
                     agentStatus.getAgentno(),
                     super.getOrgi(request)));
             agentStatus.setStatus(MainContext.AgentStatusEnum.READY.toString());

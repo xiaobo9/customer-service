@@ -25,7 +25,7 @@
  import com.chatopera.cc.basic.MainUtils;
  import com.chatopera.cc.basic.ThumbnailUtils;
  import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
- import com.chatopera.cc.cache.Cache;
+ import com.chatopera.cc.cache.CacheService;
  import com.chatopera.cc.controller.Handler;
  import com.chatopera.cc.exception.CSKefuException;
  import com.chatopera.cc.exception.EntityNotFoundException;
@@ -159,7 +159,7 @@
      private BlackEntityProxy blackEntityProxy;
 
      @Autowired
-     private Cache cache;
+     private CacheService cacheService;
 
      @Autowired
      private AgentServiceProxy agentServiceProxy;
@@ -586,7 +586,7 @@
          agentStatus.setBusy(false);
          agentStatus.setUpdatetime(new Date());
          agentStatus.setStatus(MainContext.AgentStatusEnum.NOTREADY.toString());
-         cache.putAgentStatusByOrgi(agentStatus, orgi);
+         cacheService.putAgentStatusByOrgi(agentStatus, orgi);
          agentStatusRes.save(agentStatus);
 
          agentStatusProxy.broadcastAgentsStatus(orgi, "agent", "notready", agentStatus.getAgentno());
@@ -631,7 +631,7 @@
                  agentStatus.getOrgi(),
                  agentStatus.getUpdatetime());
          agentStatus.setUpdatetime(new Date());
-         cache.putAgentStatusByOrgi(agentStatus, super.getOrgi(request));
+         cacheService.putAgentStatusByOrgi(agentStatus, super.getOrgi(request));
          agentStatusRes.save(agentStatus);
 
          agentStatusProxy.broadcastAgentsStatus(super.getOrgi(request), "agent", "busy", logined.getId());
@@ -674,7 +674,7 @@
                  agentStatus.getUpdatetime());
 
          // 更新数据库和缓存
-         cache.putAgentStatusByOrgi(agentStatus, super.getOrgi(request));
+         cacheService.putAgentStatusByOrgi(agentStatus, super.getOrgi(request));
          agentStatusRes.save(agentStatus);
 
          // 重新分配访客给坐席
@@ -869,7 +869,7 @@
      public ModelAndView messageimage(HttpServletResponse response, ModelMap map, @Valid String id, @Valid String t) throws IOException {
          ChatMessage message = chatMessageRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
          map.addAttribute("chatMessage", message);
-         map.addAttribute("agentUser", cache.findOneAgentUserByUserIdAndOrgi(message.getUserid(), message.getOrgi()));
+         map.addAttribute("agentUser", cacheService.findOneAgentUserByUserIdAndOrgi(message.getUserid(), message.getOrgi()));
     	/*if(StringUtils.isNotBlank(t)){
     		map.addAttribute("t", t) ;
     	}*/
@@ -906,7 +906,7 @@
                      streamingFileRes.save(sf);
                  }
 
-                 cache.findOneAgentUserByUserIdAndOrgi(
+                 cacheService.findOneAgentUserByUserIdAndOrgi(
                          chatMessage.getUserid(), chatMessage.getOrgi()).ifPresent(p -> {
                      Message outMessage = new Message();
                      outMessage.setMessage("/res/image.html?id=" + fileid + "&cooperation=true");
@@ -1171,7 +1171,7 @@
              logger.info("[transfer] set current organ as {}", currentOrgan);
              // 列出所有在线的坐席，排除本身
              List<String> userids = new ArrayList<>();
-             final Map<String, AgentStatus> agentStatusMap = cache.findAllReadyAgentStatusByOrgi(orgi);
+             final Map<String, AgentStatus> agentStatusMap = cacheService.findAllReadyAgentStatusByOrgi(orgi);
 
              for (final String o : agentStatusMap.keySet()) {
                  if (!StringUtils.equals(o, logined.getId())) {
@@ -1221,7 +1221,7 @@
          if (StringUtils.isNotBlank(organ)) {
              List<String> userids = new ArrayList<>();
 
-             final Map<String, AgentStatus> agentStatusMap = cache.findAllReadyAgentStatusByOrgi(orgi);
+             final Map<String, AgentStatus> agentStatusMap = cacheService.findAllReadyAgentStatusByOrgi(orgi);
 
              for (final String o : agentStatusMap.keySet()) {
                  if (!StringUtils.equals(o, agentid)) {

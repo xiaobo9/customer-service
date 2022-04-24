@@ -19,7 +19,7 @@ package com.chatopera.cc.controller.apps.service;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.model.AgentService;
 import com.chatopera.cc.model.AgentServiceSummary;
@@ -82,7 +82,7 @@ public class OnlineUserController extends Handler {
     private AgentUserContactsRepository agentUserContactsRes;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @RequestMapping("/online/index.html")
     @Menu(type = "service", subtype = "online", admin = true)
@@ -148,7 +148,7 @@ public class OnlineUserController extends Handler {
             onlineUserRes.findById(userid).ifPresent(onlineUser -> map.put("onlineUser", onlineUser));
         }
 
-        cache.findOneAgentUserByUserIdAndOrgi(userid, orgi).ifPresent(agentUser -> {
+        cacheService.findOneAgentUserByUserIdAndOrgi(userid, orgi).ifPresent(agentUser -> {
             map.put("agentUser", agentUser);
         });
         return request(super.createAppsTempletResponse("/apps/service/online/index"));
@@ -160,7 +160,7 @@ public class OnlineUserController extends Handler {
         AgentService agentService = agentServiceRes.getOne(id);
         map.put("curAgentService", agentService);
         String orgi = super.getOrgi(request);
-        cache.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), orgi)
+        cacheService.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), orgi)
                 .ifPresent(p -> map.put("curragentuser", p));
 
         if (StringUtils.isNotBlank(title)) {

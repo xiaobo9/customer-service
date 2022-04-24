@@ -23,7 +23,7 @@ import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext.*;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
 import com.chatopera.cc.exception.CSKefuException;
@@ -75,7 +75,7 @@ public class ApiAgentUserController extends Handler {
     private ACDAgentService acdAgentService;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private PeerSyncIM peerSyncIM;
@@ -169,7 +169,7 @@ public class ApiAgentUserController extends Handler {
              */
             AgentUser agentUser = agentUserProxy.findById(agentUserId).orElse(null);
             if (agentUser != null) {
-                AgentUserAudit agentAudits = cache.findOneAgentUserAuditByOrgiAndId(orgi, agentUserId).orElse(null);
+                AgentUserAudit agentAudits = cacheService.findOneAgentUserAuditByOrgiAndId(orgi, agentUserId).orElse(null);
 
                 // 当前服务于访客的坐席
                 final String currentAgentno = agentUser.getAgentno();
@@ -200,16 +200,16 @@ public class ApiAgentUserController extends Handler {
                  * 坐席状态
                  */
                 // 转接目标坐席
-                final AgentStatus transAgentStatus = cache.findOneAgentStatusByAgentnoAndOrig(transAgentId, orgi);
+                final AgentStatus transAgentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(transAgentId, orgi);
 
                 // 转接源坐席
-                final AgentStatus currentAgentStatus = cache.findOneAgentStatusByAgentnoAndOrig(currentAgentno, orgi);
+                final AgentStatus currentAgentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(currentAgentno, orgi);
 
                 //转接 ， 发送消息给 目标坐席
                 if (StringUtils.equals(AgentUserStatusEnum.INSERVICE.toString(), agentUser.getStatus())) {
                     // 更新当前坐席的服务访客列表
                     if (currentAgentStatus != null) {
-                        cache.deleteOnlineUserIdFromAgentStatusByUseridAndAgentnoAndOrgi(userId, currentAgentno, orgi);
+                        cacheService.deleteOnlineUserIdFromAgentStatusByUseridAndAgentnoAndOrgi(userId, currentAgentno, orgi);
                         agentUserProxy.updateAgentStatus(currentAgentStatus, orgi);
                     }
 
@@ -353,7 +353,7 @@ public class ApiAgentUserController extends Handler {
         JsonObject resp = new JsonObject();
         JsonArray data = new JsonArray();
 
-        List<AgentUser> lis = cache.findInservAgentUsersByAgentnoAndOrgi(
+        List<AgentUser> lis = cacheService.findInservAgentUsersByAgentnoAndOrgi(
                 super.getUser(request).getId(), super.getOrgi(request));
         for (final AgentUser au : lis) {
             JsonObject obj = new JsonObject();

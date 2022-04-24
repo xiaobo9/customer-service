@@ -17,7 +17,7 @@
 package com.chatopera.cc.activemq;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.exception.CSKefuException;
 import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.model.AgentUserAudit;
@@ -42,7 +42,7 @@ public class AgentAuditSubscription {
     private final static Logger logger = LoggerFactory.getLogger(AgentAuditSubscription.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private AgentAuditProxy agentAuditProxy;
@@ -67,7 +67,7 @@ public class AgentAuditSubscription {
                     json.has("event") && json.has("agentno")) {
 
                 // 查找关联的会话监控信息
-                final AgentUserAudit agentUserAudit = cache.findOneAgentUserAuditByOrgiAndId(
+                final AgentUserAudit agentUserAudit = cacheService.findOneAgentUserAuditByOrgiAndId(
                         json.get("orgi").getAsString(),
                         json.get("agentUserId").getAsString()).orElseGet(() -> {
                     final AgentUser agentUser = agentUserRes.findById(json.get("agentUserId").getAsString()).orElse(null);

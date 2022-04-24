@@ -16,7 +16,7 @@
 package com.chatopera.cc.aspect;
 
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.OnlineUser;
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.JoinPoint;
@@ -33,7 +33,7 @@ public class OnlineUserAspect {
     private final static Logger logger = LoggerFactory.getLogger(OnlineUserAspect.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     /**
      * 因为会定期从缓存序列化到数据库
@@ -46,10 +46,10 @@ public class OnlineUserAspect {
         if (StringUtils.isNotBlank(onlineUser.getStatus())) {
             switch (MainContext.OnlineUserStatusEnum.toValue(onlineUser.getStatus())) {
                 case OFFLINE:
-                    cache.deleteOnlineUserByIdAndOrgi(onlineUser.getId(), onlineUser.getOrgi());
+                    cacheService.deleteOnlineUserByIdAndOrgi(onlineUser.getId(), onlineUser.getOrgi());
                     break;
                 default:
-                    cache.putOnlineUserByOrgi(onlineUser, onlineUser.getOrgi());
+                    cacheService.putOnlineUserByOrgi(onlineUser, onlineUser.getOrgi());
             }
         }
     }

@@ -16,7 +16,7 @@
 
 package com.chatopera.cc.aspect;
 
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.BlackEntity;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
@@ -34,19 +34,19 @@ public class BlackEntityAspect {
     private final static Logger logger = LoggerFactory.getLogger(BlackEntityAspect.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @After("execution(* com.chatopera.cc.persistence.repository.BlackListRepository.save(..))")
     public void save(final JoinPoint joinPoint) {
         final BlackEntity blackEntity = (BlackEntity) joinPoint.getArgs()[0];
         logger.info("[save] blackEntity userId {}, orgi {}", blackEntity.getUserid(), blackEntity.getOrgi());
-        cache.putBlackEntityByOrgi(blackEntity, blackEntity.getOrgi());
+        cacheService.putBlackEntityByOrgi(blackEntity, blackEntity.getOrgi());
     }
 
     @After("execution(* com.chatopera.cc.persistence.repository.BlackListRepository.delete(..))")
     public void delete(final JoinPoint joinPoint) {
         final BlackEntity blackEntity = (BlackEntity) joinPoint.getArgs()[0];
         logger.info("[delete] blackEntity userId {}, orgi {}", blackEntity.getUserid(), blackEntity.getOrgi());
-        cache.deleteBlackEntityByUserIdAndOrgi(blackEntity.getUserid(), blackEntity.getOrgi());
+        cacheService.deleteBlackEntityByUserIdAndOrgi(blackEntity.getUserid(), blackEntity.getOrgi());
     }
 }

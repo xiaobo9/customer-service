@@ -21,7 +21,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.plugins.IPluginConfigurer;
 import com.chatopera.cc.basic.plugins.PluginRegistry;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.BlackEntity;
 import com.chatopera.cc.model.SysDic;
 import com.chatopera.cc.model.SystemConfig;
@@ -48,7 +48,7 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
             MainContext.setApplicationContext(event.getApplicationContext());
             SysDicRepository sysDicRes = event.getApplicationContext().getBean(SysDicRepository.class);
             BlackListRepository blackListRes = event.getApplicationContext().getBean(BlackListRepository.class);
-            Cache cache = event.getApplicationContext().getBean(Cache.class);
+            CacheService cacheService = event.getApplicationContext().getBean(CacheService.class);
             String cacheSetupStrategy = event.getApplicationContext().getEnvironment().getProperty("cache.setup.strategy");
 
             if (!StringUtils.equalsIgnoreCase(cacheSetupStrategy, Constants.cache_setup_strategy_skip)) {
@@ -59,7 +59,7 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
                  **************************/
 
                 // 首先将之前缓存清空，此处使用系统的默认租户信息
-                cache.eraseSysDicByOrgi(Constants.SYSTEM_ORGI);
+                cacheService.eraseSysDicByOrgi(Constants.SYSTEM_ORGI);
 
                 List<SysDic> sysDicList = sysDicRes.findAll();
                 Map<String, List<SysDic>> rootDictItems = new HashMap<>(); // 关联根词典及其子项
@@ -92,23 +92,23 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
                 // 所以，当前代码不支持集群，需要解决启动上的这个问题！
 
                 // 存储根词典 TODO 此处只考虑了系统默认租户
-                cache.putSysDicByOrgi(new ArrayList<>(rootDics.values()), Constants.SYSTEM_ORGI);
+                cacheService.putSysDicByOrgi(new ArrayList<>(rootDics.values()), Constants.SYSTEM_ORGI);
 
                 for (final Map.Entry<String, List<SysDic>> entry : rootDictItems.entrySet()) {
                     SysDic rootDic = rootDics.get(entry.getKey());
                     // 打印根词典信息
                     logger.debug("[onApplicationEvent] root dict: {}, code {}, name {}, item size {}", entry.getKey(), rootDics.get(entry.getKey()).getCode(), rootDics.get(entry.getKey()).getName(), entry.getValue().size());
                     // 存储子项列表
-                    cache.putSysDicByOrgi(rootDic.getCode(), Constants.SYSTEM_ORGI, entry.getValue());
+                    cacheService.putSysDicByOrgi(rootDic.getCode(), Constants.SYSTEM_ORGI, entry.getValue());
                     // 存储子项成员
-                    cache.putSysDicByOrgi(entry.getValue(), Constants.SYSTEM_ORGI);
+                    cacheService.putSysDicByOrgi(entry.getValue(), Constants.SYSTEM_ORGI);
                 }
 
                 List<BlackEntity> blackList = blackListRes.findByOrgi(Constants.SYSTEM_ORGI);
                 for (final BlackEntity black : blackList) {
                     if (StringUtils.isNotBlank(black.getUserid())) {
                         if (black.getEndtime() == null || black.getEndtime().after(new Date())) {
-                            cache.putSystemByIdAndOrgi(black.getUserid(), black.getOrgi(), black);
+                            cacheService.putSystemByIdAndOrgi(black.getUserid(), black.getOrgi(), black);
                         }
                     }
                 }
@@ -119,7 +119,7 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
                 SystemConfigRepository systemConfigRes = event.getApplicationContext().getBean(SystemConfigRepository.class);
                 SystemConfig config = systemConfigRes.findByOrgi(Constants.SYSTEM_ORGI);
                 if (config != null) {
-                    cache.putSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI, config);
+                    cacheService.putSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI, config);
                 }
                 logger.info("[StartedEventListener] setup Sysdicts in Redis done, strategy {}", cacheSetupStrategy);
             } else {

@@ -17,7 +17,7 @@ package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public class AgentSessionProxy {
     private final static Logger logger = LoggerFactory.getLogger(AgentSessionProxy.class);
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private BrokerPublisher brokerPublisher;
@@ -49,8 +49,8 @@ public class AgentSessionProxy {
      */
     public void updateUserSession(final String agentno, final String sessionId, final String orgi) {
         logger.info("[updateUserSession] agentno {}, sessionId {}, orgi {}", agentno, sessionId, orgi);
-        if (cache.existUserSessionByAgentnoAndOrgi(agentno, orgi)) {
-            final String preSessionId = cache.findOneSessionIdByAgentnoAndOrgi(agentno, orgi);
+        if (cacheService.existUserSessionByAgentnoAndOrgi(agentno, orgi)) {
+            final String preSessionId = cacheService.findOneSessionIdByAgentnoAndOrgi(agentno, orgi);
             if (StringUtils.equals(preSessionId, sessionId)) {
                 // 现在的session和之前的是一样的，忽略更新
                 logger.info(
@@ -63,7 +63,7 @@ public class AgentSessionProxy {
                 publishAgentLeaveEvent(agentno, sessionId, orgi);
             }
         }
-        cache.putUserSessionByAgentnoAndSessionIdAndOrgi(agentno, sessionId, orgi);
+        cacheService.putUserSessionByAgentnoAndSessionIdAndOrgi(agentno, sessionId, orgi);
     }
 
     /**
@@ -95,8 +95,8 @@ public class AgentSessionProxy {
     public boolean isInvalidSessionId(final String userid, final String session, final String orgi) {
 //        logger.info("[isInvalidSessionId] userid {}, sesssion {}", userid, session);
         boolean result = true;
-        if (cache.existUserSessionByAgentnoAndOrgi(userid, orgi)) {
-            final String curr = cache.findOneSessionIdByAgentnoAndOrgi(userid, orgi);
+        if (cacheService.existUserSessionByAgentnoAndOrgi(userid, orgi)) {
+            final String curr = cacheService.findOneSessionIdByAgentnoAndOrgi(userid, orgi);
 //            logger.info("[isInvalidSessionId] current session {}", curr);
             result = !StringUtils.equals(curr, session);
         } else {

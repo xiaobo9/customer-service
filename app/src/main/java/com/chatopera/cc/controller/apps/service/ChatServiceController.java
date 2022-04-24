@@ -23,7 +23,7 @@ import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.cache.Cache;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.exception.EntityNotFoundException;
 import com.chatopera.cc.model.*;
@@ -99,7 +99,7 @@ public class ChatServiceController extends Handler {
     private OrganProxy organProxy;
 
     @Autowired
-    private Cache cache;
+    private CacheService cacheService;
 
     @Autowired
     private PeerSyncIM peerSyncIM;
@@ -194,7 +194,7 @@ public class ChatServiceController extends Handler {
                     currentOrgan = skillGroups.get(0).getId();
                 }
             }
-            final Map<String, AgentStatus> agentStatusMap = cache.findAllReadyAgentStatusByOrgi(orgi);
+            final Map<String, AgentStatus> agentStatusMap = cacheService.findAllReadyAgentStatusByOrgi(orgi);
             List<String> usersids = new ArrayList<String>();
             for (final String o : agentStatusMap.keySet()) {
                 if (!StringUtils.equals(o, agentService.getAgentno())) {
@@ -203,7 +203,7 @@ public class ChatServiceController extends Handler {
             }
             List<User> userList = userRes.findAllById(usersids);
             for (User user : userList) {
-                user.setAgentStatus(cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
+                user.setAgentStatus(cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
                 userProxy.attachOrgansPropertiesForUser(user);
             }
             map.addAttribute("userList", userList);
@@ -225,7 +225,7 @@ public class ChatServiceController extends Handler {
             AgentService agentService = agentServiceRes.findByIdAndOrgi(id, super.getOrgi(request));
             final User targetAgent = userRes.findById(agentno).orElseThrow(EntityNotFoundException::new);
             AgentUser agentUser = null;
-            Optional<AgentUser> agentUserOpt = cache.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), super.getOrgi(request));
+            Optional<AgentUser> agentUserOpt = cacheService.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), super.getOrgi(request));
             if (agentUserOpt.isPresent()) {
                 agentUser = agentUserOpt.get();
             }
@@ -237,14 +237,14 @@ public class ChatServiceController extends Handler {
                 if (AgentUserStatusEnum.INSERVICE.toString().equals(
                         agentUser.getStatus())) {
                     // 转接 ， 发送消息给 目标坐席
-                    AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                    AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                             super.getUser(request).getId(), super.getOrgi(request));
 
                     if (agentStatus != null) {
                         agentUserProxy.updateAgentStatus(agentStatus, super.getOrgi(request));
                     }
 
-                    AgentStatus transAgentStatus = cache.findOneAgentStatusByAgentnoAndOrig(
+                    AgentStatus transAgentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                             agentno, super.getOrgi(request));
                     if (transAgentStatus != null) {
                         agentUserProxy.updateAgentStatus(transAgentStatus, super.getOrgi(request));
@@ -356,7 +356,7 @@ public class ChatServiceController extends Handler {
                     // AiUser 定义参考
                     // https://gitlab.chatopera.com/chatopera/cosinee.w4l/blob/2ea2ad5cad92d2d9f4ceb88e9608c7019495ccf5/contact-center/app/src/main/java/com/chatopera/cc/app/model/AiUser.java
                     // 需要做更多测试
-                    OnlineUser onlineUser = cache.findOneOnlineUserByUserIdAndOrgi(
+                    OnlineUser onlineUser = cacheService.findOneOnlineUserByUserIdAndOrgi(
                             agentService.getUserid(), agentService.getOrgi());
 
                     if (onlineUser != null) {
@@ -439,7 +439,7 @@ public class ChatServiceController extends Handler {
                     currentOrgan = skillGroups.get(0).getId();
                 }
             }
-            List<AgentStatus> agentStatusList = cache.getAgentStatusBySkillAndOrgi(null, super.getOrgi(request));
+            List<AgentStatus> agentStatusList = cacheService.getAgentStatusBySkillAndOrgi(null, super.getOrgi(request));
             List<String> usersids = new ArrayList<String>();
             if (!agentStatusList.isEmpty()) {
                 for (AgentStatus agentStatus : agentStatusList) {
@@ -450,7 +450,7 @@ public class ChatServiceController extends Handler {
             }
             List<User> userList = userRes.findAllById(usersids);
             for (User user : userList) {
-                user.setAgentStatus(cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
+                user.setAgentStatus(cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
                 userProxy.attachOrgansPropertiesForUser(user);
             }
             map.put("id", id);
@@ -501,7 +501,7 @@ public class ChatServiceController extends Handler {
     public ModelAndView agent(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
-        final Map<String, AgentStatus> ass = cache.findAllAgentStatusByOrgi(super.getOrgi(request));
+        final Map<String, AgentStatus> ass = cacheService.findAllAgentStatusByOrgi(super.getOrgi(request));
         List<AgentStatus> lis = new ArrayList<>();
         List<User> users = userProxy.findUserInOrgans(organs.keySet());
         if (users != null) {
@@ -531,7 +531,7 @@ public class ChatServiceController extends Handler {
         if (agentStatus != null) {
             agentStatusRepository.delete(agentStatus);
         }
-        cache.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), super.getOrgi(request));
+        cacheService.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), super.getOrgi(request));
 
         agentStatusProxy.broadcastAgentsStatus(
                 super.getOrgi(request), "agent", "offline", super.getUser(request).getId());
@@ -556,7 +556,7 @@ public class ChatServiceController extends Handler {
         Map<String, Boolean> onlines = new HashMap<>();
         if (userList != null) {
             for (User user : userList.getContent()) {
-                if (cache.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)) != null) {
+                if (cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)) != null) {
                     onlines.put(user.getId(), true);
                 } else {
                     onlines.put(user.getId(), false);
