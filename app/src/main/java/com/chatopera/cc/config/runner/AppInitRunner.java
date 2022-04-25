@@ -2,16 +2,21 @@ package com.chatopera.cc.config.runner;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.util.DateConverter;
+import com.chatopera.cc.util.IPTools;
 import com.chatopera.cc.util.SystemEnvHelper;
 import com.chatopera.cc.util.mobile.MobileNumberUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 @Slf4j
 @Component
-public class InitRunner implements CommandLineRunner {
+public class AppInitRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         log.info("enable modules");
@@ -19,6 +24,11 @@ public class InitRunner implements CommandLineRunner {
 
         log.info("mobile number init");
         MobileNumberUtils.init();
+
+        log.info("init ip data");
+        IPTools.init();
+
+        ConvertUtils.register(new DateConverter(), Date.class);
     }
 
     /**

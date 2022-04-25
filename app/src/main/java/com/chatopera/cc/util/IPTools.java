@@ -35,24 +35,10 @@ public class IPTools {
     private static final String IP_DATA_PATH = "WEB-INF/data/ip/ip2region.db";
     private static final IPTools iptools = new IPTools();
     private DbSearcher _searcher = null;
+    private static boolean inited = false;
 
     public static IPTools getInstance() {
         return iptools;
-    }
-
-    public IPTools() {
-        try {
-            String property = MainContext.getContext().getEnvironment().getProperty("web.upload-path");
-            File dbFile = new File(property, "ipdata/ipdata.db");
-            if (!dbFile.exists()) {
-                ClassLoader classLoader = IPTools.class.getClassLoader();
-                InputStream stream = classLoader.getResourceAsStream(IP_DATA_PATH);
-                FileUtils.copyInputStreamToFile(Objects.requireNonNull(stream), dbFile);
-            }
-            _searcher = new DbSearcher(new DbConfig(), dbFile.getAbsolutePath());
-        } catch (DbMakerConfigException | IOException e) {
-            log.warn("", e);
-        }
     }
 
     public static IP findGeography(String remote) {
@@ -87,6 +73,25 @@ public class IPTools {
             return "";
         }
         return str;
+    }
+
+    public static synchronized void init() {
+        if (inited) {
+            return;
+        }
+        try {
+            String property = MainContext.getContext().getEnvironment().getProperty("web.upload-path");
+            File dbFile = new File(property, "ipdata/ipdata.db");
+            if (!dbFile.exists()) {
+                ClassLoader classLoader = IPTools.class.getClassLoader();
+                InputStream stream = classLoader.getResourceAsStream(IP_DATA_PATH);
+                FileUtils.copyInputStreamToFile(Objects.requireNonNull(stream), dbFile);
+            }
+            iptools._searcher = new DbSearcher(new DbConfig(), dbFile.getAbsolutePath());
+            inited = true;
+        } catch (DbMakerConfigException | IOException e) {
+            log.warn("", e);
+        }
     }
 
 }
