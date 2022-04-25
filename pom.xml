@@ -19,6 +19,7 @@
     </properties>
     <modules>
         <module>app</module>
+        <module>common</module>
     </modules>
     <dependencies>
         <!-- test -->
@@ -303,6 +304,15 @@
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.github.xiaobo9.customer-service</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <plugins>
             <plugin>

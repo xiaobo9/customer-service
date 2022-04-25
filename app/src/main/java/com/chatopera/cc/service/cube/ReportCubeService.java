@@ -14,12 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.persistence.repository;
+package com.chatopera.cc.service.cube;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.model.*;
+import com.chatopera.cc.persistence.repository.MetadataRepository;
+import com.chatopera.cc.persistence.repository.ReportFilterRepository;
+import com.chatopera.cc.persistence.repository.TemplateRepository;
+import com.chatopera.cc.service.cube.CubeService;
+import com.chatopera.cc.service.cube.DataSourceService;
 import com.chatopera.cc.util.bi.ReportData;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.StringUtils;

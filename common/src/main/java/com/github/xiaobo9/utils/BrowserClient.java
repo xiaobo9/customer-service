@@ -1,4 +1,4 @@
-package com.chatopera.cc.util;
+package com.github.xiaobo9.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

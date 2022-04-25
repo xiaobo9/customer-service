@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.persistence.repository;
+package com.chatopera.cc.service.cube;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;

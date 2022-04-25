@@ -9,6 +9,7 @@ import com.chatopera.cc.util.mobile.MobileNumberUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -17,13 +18,20 @@ import java.util.Date;
 @Slf4j
 @Component
 public class AppInitRunner implements CommandLineRunner {
+    @Value("${enable.mobile.search:false}")
+    private boolean enableMobile;
+
     @Override
     public void run(String... args) throws Exception {
         log.info("enable modules");
         modules();
 
         log.info("mobile number init");
-        MobileNumberUtils.init();
+        if (enableMobile) {
+            MobileNumberUtils.init();
+        } else {
+            MobileNumberUtils.initNone();
+        }
 
         log.info("init ip data");
         IPTools.init();

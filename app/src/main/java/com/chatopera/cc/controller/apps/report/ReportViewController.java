@@ -21,7 +21,7 @@ import com.chatopera.cc.model.PublishedReport;
 import com.chatopera.cc.model.ReportFilter;
 import com.chatopera.cc.persistence.repository.DataDicRepository;
 import com.chatopera.cc.persistence.repository.PublishedReportRepository;
-import com.chatopera.cc.persistence.repository.ReportCubeService;
+import com.chatopera.cc.service.cube.ReportCubeService;
 import com.chatopera.cc.util.Menu;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

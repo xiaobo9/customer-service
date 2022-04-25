@@ -28,6 +28,7 @@ import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.util.*;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.xiaobo9.utils.BrowserClient;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

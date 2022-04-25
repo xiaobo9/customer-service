@@ -92,4 +92,10 @@
         </plugins>
         <defaultGoal>compile</defaultGoal>
     </build>
+    <dependencies>
+        <dependency>
+            <groupId>com.github.xiaobo9.customer-service</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+    </dependencies>
 </project>

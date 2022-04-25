@@ -81,13 +81,11 @@ public class WebIMController extends Handler {
         CousultInvite coultInvite = OnlineUserProxy.consult(snsid, super.getOrgi(request));
         logger.info("[index] snsaccount Id {}, Ai {}, Aifirst {}, Ainame {}, Aisuccess {}, Aiid {}", coultInvite.getSnsaccountid(), coultInvite.isAi(), coultInvite.isAifirst(), coultInvite.getAiname(), coultInvite.getAisuccesstip(), coultInvite.getAiid());
 
-        if (coultInvite != null) {
-            map.addAttribute("inviteData", coultInvite);
-            map.addAttribute("skillGroups", getSkillGroups(request));
-            map.addAttribute("agentList", getUsers(request));
-            map.addAttribute("import", request.getServerPort());
-            map.addAttribute("snsAccount", snsAccountRes.findBySnsidAndOrgi(snsid, super.getOrgi(request)));
-        }
+        map.addAttribute("inviteData", coultInvite);
+        map.addAttribute("skillGroups", getSkillGroups(request));
+        map.addAttribute("agentList", getUsers(request));
+        map.addAttribute("import", request.getServerPort());
+        map.addAttribute("snsAccount", snsAccountRes.findBySnsidAndOrgi(snsid, super.getOrgi(request)));
         return request(super.createAdminTemplateResponse("/admin/webim/index"));
     }
 

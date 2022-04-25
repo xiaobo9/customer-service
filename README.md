@@ -1,5 +1,13 @@
 # customer service
 
+## 删除记录
+
+`uk_callcenter_siptrunk` SIP网关信息表
+
+## 补充的记录
+
+`uk_quickreply` 春松的删除了 好像是这个表，不记得了。
+
 ## 升级历史
 
 ### uk_quick_type

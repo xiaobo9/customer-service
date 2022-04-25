@@ -32,6 +32,7 @@ import com.chatopera.cc.service.SystemConfigService;
 import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.util.RichMediaUtils;
 import com.chatopera.cc.util.*;
+import com.github.xiaobo9.utils.BrowserClient;
 import freemarker.template.TemplateException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;

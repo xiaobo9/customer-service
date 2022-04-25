@@ -1,36 +1,20 @@
-/*
- * Copyright (C) 2017 优客服-多渠道客服系统
- * Modifications copyright (C) 2018-2019 Chatopera Inc, <https://www.chatopera.com>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package com.chatopera.cc.util.mobile;
 
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 
+@Slf4j
 public class MobileNumberUtils {
-    private static final Logger logger = LoggerFactory.getLogger(MobileNumberUtils.class);
-    private static final Map<String, MobileAddress> mobileAddressMap = new HashMap<>();
-    public static final String CONFIG_MOBILE_DATA = "/config/mobile.data";
+
     private static boolean isInited = false;
+
+    @Setter
+    @Getter
+    private static IMobileSearcher searcher;
 
     /**
      * 根据呼入号码 找到对应 城市 , 需要传入的号码是 手机号 或者 固话号码，位数为 11位
@@ -40,61 +24,42 @@ public class MobileNumberUtils {
      */
     public static MobileAddress getAddress(String phoneNumber) {
         initIfNeed();
-
-        String code = "";
-        if (!StringUtils.isBlank(phoneNumber) && phoneNumber.length() > 10) {
-            if (phoneNumber.startsWith("0")) {
-                code = phoneNumber.substring(0, 4);
-            } else if (phoneNumber.startsWith("1")) {
-                code = phoneNumber.substring(0, 7);
-            }
-        }
-        return mobileAddressMap.get(code);
+        return searcher.search(phoneNumber);
     }
 
-    public static int init() throws IOException {
-        URL resource = MobileNumberUtils.class.getResource(CONFIG_MOBILE_DATA);
-        if (resource == null) {
-            logger.info("{} 读取失败", CONFIG_MOBILE_DATA);
-            return mobileAddressMap.size();
-        }
-        File file = new File(resource.getFile());
-        logger.info("init with file [{}]", file.getAbsolutePath());
-        if (!file.exists()) {
-            return mobileAddressMap.size();
-        }
-        try (FileInputStream reader = new FileInputStream(file);
-             InputStreamReader isr = new InputStreamReader(reader, StandardCharsets.UTF_8);
-             BufferedReader bf = new BufferedReader(isr)) {
-            String data;
-            while ((data = bf.readLine()) != null) {
-                String[] group = data.split("[\t ]");
-                MobileAddress address = null;
-                if (group.length == 5) {
-                    address = new MobileAddress(group[0], group[1], group[2], group[3], group[4]);
-                } else if (group.length == 4) {
-                    address = new MobileAddress(group[0], group[1], group[2], group[2], group[3]);
-                }
-                if (address != null) {
-                    mobileAddressMap.putIfAbsent(address.getCode(), address);
-                    mobileAddressMap.putIfAbsent(address.getAreacode(), address);
-                }
-            }
-            isInited = true;
-            logger.info("inited successfully, map size [{}]", mobileAddressMap.size());
-        } catch (Exception ex) {
-            logger.error("", ex);
-        }
-        return mobileAddressMap.size();
+    public static synchronized int init() throws IOException {
+        int i = innerInit();
+        isInited = true;
+        return i;
     }
 
     private static void initIfNeed() {
         if (!isInited) {
             try {
-                MobileNumberUtils.init();
+                init();
             } catch (IOException e) {
-                logger.error("getAddress error: ", e);
+                log.error("getAddress error: ", e);
             }
         }
+    }
+
+    private static int innerInit() throws IOException {
+        MobileSearcher a = new MobileSearcher();
+        searcher = a;
+        return a.init();
+    }
+
+    public static void initNone() {
+        searcher = new IMobileSearcher() {
+            @Override
+            public int init() {
+                return 0;
+            }
+
+            @Override
+            public MobileAddress search(String phoneNumber) {
+                return new MobileAddress("", "", "", "", "");
+            }
+        };
     }
 }
