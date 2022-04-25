@@ -15,7 +15,7 @@
  */
 package com.chatopera.cc.util;
 
-import com.chatopera.cc.basic.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
 import org.junit.Test;
 
 import java.text.ParseException;

@@ -18,9 +18,6 @@
 package com.chatopera.cc.peer;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext.ChannelType;
-import com.chatopera.cc.basic.MainContext.MessageType;
-import com.chatopera.cc.basic.MainContext.ReceiverType;
 import com.chatopera.cc.basic.plugins.PluginRegistry;
 import com.chatopera.cc.peer.im.ComposeMw1;
 import com.chatopera.cc.peer.im.ComposeMw2;
@@ -29,6 +26,9 @@ import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.compose4j.Composer;
 import com.chatopera.compose4j.Middleware;
 import com.chatopera.compose4j.exception.Compose4jRuntimeException;
+import com.github.xiaobo9.commons.enums.Enums.ChannelType;
+import com.github.xiaobo9.commons.enums.Enums.MessageType;
+import com.github.xiaobo9.commons.enums.Enums.ReceiverType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -109,10 +109,8 @@ public class PeerSyncIM implements ApplicationContextAware {
             final Message outMessage,
             final boolean distribute
     ) {
-        logger.info(
-                "[send] instant message \n msgType {}, \n channelType {}, \n appId {}, \n receiverType {}, \n touser {}, \n distribute {} \n",
-                msgType.toString(), channelType.toString(), appid, receiverType.toString(), touser,
-                distribute);
+        logger.info("[send] instant message \n msgType {}, \n channelType {}, \n appId {}, \n receiverType {}, \n touser {}, \n distribute {} \n",
+                msgType.toString(), channelType.toString(), appid, receiverType.toString(), touser, distribute);
 
         PeerContext ctx = new PeerContext();
         ctx.setReceiverType(receiverType);

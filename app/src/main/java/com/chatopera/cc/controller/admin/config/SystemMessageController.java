@@ -16,15 +16,15 @@
  */
 package com.chatopera.cc.controller.admin.config;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Dict;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.model.SystemMessage;
-import com.chatopera.cc.persistence.repository.OrganRepository;
-import com.chatopera.cc.persistence.repository.SystemMessageRepository;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.entity.SystemMessage;
+import com.github.xiaobo9.repository.OrganRepository;
+import com.github.xiaobo9.repository.SystemMessageRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -74,7 +74,7 @@ public class SystemMessageController extends Handler {
     @Menu(type = "admin", subtype = "user")
     public ModelAndView save(HttpServletRequest request, @Valid SystemMessage email) throws NoSuchAlgorithmException {
         email.setOrgi(super.getOrgi(request));
-        email.setMsgtype(MainContext.SystemMessageType.EMAIL.toString());
+        email.setMsgtype(Enums.SystemMessageType.EMAIL.toString());
         if (!StringUtils.isBlank(email.getSmtppassword())) {
             email.setSmtppassword(MainUtils.encryption(email.getSmtppassword()));
         }
@@ -97,7 +97,7 @@ public class SystemMessageController extends Handler {
         if (email != null) {
             email.setCreatetime(temp.getCreatetime());
             email.setOrgi(temp.getOrgi());
-            email.setMsgtype(MainContext.SystemMessageType.EMAIL.toString());
+            email.setMsgtype(Enums.SystemMessageType.EMAIL.toString());
             if (!StringUtils.isBlank(email.getSmtppassword())) {
                 email.setSmtppassword(MainUtils.encryption(email.getSmtppassword()));
             } else {
@@ -138,7 +138,7 @@ public class SystemMessageController extends Handler {
     @Menu(type = "admin", subtype = "sms")
     public ModelAndView smssave(HttpServletRequest request, @Valid SystemMessage sms) throws NoSuchAlgorithmException {
         sms.setOrgi(super.getOrgi(request));
-        sms.setMsgtype(MainContext.SystemMessageType.SMS.toString());
+        sms.setMsgtype(Enums.SystemMessageType.SMS.toString());
         if (!StringUtils.isBlank(sms.getSmtppassword())) {
             sms.setSmtppassword(MainUtils.encryption(sms.getSmtppassword()));
         }
@@ -161,7 +161,7 @@ public class SystemMessageController extends Handler {
         if (sms != null) {
             sms.setCreatetime(temp.getCreatetime());
             sms.setOrgi(temp.getOrgi());
-            sms.setMsgtype(MainContext.SystemMessageType.SMS.toString());
+            sms.setMsgtype(Enums.SystemMessageType.SMS.toString());
             if (!StringUtils.isBlank(sms.getSmtppassword())) {
                 sms.setSmtppassword(MainUtils.encryption(sms.getSmtppassword()));
             } else {

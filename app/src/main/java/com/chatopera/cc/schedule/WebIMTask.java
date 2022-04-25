@@ -20,16 +20,18 @@ import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.*;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.persistence.repository.AgentUserTaskRepository;
-import com.chatopera.cc.persistence.repository.JobDetailRepository;
-import com.chatopera.cc.persistence.repository.OnlineUserRepository;
 import com.chatopera.cc.proxy.OnlineUserProxy;
-import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.cc.socketio.message.Message;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.AgentUserTaskRepository;
+import com.github.xiaobo9.repository.JobDetailRepository;
+import com.github.xiaobo9.repository.OnlineUserRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +43,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -73,131 +75,137 @@ public class WebIMTask {
     private PeerSyncIM peerSyncIM;
 
     @Autowired
-    private CacheService cacheService;
+    private CacheService cache;
 
-    @Scheduled(fixedDelay = 5000, initialDelay = 20000) // 处理超时消息，每5秒执行一次
+    /**
+     * 处理超时消息，每5秒执行一次
+     */
+    @Scheduled(fixedDelay = 5000, initialDelay = 20000)
     public void task() {
-        final List<SessionConfig> sessionConfigList = acdPolicyService.initSessionConfigList();
-        if (sessionConfigList != null && sessionConfigList.size() > 0 && MainContext.getContext() != null) {
-            for (final SessionConfig sessionConfig : sessionConfigList) {
-                if (sessionConfig.isSessiontimeout()) {        //设置了启用 超时提醒
-                    final List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLastmessageLessThanAndStatusAndOrgi(
-                            MainUtils.getLastTime(sessionConfig.getTimeout()),
-                            AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
-                    for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cacheService.findOneAgentUserByUserIdAndOrgi(
-                                task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
-                            if (StringUtils.isNotBlank(p.getAgentno())) {
-                                AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
-                                        p.getAgentno(), task.getOrgi());
-                                task.setAgenttimeouttimes(task.getAgenttimeouttimes() + 1);
-                                if (agentStatus != null && (task.getWarnings() == null || task.getWarnings().equals(
-                                        "0"))) {
-                                    task.setWarnings("1");
-                                    task.setWarningtime(new Date());
+        final List<SessionConfig> configs = acdPolicyService.initSessionConfigList();
+        if (isEmpty(configs) || MainContext.getContext() == null) {
+            return;
+        }
+        for (final SessionConfig config : configs) {
+            // 设置了启用 超时提醒
+            if (config.isSessiontimeout()) {
+                doTask(config);
+            } else if (config.isResessiontimeout()) {
+                // 未启用超时提醒，只设置了超时断开
+                doTask2(config);
+            }
+            // 启用排队超时功能，超时断开
+            if (config.isQuene()) {
+                doTask3(config);
+            }
+        }
+    }
 
-                                    // 发送提示消息
-                                    processMessage(
-                                            sessionConfig, sessionConfig.getTimeoutmsg(), agentStatus.getUsername(),
-                                            p, agentStatus, task);
-                                    agentUserTaskRes.save(task);
-                                } else if (sessionConfig.isResessiontimeout() && agentStatus != null && task.getWarningtime() != null && MainUtils.getLastTime(
-                                        sessionConfig.getRetimeout()).after(task.getWarningtime())) {    //再次超时未回复
-                                    /**
-                                     * 设置了再次超时,断开
-                                     */
-                                    processMessage(
-                                            sessionConfig, sessionConfig.getRetimeoutmsg(),
-                                            sessionConfig.getServicename(),
-                                            p, agentStatus, task);
-                                    try {
-                                        acdAgentService.finishAgentService(p, task.getOrgi());
-                                    } catch (Exception e) {
-                                        logger.warn("[task] exception: ", e);
-                                    }
-                                }
-                            }
-                        });
-                    }
-                } else if (sessionConfig.isResessiontimeout()) {    //未启用超时提醒，只设置了超时断开
-                    List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLastmessageLessThanAndStatusAndOrgi(
-                            MainUtils.getLastTime(sessionConfig.getRetimeout()),
-                            AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
-                    for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cacheService.findOneAgentUserByUserIdAndOrgi(
-                                task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
-                            AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
-                                    p.getAgentno(), task.getOrgi());
-                            if (agentStatus != null && task.getWarningtime() != null && MainUtils.getLastTime(
-                                    sessionConfig.getRetimeout()).after(task.getWarningtime())) {    //再次超时未回复
-                                /**
-                                 * 设置了再次超时,断开
-                                 */
-                                processMessage(
-                                        sessionConfig, sessionConfig.getRetimeoutmsg(), agentStatus.getUsername(),
-                                        p, agentStatus, task);
-                                try {
-                                    acdAgentService.finishAgentService(p, task.getOrgi());
-                                } catch (Exception e) {
-                                    logger.warn("[task] exception: ", e);
-                                }
-                            }
-                        });
-                    }
-                }
-                if (sessionConfig.isQuene()) {    // 启用排队超时功能，超时断开
-                    List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLogindateLessThanAndStatusAndOrgi(
-                            MainUtils.getLastTime(sessionConfig.getQuenetimeout()),
-                            AgentUserStatusEnum.INQUENE.toString(), sessionConfig.getOrgi());
-                    for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cacheService.findOneAgentUserByUserIdAndOrgi(
-                                task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
-                            /**
-                             * 设置了超时,断开
-                             */
-                            processMessage(
-                                    sessionConfig, sessionConfig.getQuenetimeoutmsg(), sessionConfig.getServicename(),
-                                    p, null, task);
-                            try {
-                                acdAgentService.finishAgentService(p, task.getOrgi());
-                            } catch (Exception e) {
-                                logger.warn("[task] exception: ", e);
-                            }
-                        });
-                    }
+    private void doTask(SessionConfig config) {
+        final List<AgentUserTask> tasks = agentUserTaskRes.findByLastmessageLessThanAndStatusAndOrgi(
+                MainUtils.getLastTime(config.getTimeout()),
+                AgentUserStatusEnum.INSERVICE.toString(), config.getOrgi());
+        // 超时未回复
+        for (final AgentUserTask task : tasks) {
+            AgentUser agentUser = cache.findOneAgentUserByUserIdAndOrgi(task.getUserid(), Constants.SYSTEM_ORGI).orElse(null);
+            if (agentUser == null || StringUtils.isBlank(agentUser.getAgentno())) {
+                continue;
+            }
+            AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(agentUser.getAgentno(), task.getOrgi());
+            if (agentStatus == null) {
+                continue;
+            }
+            task.setAgenttimeouttimes(task.getAgenttimeouttimes() + 1);
+            if (task.getWarnings() == null || task.getWarnings().equals("0")) {
+                task.setWarnings("1");
+                task.setWarningtime(new Date());
+
+                // 发送提示消息
+                processMessage(config.getTimeoutmsg(), agentStatus.getUsername(), agentUser);
+                agentUserTaskRes.save(task);
+                continue;
+            }
+            Date lastReTimout = MainUtils.getLastTime(config.getRetimeout());
+            // 再次超时未回复 设置了再次超时,断开
+            if (config.isResessiontimeout() && task.getWarningtime() != null && lastReTimout.after(task.getWarningtime())) {
+                processMessage(config.getRetimeoutmsg(), config.getServicename(), agentUser);
+                try {
+                    acdAgentService.finishAgentService(agentUser, task.getOrgi());
+                } catch (Exception e) {
+                    logger.warn("[task] exception: ", e);
                 }
             }
         }
     }
 
+    private void doTask2(SessionConfig config) {
+
+        List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLastmessageLessThanAndStatusAndOrgi(
+                MainUtils.getLastTime(config.getRetimeout()),
+                AgentUserStatusEnum.INSERVICE.toString(), config.getOrgi());
+        for (final AgentUserTask task : agentUserTask) {        // 超时未回复
+            AgentUser user = cache.findOneAgentUserByUserIdAndOrgi(task.getUserid(), Constants.SYSTEM_ORGI).orElse(null);
+            if (user == null) {
+                continue;
+            }
+            AgentStatus status = cache.findOneAgentStatusByAgentnoAndOrig(user.getAgentno(), task.getOrgi());
+            Date lastReTimeOut = MainUtils.getLastTime(config.getRetimeout());
+            if (status != null && task.getWarningtime() != null && lastReTimeOut.after(task.getWarningtime())) {
+                //再次超时未回复 设置了再次超时,断开
+                processMessage(config.getRetimeoutmsg(), status.getUsername(), user);
+                try {
+                    acdAgentService.finishAgentService(user, task.getOrgi());
+                } catch (Exception e) {
+                    logger.warn("[task] exception: ", e);
+                }
+            }
+        }
+    }
+
+    private void doTask3(SessionConfig config) {
+        List<AgentUserTask> tasks = agentUserTaskRes.findByLogindateLessThanAndStatusAndOrgi(
+                MainUtils.getLastTime(config.getQuenetimeout()),
+                AgentUserStatusEnum.INQUENE.toString(), config.getOrgi());
+        for (final AgentUserTask task : tasks) {
+            // 超时未回复
+            cache.findOneAgentUserByUserIdAndOrgi(task.getUserid(), Constants.SYSTEM_ORGI)
+                    .ifPresent(p -> {
+                        // 设置了超时,断开
+                        processMessage(config.getQuenetimeoutmsg(), config.getServicename(), p);
+                        try {
+                            acdAgentService.finishAgentService(p, task.getOrgi());
+                        } catch (Exception e) {
+                            logger.warn("[task] exception: ", e);
+                        }
+                    });
+        }
+    }
+
     @Scheduled(fixedDelay = 5000, initialDelay = 20000) // 每5秒执行一次
     public void agent() {
-        List<SessionConfig> sessionConfigList = acdPolicyService.initSessionConfigList();
-        if (sessionConfigList != null && sessionConfigList.size() > 0) {
-            for (final SessionConfig sessionConfig : sessionConfigList) {
-                // ? 为什么还要重新取一次？
-//                sessionConfig = automaticServiceDist.initSessionConfig(sessionConfig.getOrgi());
-                if (sessionConfig != null && MainContext.getContext() != null && sessionConfig.isAgentreplaytimeout()) {
-                    List<AgentUserTask> agentUserTask = agentUserTaskRes.findByLastgetmessageLessThanAndStatusAndOrgi(
-                            MainUtils.getLastTime(sessionConfig.getAgenttimeout()),
-                            AgentUserStatusEnum.INSERVICE.toString(), sessionConfig.getOrgi());
-                    for (final AgentUserTask task : agentUserTask) {        // 超时未回复
-                        cacheService.findOneAgentUserByUserIdAndOrgi(
-                                task.getUserid(), Constants.SYSTEM_ORGI).ifPresent(p -> {
-                            AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
-                                    p.getAgentno(), task.getOrgi());
-                            if (agentStatus != null && (task.getReptimes() == null || task.getReptimes().equals("0"))) {
-                                task.setReptimes("1");
-                                task.setReptime(new Date());
-
-                                //发送提示消息
-                                processMessage(
-                                        sessionConfig, sessionConfig.getAgenttimeoutmsg(),
-                                        sessionConfig.getServicename(), p, agentStatus, task);
-                                agentUserTaskRes.save(task);
-                            }
-                        });
-                    }
+        List<SessionConfig> configs = acdPolicyService.initSessionConfigList();
+        if (isEmpty(configs) || MainContext.getContext() == null) {
+            return;
+        }
+        for (final SessionConfig config : configs) {
+            if (config == null || !config.isAgentreplaytimeout()) {
+                continue;
+            }
+            List<AgentUserTask> tasks = agentUserTaskRes.findByLastgetmessageLessThanAndStatusAndOrgi(
+                    MainUtils.getLastTime(config.getAgenttimeout()),
+                    AgentUserStatusEnum.INSERVICE.toString(), config.getOrgi());
+            for (final AgentUserTask task : tasks) {        // 超时未回复
+                AgentUser user = cache.findOneAgentUserByUserIdAndOrgi(task.getUserid(), Constants.SYSTEM_ORGI).orElse(null);
+                if (user == null) {
+                    continue;
+                }
+                AgentStatus agentStatus = cache.findOneAgentStatusByAgentnoAndOrig(user.getAgentno(), task.getOrgi());
+                if (agentStatus != null && (task.getReptimes() == null || task.getReptimes().equals("0"))) {
+                    task.setReptimes("1");
+                    task.setReptime(new Date());
+                    //发送提示消息
+                    processMessage(config.getAgenttimeoutmsg(), config.getServicename(), user);
+                    agentUserTaskRes.save(task);
                 }
             }
         }
@@ -208,17 +216,15 @@ public class WebIMTask {
      * 每分钟执行一次，将不活跃的访客设置为离线
      */
     @Scheduled(fixedDelay = 60000, initialDelay = 20000)
-    public void onlineuser() {
+    public void onlineUserTask() {
         final Page<OnlineUser> pages = onlineUserRes.findByStatusAndCreatetimeLessThan(
-                MainContext.OnlineUserStatusEnum.ONLINE.toString(),
+                Enums.OnlineUserStatusEnum.ONLINE.toString(),
                 MainUtils.getLastTime(60), PageRequest.of(0, 1000));
         if (pages.getContent().size() > 0) {
             for (final OnlineUser onlineUser : pages.getContent()) {
                 try {
-                    logger.info(
-                            "[save] put onlineUser id {}, status {}, invite status {}", onlineUser.getId(),
-                            onlineUser.getStatus(),
-                            onlineUser.getInvitestatus());
+                    logger.info("[save] put onlineUser id {}, status {}, invite status {}",
+                            onlineUser.getId(), onlineUser.getStatus(), onlineUser.getInvitestatus());
                     OnlineUserProxy.offline(onlineUser);
                 } catch (Exception e) {
                     logger.warn("[onlineuser] error", e);
@@ -227,89 +233,63 @@ public class WebIMTask {
         }
     }
 
-    /**
-     * appid : appid ,
-     * userid:userid,
-     * sign:session,
-     * touser:touser,
-     * session: session ,
-     * orgi:orgi,
-     * username:agentstatus,
-     * nickname:agentstatus,
-     * message : message
-     *
-     * @param sessionConfig
-     * @param agentUser
-     * @param task
-     */
+    private void processMessage(String message, String serviceName, AgentUser agentUser) {
+        if (StringUtils.isBlank(message) || agentUser == null) {
+            return;
+        }
 
-    private void processMessage(
-            SessionConfig sessionConfig, String message, String servicename, AgentUser
-            agentUser, AgentStatus agentStatus, AgentUserTask task) {
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setId(UUIDUtils.getUUID());
+        chatMessage.setAppid(agentUser.getAppid());
+        chatMessage.setUserid(agentUser.getUserid());
+
+        chatMessage.setUsession(agentUser.getUserid());
+        chatMessage.setTouser(agentUser.getUserid());
+        chatMessage.setOrgi(agentUser.getOrgi());
+        chatMessage.setUsername(agentUser.getUsername());
+        chatMessage.setMessage(message);
+
+        chatMessage.setContextid(agentUser.getContextid());
+
+        chatMessage.setAgentserviceid(agentUser.getAgentserviceid());
+
+        chatMessage.setCalltype(Enums.CallType.OUT.toString());
+        if (StringUtils.isNotBlank(agentUser.getAgentno())) {
+            chatMessage.setTouser(agentUser.getUserid());
+        }
+        chatMessage.setChannel(agentUser.getChannel());
+        chatMessage.setUsession(agentUser.getUserid());
+        // OUT类型，设置发消息人名字
+        chatMessage.setUsername(StringUtils.defaultString(agentUser.getAgentname(), serviceName));
 
         Message outMessage = new Message();
-        if (StringUtils.isNotBlank(message)) {
-            outMessage.setMessage(message);
-            outMessage.setMessageType(MainContext.MediaType.TEXT.toString());
-            outMessage.setCalltype(MainContext.CallType.OUT.toString());
-            outMessage.setAgentUser(agentUser);
-            outMessage.setSnsAccount(null);
+        outMessage.setMessage(message);
+        outMessage.setMessageType(Enums.MediaType.TEXT.toString());
+        outMessage.setCalltype(Enums.CallType.OUT.toString());
+        outMessage.setAgentUser(agentUser);
+        outMessage.setSnsAccount(null);
 
-            ChatMessage chatMessage = new ChatMessage();
-            if (agentUser != null) {
-                chatMessage.setAppid(agentUser.getAppid());
+        outMessage.setContextid(agentUser.getContextid());
+        outMessage.setChannelMessage(chatMessage);
+        outMessage.setCreatetime(Constants.DISPLAY_DATE_FORMATTER.format(chatMessage.getCreatetime()));
 
-                chatMessage.setUserid(agentUser.getUserid());
-                chatMessage.setUsession(agentUser.getUserid());
-                chatMessage.setTouser(agentUser.getUserid());
-                chatMessage.setOrgi(agentUser.getOrgi());
-                chatMessage.setUsername(agentUser.getUsername());
-                chatMessage.setMessage(message);
-
-                chatMessage.setId(MainUtils.getUUID());
-                chatMessage.setContextid(agentUser.getContextid());
-
-                chatMessage.setAgentserviceid(agentUser.getAgentserviceid());
-
-                chatMessage.setCalltype(MainContext.CallType.OUT.toString());
-                if (StringUtils.isNotBlank(agentUser.getAgentno())) {
-                    chatMessage.setTouser(agentUser.getUserid());
-                }
-                chatMessage.setChannel(agentUser.getChannel());
-                chatMessage.setUsession(agentUser.getUserid());
-
-                outMessage.setContextid(agentUser.getContextid());
-
-                outMessage.setChannelMessage(chatMessage);
-                if (StringUtils.isNotBlank(agentUser.getAgentname())) {
-                    // OUT类型，设置发消息人名字
-                    chatMessage.setUsername(agentUser.getAgentname());
-                } else {
-                    chatMessage.setUsername(servicename);
-                }
-                outMessage.setCreatetime(Constants.DISPLAY_DATE_FORMATTER.format(chatMessage.getCreatetime()));
-
-                /**
-                 * 同时发送消息给双方
-                 */
-                // 通知坐席
-                if (agentUser != null && StringUtils.isNotBlank(agentUser.getAgentno())) {
-                    peerSyncIM.send(MainContext.ReceiverType.AGENT, MainContext.ChannelType.WEBIM,
-                            agentUser.getAppid(),
-                            MainContext.MessageType.MESSAGE, agentUser.getAgentno(), outMessage, true);
-                }
-
-                // 通知访客
-                if (StringUtils.isNotBlank(chatMessage.getTouser())) {
-                    peerSyncIM.send(MainContext.ReceiverType.VISITOR,
-                            MainContext.ChannelType.toValue(agentUser.getChannel()),
-                            agentUser.getAppid(),
-                            MainContext.MessageType.MESSAGE,
-                            agentUser.getUserid(),
-                            outMessage, true);
-                }
-            }
+        // 通知坐席
+        if (StringUtils.isNotBlank(agentUser.getAgentno())) {
+            peerSyncIM.send(Enums.ReceiverType.AGENT, Enums.ChannelType.WEBIM,
+                    agentUser.getAppid(),
+                    Enums.MessageType.MESSAGE, agentUser.getAgentno(), outMessage, true);
         }
+
+        // 通知访客
+        if (StringUtils.isNotBlank(chatMessage.getTouser())) {
+            peerSyncIM.send(Enums.ReceiverType.VISITOR,
+                    Enums.ChannelType.toValue(agentUser.getChannel()),
+                    agentUser.getAppid(),
+                    Enums.MessageType.MESSAGE,
+                    agentUser.getUserid(),
+                    outMessage, true);
+        }
+
     }
 
     /**
@@ -320,27 +300,38 @@ public class WebIMTask {
      */
     @Scheduled(fixedDelay = 600000) //
     public void jobDetail() {
-        List<JobDetail> allJob = new ArrayList<JobDetail>();
-        Page<JobDetail> readyTaskList = jobDetailRes.findByTaskstatus(
-                MainContext.TaskStatusType.READ.getType(), new PageRequest(0, 100));
-        allJob.addAll(readyTaskList.getContent());
-        Page<JobDetail> planTaskList = jobDetailRes.findByPlantaskAndTaskstatusAndNextfiretimeLessThan(
-                true, MainContext.TaskStatusType.NORMAL.getType(), new Date(), new PageRequest(0, 100));
-        allJob.addAll(planTaskList.getContent());
-        if (allJob.size() > 0) {
-            for (JobDetail jobDetail : allJob) {
-                if (!cacheService.existJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi())) {
-                    jobDetail.setTaskstatus(MainContext.TaskStatusType.QUEUE.getType());
-                    jobDetailRes.save(jobDetail);
-                    cacheService.putJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi(), jobDetail);
-                    /**
-                     * 加入到作业执行引擎
-                     */
-                    webimTaskExecutor.execute(new Task(jobDetail, jobDetailRes));
-                }
+        PageRequest page = PageRequest.of(0, 100);
+        List<JobDetail> readyTasks = jobDetailRes.findByTaskstatus(Enums.TaskStatusType.READ.getType(), page)
+                .getContent();
+        List<JobDetail> planTasks = jobDetailRes.findByPlantaskAndTaskstatusAndNextfiretimeLessThan(
+                        true, Enums.TaskStatusType.NORMAL.getType(), new Date(), page)
+                .getContent();
+
+        if (readyTasks.size() > 0) {
+            for (JobDetail jobDetail : readyTasks) {
+                doJob(jobDetail);
+            }
+        }
+        if (planTasks.size() > 0) {
+            for (JobDetail jobDetail : planTasks) {
+                doJob(jobDetail);
             }
         }
     }
 
+    private void doJob(JobDetail jobDetail) {
+        if (cache.existJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi())) {
+            return;
+        }
+        jobDetail.setTaskstatus(Enums.TaskStatusType.QUEUE.getType());
+        jobDetailRes.save(jobDetail);
+        cache.putJobByIdAndOrgi(jobDetail.getId(), jobDetail.getOrgi(), jobDetail);
+        // 加入到作业执行引擎
+        webimTaskExecutor.execute(new Task(jobDetail, jobDetailRes));
+    }
+
+    private boolean isEmpty(final Collection<?> coll) {
+        return coll == null || coll.isEmpty();
+    }
 
 }

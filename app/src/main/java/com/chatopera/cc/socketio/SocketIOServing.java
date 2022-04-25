@@ -17,8 +17,8 @@
 package com.chatopera.cc.socketio;
 
 import com.chatopera.cc.activemq.BrokerPublisher;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.persistence.repository.AgentStatusRepository;
 import com.chatopera.cc.proxy.AgentProxy;
 import com.chatopera.cc.proxy.AgentSessionProxy;
 import com.chatopera.cc.proxy.AgentUserProxy;
@@ -28,6 +28,7 @@ import com.chatopera.cc.socketio.handler.EntIMEventHandler;
 import com.chatopera.cc.socketio.handler.IMEventHandler;
 import com.corundumstudio.socketio.SocketIONamespace;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.github.xiaobo9.repository.AgentStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -57,11 +58,11 @@ public class SocketIOServing implements CommandLineRunner {
     public SocketIOServing(SocketIOServer server) {
         this.server = server;
         // 访客聊天
-        imSocketNameSpace = server.addNamespace(MainContext.NameSpaceEnum.IM.getNamespace());
+        imSocketNameSpace = server.addNamespace(Enums.NameSpaceEnum.IM.getNamespace());
         // 坐席聊天
-        agentSocketIONameSpace = server.addNamespace(MainContext.NameSpaceEnum.AGENT.getNamespace());
+        agentSocketIONameSpace = server.addNamespace(Enums.NameSpaceEnum.AGENT.getNamespace());
         // 企业聊天
-        entIMSocketIONameSpace = server.addNamespace(MainContext.NameSpaceEnum.ENTIM.getNamespace());
+        entIMSocketIONameSpace = server.addNamespace(Enums.NameSpaceEnum.ENTIM.getNamespace());
     }
 
     @Bean(name = "imNamespace")

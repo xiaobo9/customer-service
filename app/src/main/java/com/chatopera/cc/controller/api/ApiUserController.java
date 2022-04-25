@@ -18,19 +18,19 @@ package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.OrganRepository;
-import com.chatopera.cc.persistence.repository.OrganUserRepository;
-import com.chatopera.cc.persistence.repository.UserRepository;
-import com.chatopera.cc.persistence.repository.UserRoleRepository;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.OrganRepository;
+import com.github.xiaobo9.repository.OrganUserRepository;
+import com.github.xiaobo9.repository.UserRepository;
+import com.github.xiaobo9.repository.UserRoleRepository;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -221,7 +221,7 @@ public class ApiUserController extends Handler {
                 }
 
                 if (StringUtils.isNotBlank(updated.getPassword())) {
-                    previous.setPassword(MainUtils.md5(updated.getPassword()));
+                    previous.setPassword(MD5Utils.md5(updated.getPassword()));
                 }
 
                 final Date now = new Date();

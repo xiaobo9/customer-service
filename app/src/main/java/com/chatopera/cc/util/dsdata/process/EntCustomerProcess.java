@@ -16,8 +16,8 @@
  */
 package com.chatopera.cc.util.dsdata.process;
 
-import com.chatopera.cc.model.EntCustomer;
 import com.chatopera.cc.persistence.es.EntCustomerRepository;
+import com.github.xiaobo9.entity.EntCustomer;
 
 public class EntCustomerProcess implements JPAProcess{
 	

@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.model.EntCustomer;
+import com.github.xiaobo9.entity.EntCustomer;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

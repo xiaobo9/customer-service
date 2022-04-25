@@ -16,19 +16,19 @@
  */
 package com.chatopera.cc.basic.resource;
 
-import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.freemarker.FreeMarkerTplUtils;
-import com.chatopera.cc.model.JobDetail;
-import com.chatopera.cc.model.MetadataTable;
 import com.chatopera.cc.persistence.impl.BatchDataProcess;
 import com.chatopera.cc.persistence.impl.ESDataExchangeImpl;
-import com.chatopera.cc.persistence.repository.MetadataRepository;
-import com.chatopera.cc.persistence.repository.ReporterRepository;
 import com.chatopera.cc.util.dsdata.DSData;
 import com.chatopera.cc.util.dsdata.DSDataEvent;
 import com.chatopera.cc.util.dsdata.ExcelImportProcess;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.entity.JobDetail;
+import com.github.xiaobo9.entity.MetadataTable;
+import com.github.xiaobo9.repository.MetadataRepository;
+import com.github.xiaobo9.repository.ReporterRepository;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -71,7 +71,7 @@ public class BatchResource extends Resource {
                 }
             }
             if (tempFile.exists()) {
-                String fileName = "callout/batch/" + MainUtils.getUUID() + tempFile.getName().substring(tempFile.getName().lastIndexOf("."));
+                String fileName = "callout/batch/" + UUIDUtils.getUUID() + tempFile.getName().substring(tempFile.getName().lastIndexOf("."));
                 File excelFile = new File(path, fileName);
                 FileUtils.forceMkdirParent(excelFile);
 

@@ -16,13 +16,15 @@
  */
 package com.chatopera.cc.util.dsdata;
 
-import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.JobDetailRepository;
-import com.chatopera.cc.persistence.repository.ReporterRepository;
+import com.chatopera.cc.util.Dict;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.JobDetailRepository;
+import com.github.xiaobo9.repository.ReporterRepository;
 import com.google.common.collect.ArrayListMultimap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.*;
@@ -171,9 +173,9 @@ public class ExcelImportProcess extends DataProcess {
             values.put("orgi", event.getOrgi());
             if (values.get("id") == null) {
                 if (pkStr.length() > 0) {
-                    values.put("id", MainUtils.md5(pkStr.append(dsData.getTask().getTablename()).toString()));
+                    values.put("id", MD5Utils.md5(pkStr.append(dsData.getTask().getTablename()).toString()));
                 } else {
-                    values.put("id", MainUtils.md5(allStr.append(dsData.getTask().getTablename()).toString()));
+                    values.put("id", MD5Utils.md5(allStr.append(dsData.getTask().getTablename()).toString()));
                 }
             }
             if (event.getValues() != null && event.getValues().size() > 0) {
@@ -241,11 +243,11 @@ public class ExcelImportProcess extends DataProcess {
                 } else {
                     values.put("validresult", "valid");
                 }
-                values.put("status", MainContext.NamesDisStatusType.NOT.toString());
+                values.put("status", Enums.NamesDisStatusType.NOT.toString());
                 values.put("batid", event.getBatid());
 
                 values.put("createtime", System.currentTimeMillis());
-                values.put("callstatus", MainContext.NameStatusType.NOTCALL.toString());
+                values.put("callstatus", Enums.NameStatusType.NOTCALL.toString());
                 values.put("execid", report.getId());
 
                 if (i % 500 == 0) {
@@ -267,7 +269,7 @@ public class ExcelImportProcess extends DataProcess {
         event.setTimes(System.currentTimeMillis() - start);
         report.setEndtime(new Date());
         report.setAmount(String.valueOf((float) event.getTimes() / 1000f));
-        report.setStatus(MainContext.TaskStatusType.END.getType());
+        report.setStatus(Enums.TaskStatusType.END.getType());
         report.setTotal(pages.intValue());
         report.setPages(pages.intValue());
         report.setErrors(errors.intValue());

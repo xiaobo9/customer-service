@@ -17,7 +17,7 @@
 package com.chatopera.cc.aspect;
 
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.BlackEntity;
+import com.github.xiaobo9.entity.BlackEntity;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -36,14 +36,14 @@ public class BlackEntityAspect {
     @Autowired
     private CacheService cacheService;
 
-    @After("execution(* com.chatopera.cc.persistence.repository.BlackListRepository.save(..))")
+    @After("execution(* com.github.xiaobo9.repository.BlackListRepository.save(..))")
     public void save(final JoinPoint joinPoint) {
         final BlackEntity blackEntity = (BlackEntity) joinPoint.getArgs()[0];
         logger.info("[save] blackEntity userId {}, orgi {}", blackEntity.getUserid(), blackEntity.getOrgi());
         cacheService.putBlackEntityByOrgi(blackEntity, blackEntity.getOrgi());
     }
 
-    @After("execution(* com.chatopera.cc.persistence.repository.BlackListRepository.delete(..))")
+    @After("execution(* com.github.xiaobo9.repository.BlackListRepository.delete(..))")
     public void delete(final JoinPoint joinPoint) {
         final BlackEntity blackEntity = (BlackEntity) joinPoint.getArgs()[0];
         logger.info("[delete] blackEntity userId {}, orgi {}", blackEntity.getUserid(), blackEntity.getOrgi());

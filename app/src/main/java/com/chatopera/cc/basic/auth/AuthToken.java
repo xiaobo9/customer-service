@@ -16,8 +16,8 @@
 package com.chatopera.cc.basic.auth;
 
 import com.chatopera.cc.cache.RedisKey;
-import com.chatopera.cc.model.User;
 import com.chatopera.cc.util.SerializeUtil;
+import com.github.xiaobo9.entity.User;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

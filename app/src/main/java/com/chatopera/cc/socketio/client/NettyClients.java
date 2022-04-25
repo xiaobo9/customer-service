@@ -22,6 +22,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.util.SerializeUtil;
 import com.corundumstudio.socketio.SocketIOClient;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -174,7 +175,7 @@ public class NettyClients {
         logger.info("publishLeaveEventMessage:  agentno {}, agentSize {}", id, agents.size());
         for (final SocketIOClient agentClient : agents) {
             if (!StringUtils.equals(agentClient.get("session"), session)) {
-                agentClient.sendEvent(MainContext.MessageType.LEAVE.toString());
+                agentClient.sendEvent(Enums.MessageType.LEAVE.toString());
             }
         }
     }

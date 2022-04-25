@@ -19,6 +19,9 @@ package com.chatopera.cc.model;
 
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.util.bi.ReportData;
+import com.github.xiaobo9.entity.CubeLevel;
+import com.github.xiaobo9.entity.TableProperties;
+import com.github.xiaobo9.entity.Template;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;

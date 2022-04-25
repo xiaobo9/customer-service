@@ -16,10 +16,10 @@
  */
 package com.chatopera.cc.persistence.impl;
 
-import com.chatopera.cc.model.TopicItem;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.TopicItemRepository;
 import com.chatopera.cc.util.dsdata.process.TopicProcess;
+import com.github.xiaobo9.entity.TopicItem;
+import com.github.xiaobo9.repository.TopicItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

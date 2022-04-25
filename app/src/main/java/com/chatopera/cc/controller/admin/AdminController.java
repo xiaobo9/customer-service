@@ -18,20 +18,20 @@ package com.chatopera.cc.controller.admin;
 
 import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.OnlineUserRepository;
-import com.chatopera.cc.persistence.repository.SysDicRepository;
-import com.chatopera.cc.persistence.repository.UserEventRepository;
-import com.chatopera.cc.persistence.repository.UserRepository;
 import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.OnlineUserRepository;
+import com.github.xiaobo9.repository.SysDicRepository;
+import com.github.xiaobo9.repository.UserEventRepository;
+import com.github.xiaobo9.repository.UserRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -87,7 +87,7 @@ public class AdminController extends Handler {
 
         map.put("agents", getAgent(request).size());
 
-        map.put("webIMInvite", MainUtils.getWebIMInviteStatus(onlineUserRes.findByOrgiAndStatus(super.getOrgi(request), MainContext.OnlineUserStatusEnum.ONLINE.toString())));
+        map.put("webIMInvite", MainUtils.getWebIMInviteStatus(onlineUserRes.findByOrgiAndStatus(super.getOrgi(request), Enums.OnlineUserStatusEnum.ONLINE.toString())));
 
         map.put("inviteResult", MainUtils.getWebIMInviteResult(onlineUserRes.findByOrgiAndAgentnoAndCreatetimeRange(super.getOrgi(request), super.getUser(request).getId(), MainUtils.getStartTime(), MainUtils.getEndTime())));
 
@@ -97,13 +97,13 @@ public class AdminController extends Handler {
 
         map.put("agentServicesAvg", onlineUserRes.countByAgentForAvagTime(super.getOrgi(request), AgentUserStatusEnum.END.toString(), super.getUser(request).getId(), MainUtils.getStartTime(), MainUtils.getEndTime()));
 
-        map.put("webInviteReport", MainUtils.getWebIMInviteAgg(onlineUserRes.findByOrgiAndCreatetimeRange(super.getOrgi(request), MainContext.ChannelType.WEBIM.toString(), MainUtils.getLast30Day(), MainUtils.getEndTime())));
+        map.put("webInviteReport", MainUtils.getWebIMInviteAgg(onlineUserRes.findByOrgiAndCreatetimeRange(super.getOrgi(request), Enums.ChannelType.WEBIM.toString(), MainUtils.getLast30Day(), MainUtils.getEndTime())));
 
         map.put("agentConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForAgent(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime())));
 
-        map.put("clentConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForClient(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime(), MainContext.ChannelType.WEBIM.toString())));
+        map.put("clentConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForClient(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime(), Enums.ChannelType.WEBIM.toString())));
 
-        map.put("browserConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForBrowser(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime(), MainContext.ChannelType.WEBIM.toString())));
+        map.put("browserConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForBrowser(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime(), Enums.ChannelType.WEBIM.toString())));
     }
 
     private List<User> getAgent(HttpServletRequest request) {

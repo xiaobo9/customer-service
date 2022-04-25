@@ -19,11 +19,11 @@ package com.chatopera.cc.controller.apps;
 
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.JobDetail;
-import com.chatopera.cc.model.JobTask;
-import com.chatopera.cc.persistence.repository.JobDetailRepository;
 import com.chatopera.cc.util.Menu;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.xiaobo9.entity.JobDetail;
+import com.github.xiaobo9.bean.JobTask;
+import com.github.xiaobo9.repository.JobDetailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;

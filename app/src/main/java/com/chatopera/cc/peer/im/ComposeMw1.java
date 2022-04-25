@@ -1,15 +1,15 @@
 package com.chatopera.cc.peer.im;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.AgentUserTask;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerContext;
 import com.chatopera.cc.peer.PeerUtils;
 import com.chatopera.cc.persistence.es.ChatMessageEsRepository;
-import com.chatopera.cc.persistence.repository.AgentUserTaskRepository;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.compose4j.Functional;
 import com.chatopera.compose4j.Middleware;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentUserTask;
+import com.github.xiaobo9.repository.AgentUserTaskRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class ComposeMw1 implements Middleware<PeerContext> {
         switch (ctx.getReceiverType()) {
             case AGENT:
                 // 发送给坐席的消息
-                if (ctx.getMsgType() == MainContext.MessageType.MESSAGE) {
+                if (ctx.getMsgType() == Enums.MessageType.MESSAGE) {
                     // 坐席服务数据记录
                     prcessAgentUserTask(ctx);
                 }
@@ -117,7 +117,7 @@ public class ComposeMw1 implements Middleware<PeerContext> {
                         0,
                         100) : received.getMessage());
 
-        if (StringUtils.equals(received.getType(), MainContext.MessageType.MESSAGE.toString())) {
+        if (StringUtils.equals(received.getType(), Enums.MessageType.MESSAGE.toString())) {
             agentUserTask.setTokenum(agentUserTask.getTokenum() + 1);
         }
         received.setTokenum(agentUserTask.getTokenum());

@@ -17,7 +17,8 @@ package com.chatopera.cc.socketio.util;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.socketio.message.ChatMessage;
+import com.chatopera.cc.model.ChatMessage;
+import com.github.xiaobo9.commons.enums.Enums;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class RichMediaUtils {
      * @return
      */
     public static ChatMessage uploadImage(String image, String attachid, int size, String name, String userid) {
-        return createRichMediaMessage(image, size, name, MainContext.MediaType.IMAGE.toString(), userid, attachid);
+        return createRichMediaMessage(image, size, name, Enums.MediaType.IMAGE.toString(), userid, attachid);
     }
 
     /**
@@ -55,7 +56,7 @@ public class RichMediaUtils {
      */
     public static ChatMessage uploadImageWithChannel(String image, String attachid, int size, String name, String channel, String userid, String username, String appid, String orgi) {
         return createRichMediaMessageWithChannel(
-                image, size, name, channel, MainContext.MediaType.IMAGE.toString(), userid, username, appid, orgi,
+                image, size, name, channel, Enums.MediaType.IMAGE.toString(), userid, username, appid, orgi,
                 attachid);
     }
 
@@ -71,7 +72,7 @@ public class RichMediaUtils {
      * @return
      */
     public static ChatMessage uploadFile(String url, int size, String name, String userid, String attachid) {
-        return createRichMediaMessage(url, size, name, MainContext.MediaType.FILE.toString(), userid, attachid);
+        return createRichMediaMessage(url, size, name, Enums.MediaType.FILE.toString(), userid, attachid);
     }
 
     /**
@@ -90,7 +91,7 @@ public class RichMediaUtils {
      */
     public static ChatMessage uploadFileWithChannel(String url, int size, String name, String channel, String userid, String username, String appid, String orgi, String attachid) {
         return createRichMediaMessageWithChannel(
-                url, size, name, channel, MainContext.MediaType.FILE.toString(), userid, username, appid, orgi,
+                url, size, name, channel, Enums.MediaType.FILE.toString(), userid, username, appid, orgi,
                 attachid);
     }
 
@@ -113,7 +114,7 @@ public class RichMediaUtils {
         data.setAttachmentid(attachid);
         data.setMessage(message);
         data.setMsgtype(msgtype);
-        data.setType(MainContext.MessageType.MESSAGE.toString());
+        data.setType(Enums.MessageType.MESSAGE.toString());
 
         MainContext.getCache().findOneAgentUserByUserIdAndOrgi(userid, Constants.SYSTEM_ORGI).ifPresent(p -> {
             data.setUserid(p.getUserid());
@@ -161,17 +162,17 @@ public class RichMediaUtils {
         data.setFilename(name);
         data.setAttachmentid(attachid);
         data.setMsgtype(msgtype);
-        data.setType(MainContext.MessageType.MESSAGE.toString());
+        data.setType(Enums.MessageType.MESSAGE.toString());
 
         if (StringUtils.isNotBlank(userid)) {
             if (MainContext.getCache().findOneAgentUserByUserIdAndOrgi(
                     userid, Constants.SYSTEM_ORGI).filter(p -> StringUtils.equals(
-                    p.getOpttype(), MainContext.OptType.CHATBOT.toString())).isPresent()) {
+                    p.getOpttype(), Enums.OptType.CHATBOT.toString())).isPresent()) {
                 // TODO 给聊天机器人发送图片或文字
                 // #652 创建聊天机器人插件时去掉了对它的支持，需要将来实现
 //                getChatbotProxy().createMessage(
-//                        data, appid, channel, MainContext.CallType.IN.toString(),
-//                        MainContext.ChatbotItemType.USERINPUT.toString(), msgtype, data.getUserid(), orgi);
+//                        data, appid, channel, Enums.CallType.IN.toString(),
+//                        Enums.ChatbotItemType.USERINPUT.toString(), msgtype, data.getUserid(), orgi);
             } else {
                 HumanUtils.processMessage(data, msgtype, userid);
             }

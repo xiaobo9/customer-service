@@ -17,10 +17,10 @@
 package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.OrganRepository;
-import com.chatopera.cc.persistence.repository.UserRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.OrganRepository;
+import com.github.xiaobo9.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

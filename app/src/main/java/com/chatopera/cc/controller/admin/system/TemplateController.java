@@ -17,15 +17,16 @@
 package com.chatopera.cc.controller.admin.system;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Dict;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.model.Template;
-import com.chatopera.cc.persistence.repository.SysDicRepository;
-import com.chatopera.cc.persistence.repository.TemplateRepository;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.Template;
+import com.github.xiaobo9.repository.SysDicRepository;
+import com.github.xiaobo9.repository.TemplateRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -38,7 +39,6 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -67,8 +67,8 @@ public class TemplateController extends Handler {
     @Menu(type = "admin", subtype = "template", access = false, admin = true)
     public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response) throws Exception {
         List<Template> templateList = templateRes.findByOrgi(super.getOrgi(request));
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-Template-Export-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".data");
-        response.getOutputStream().write(MainUtils.toBytes(templateList));
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.nameWithDayAnd("Template-Export", ".data"));
+        response.getOutputStream().write(ObjectKit.toBytes(templateList));
     }
 
     @RequestMapping("/imp")
@@ -80,14 +80,12 @@ public class TemplateController extends Handler {
     @SuppressWarnings("unchecked")
     @RequestMapping("/impsave")
     @Menu(type = "admin", subtype = "template", access = false, admin = true)
-    public ModelAndView impsave(ModelMap map, HttpServletRequest request, @RequestParam(value = "dataFile", required = false) MultipartFile dataFile) throws Exception {
+    public ModelAndView impsave(@RequestParam(value = "dataFile", required = false) MultipartFile dataFile) throws Exception {
         if (dataFile != null && dataFile.getSize() > 0) {
-            List<Template> templateList = (List<Template>) MainUtils.toObject(dataFile.getBytes());
+            List<Template> templateList = (List<Template>) ObjectKit.toObject(dataFile.getBytes());
             if (templateList != null && templateList.size() > 0) {
                 templateRes.deleteInBatch(templateList);
-                for (Template template : templateList) {
-                    templateRes.save(template);
-                }
+                templateRes.saveAll(templateList);
             }
         }
         return request(super.pageTplResponse("redirect:/admin/template/index.html"));

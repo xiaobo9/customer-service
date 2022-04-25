@@ -17,11 +17,12 @@
 package com.chatopera.cc.schedule;
 
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.JobDetail;
-import com.chatopera.cc.model.Reporter;
-import com.chatopera.cc.persistence.repository.JobDetailRepository;
-import com.chatopera.cc.persistence.repository.ReporterRepository;
 import com.chatopera.cc.util.TaskTools;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.JobDetail;
+import com.github.xiaobo9.entity.Reporter;
+import com.github.xiaobo9.repository.JobDetailRepository;
+import com.github.xiaobo9.repository.ReporterRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,51 +41,42 @@ public class Task implements Runnable {
 
     @Override
     public void run() {
+        if (jobDetail == null) {
+            return;
+        }
         try {
-            /**
-             * 首先从  等待执行的队列中找到优先级最高的任务，然后将任务放入到  执行队列
-             */
-            if (jobDetail != null) {
-                /**
-                 * 开始启动执行线程
-                 */
-                jobDetail.setTaskfiretime(new Date());
-                jobDetail.setTaskstatus(MainContext.TaskStatusType.RUNNING.getType());
-                jobDetailRes.save(jobDetail);
-                /**
-                 * 任务开始执行
-                 */
-                if (true) {
-                    if (jobDetail.getReport() == null) {
-                        jobDetail.setReport(new Reporter());
-                        MainContext.getContext().getBean(ReporterRepository.class).save(jobDetail.getReport());
-                    }
-                    if (jobDetail.isFetcher()) {//while (jobDetail.isFetcher()) {
-                        new Fetcher(jobDetail).run();
-                    }
-                }
+            // 首先从  等待执行的队列中找到优先级最高的任务，然后将任务放入到  执行队列
+
+            // 开始启动执行线程
+            jobDetail.setTaskfiretime(new Date());
+            jobDetail.setTaskstatus(Enums.TaskStatusType.RUNNING.getType());
+            jobDetailRes.save(jobDetail);
+
+            // 任务开始执行
+            if (jobDetail.getReport() == null) {
+                jobDetail.setReport(new Reporter());
+                MainContext.getContext().getBean(ReporterRepository.class).save(jobDetail.getReport());
+            }
+            if (jobDetail.isFetcher()) {
+                new Fetcher(jobDetail).run();
             }
 
         } catch (Exception e) {
             logger.error("error during execution", e);
         } finally {
-            /**
-             * 任务开始执行，执行完毕后 ，任务状态回执为  NORMAL
-             */
+            // 任务开始执行，执行完毕后 ，任务状态回执为  NORMAL
             if (jobDetail.getCronexp() != null && jobDetail.getCronexp().length() > 0 && jobDetail.isPlantask() && !"operation".equals(jobDetail.getCrawltaskid())) {
                 jobDetail.setNextfiretime(TaskTools.updateTaskNextFireTime(jobDetail));
             }
             jobDetail.setStartindex(0);    //将分页位置设置为从头开始，对数据采集有效，对RivuES增量采集无效
             jobDetail.setFetcher(true);
             jobDetail.setPause(false);
-            jobDetail.setTaskstatus(MainContext.TaskStatusType.NORMAL.getType());
+            jobDetail.setTaskstatus(Enums.TaskStatusType.NORMAL.getType());
             jobDetail.setCrawltaskid(null);
-			jobDetail.setLastdate(new Date()) ;
+            jobDetail.setLastdate(new Date());
             jobDetailRes.save(jobDetail);
 
-            /**
-             * 存储历史信息
-             */
+            // 存储历史信息
             MainContext.getCache().deleteJobByJobIdAndOrgi(this.jobDetail.getId(), this.jobDetail.getOrgi());
         }
     }

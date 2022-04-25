@@ -17,13 +17,14 @@
 package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.activemq.BrokerPublisher;
+import com.chatopera.cc.activemq.MqMessage;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.exception.CSKefuCacheException;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.AgentUserAudit;
+import com.github.xiaobo9.commons.exception.CacheEx;
 import com.chatopera.cc.util.SerializeUtil;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.bean.AgentUserAudit;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,7 @@ public class AgentAuditProxy {
             AgentUserAudit audit = new AgentUserAudit(agentUser.getOrgi(), agentUser.getId(), subscribers);
             cacheService.putAgentUserAuditByOrgi(agentUser.getOrgi(), audit);
             return audit;
-        } catch (CSKefuCacheException e) {
+        } catch (CacheEx e) {
             logger.error("[updateAgentUserAudits] exception", e);
         }
         return null;
@@ -76,7 +77,7 @@ public class AgentAuditProxy {
      * @param data
      * @param event
      */
-    public void publishMessage(final AgentUser agentUser, Serializable data, final MainContext.MessageType event) {
+    public void publishMessage(final AgentUser agentUser, Serializable data, final Enums.MessageType event) {
         JsonObject json = new JsonObject();
         json.addProperty("orgi", agentUser.getOrgi());
         json.addProperty("data", SerializeUtil.serialize(data));
@@ -84,7 +85,7 @@ public class AgentAuditProxy {
         json.addProperty("event", event.toString());
         // 发送或者接收的对应的坐席的ID
         json.addProperty("agentno", agentUser.getAgentno());
-        brokerPublisher.send(
-                Constants.AUDIT_AGENT_MESSAGE, json.toString(), true);
+        brokerPublisher.send(new MqMessage().destination(Constants.AUDIT_AGENT_MESSAGE).payload(json.toString())
+                .type(MqMessage.Type.TOPIC));
     }
 }

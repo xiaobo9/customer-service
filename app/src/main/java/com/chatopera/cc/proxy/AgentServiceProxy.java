@@ -18,14 +18,16 @@ package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.*;
-import com.chatopera.cc.util.mobile.MobileAddress;
-import com.chatopera.cc.util.mobile.MobileNumberUtils;
+import com.chatopera.cc.persistence.repository.ChatMessageRepository;
+import com.github.xiaobo9.commons.utils.mobile.MobileAddress;
+import com.github.xiaobo9.commons.utils.mobile.MobileNumberUtils;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,18 +150,18 @@ public class AgentServiceProxy {
             final AgentUser agentUser,
             final AgentService agentService,
             final User logined) {
-        if (MainContext.ChannelType.WEIXIN.toString().equals(agentUser.getChannel())) {
+        if (Enums.ChannelType.WEIXIN.toString().equals(agentUser.getChannel())) {
             List<WeiXinUser> weiXinUserList = weiXinUserRes.findByOpenidAndOrgi(
                     agentUser.getUserid(), logined.getOrgi());
             if (weiXinUserList.size() > 0) {
                 WeiXinUser weiXinUser = weiXinUserList.get(0);
                 view.addObject("weiXinUser", weiXinUser);
             }
-        } else if (MainContext.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
+        } else if (Enums.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
             OnlineUser onlineUser = onlineUserRes.findById(agentUser.getUserid()).orElse(null);
             if (onlineUser != null) {
                 if (StringUtils.equals(
-                        MainContext.OnlineUserStatusEnum.OFFLINE.toString(), onlineUser.getStatus())) {
+                        Enums.OnlineUserStatusEnum.OFFLINE.toString(), onlineUser.getStatus())) {
                     onlineUser.setBetweentime(
                             (int) (onlineUser.getUpdatetime().getTime() - onlineUser.getLogintime().getTime()));
                 } else {
@@ -167,7 +169,7 @@ public class AgentServiceProxy {
                 }
                 view.addObject("onlineUser", onlineUser);
             }
-        } else if (MainContext.ChannelType.PHONE.toString().equals(agentUser.getChannel())) {
+        } else if (Enums.ChannelType.PHONE.toString().equals(agentUser.getChannel())) {
             if (agentService != null && StringUtils.isNotBlank(agentService.getOwner())) {
                 StatusEvent statusEvent = statusEventRes.findById(agentService.getOwner()).orElse(null);
                 if (statusEvent != null) {
@@ -253,14 +255,14 @@ public class AgentServiceProxy {
 
         AgentService service = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
         if (service != null) {
-            view.addObject("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
+            view.addObject("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, Enums.ModelType.USER.toString(), service.getSkill()));
         }
         view.addObject("quickReplyList", quickReplyRes.findByOrgiAndCreater(logined.getOrgi(), logined.getId(), null));
         List<QuickType> quickTypeList = quickTypeRes.findByOrgiAndQuicktype(
-                logined.getOrgi(), MainContext.QuickType.PUB.toString());
+                logined.getOrgi(), Enums.QuickType.PUB.toString());
         List<QuickType> priQuickTypeList = quickTypeRes.findByOrgiAndQuicktypeAndCreater(
                 logined.getOrgi(),
-                MainContext.QuickType.PRI.toString(),
+                Enums.QuickType.PRI.toString(),
                 logined.getId());
         quickTypeList.addAll(priQuickTypeList);
         view.addObject("pubQuickTypeList", quickTypeList);

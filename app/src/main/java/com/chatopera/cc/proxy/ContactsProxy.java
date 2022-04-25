@@ -12,17 +12,18 @@ package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.Contacts;
-import com.chatopera.cc.model.OnlineUser;
-import com.chatopera.cc.model.User;
+import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.persistence.repository.AgentUserRepository;
-import com.chatopera.cc.persistence.repository.OnlineUserRepository;
-import com.chatopera.cc.persistence.repository.SNSAccountRepository;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.entity.Contacts;
+import com.github.xiaobo9.entity.OnlineUser;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.AgentUserRepository;
+import com.github.xiaobo9.repository.OnlineUserRepository;
+import com.github.xiaobo9.repository.SNSAccountRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,13 +84,13 @@ public class ContactsProxy {
      * @param contactid 目标联系人ID
      * @return
      */
-    public List<MainContext.ChannelType> liveApproachChannelsByContactid(
+    public List<Enums.ChannelType> liveApproachChannelsByContactid(
             final User logined,
             final String contactid,
-            final boolean isCheckSkype) throws CSKefuException {
+            final boolean isCheckSkype) throws ServerException {
 //        logger.info("[liveApproachChannelsByContactid] contact id {}", contactid);
 
-        List<MainContext.ChannelType> result = new ArrayList<>();
+        List<Enums.ChannelType> result = new ArrayList<>();
 
         Optional<Contacts> contactOpt = contactsRes.findOneById(contactid).filter(p -> !p.isDatastatus());
 
@@ -98,15 +99,15 @@ public class ContactsProxy {
 
             // 查看 WebIM 渠道
             agentUserRes.findOneByContactIdAndStatusNotAndChannelAndOrgi(
-                    contact.getId(),
-                    AgentUserStatusEnum.END.toString(),
-                    MainContext.ChannelType.WEBIM.toString(),
-                    contact.getOrgi())
+                            contact.getId(),
+                            AgentUserStatusEnum.END.toString(),
+                            Enums.ChannelType.WEBIM.toString(),
+                            contact.getOrgi())
                     .filter(p -> StringUtils.equals(p.getAgentno(), logined.getId()))
                     .ifPresent(p -> {
                         if (!cacheService.existBlackEntityByUserIdAndOrgi(p.getUserid(), logined.getOrgi())) {
                             // 访客在线 WebIM，排队或服务中
-                            result.add(MainContext.ChannelType.WEBIM);
+                            result.add(Enums.ChannelType.WEBIM);
                         } else {
                             // 该访客被拉黑
                         }
@@ -135,12 +136,12 @@ public class ContactsProxy {
                                 // 该联系人的Skype账号被服务中
                                 // TODO 此处可能是因为该联系的Skype对应的AgentUser没有被结束，长期被一个坐席占有
                                 // 并不合理，后期需要加机制维护Skype的离线信息（1，Skype Agent查询;2, 加入最大空闲时间限制）
-                                result.add(MainContext.ChannelType.SKYPE);
+                                result.add(Enums.ChannelType.SKYPE);
                             }
                         } else {
                             // 该联系人的Skype OnlineUser存在，而且未被其它坐席占用
                             // 并且该联系人没有被拉黑
-                            result.add(MainContext.ChannelType.SKYPE);
+                            result.add(Enums.ChannelType.SKYPE);
                         }
                     }
                 } else {
@@ -148,12 +149,12 @@ public class ContactsProxy {
                     // TODO 新建OnlineUser
                     OnlineUserProxy.createNewOnlineUserWithContactAndChannel(
                             contact, logined, Constants.CSKEFU_MODULE_SKYPE);
-                    result.add(MainContext.ChannelType.SKYPE);
+                    result.add(Enums.ChannelType.SKYPE);
                 }
             }
         } else {
             // can not find contact, may is deleted.
-            throw new CSKefuException("Contact does not available.");
+            throw new ServerException("Contact does not available.");
         }
 
 //        logger.info("[liveApproachChannelsByContactid] get available list {}", StringUtils.join(result, "|"));
@@ -175,7 +176,7 @@ public class ContactsProxy {
                 if (liveApproachChannelsByContactid(user, c.getId(), isSkypeSetup(user.getOrgi())).size() > 0) {
                     approachable.add(c.getId());
                 }
-            } catch (CSKefuException e) {
+            } catch (ServerException e) {
                 logger.warn("[bindContactsApproachableData] error", e);
             }
         }

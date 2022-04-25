@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.model.Contacts;
+import com.github.xiaobo9.entity.Contacts;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.jpa.repository.Query;
 

@@ -18,9 +18,9 @@ package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.AgentReport;
-import com.chatopera.cc.persistence.repository.AgentReportRepository;
 import com.corundumstudio.socketio.SocketIONamespace;
+import com.github.xiaobo9.entity.AgentReport;
+import com.github.xiaobo9.repository.AgentReportRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

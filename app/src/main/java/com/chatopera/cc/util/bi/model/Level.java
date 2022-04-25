@@ -17,7 +17,7 @@
 
 package com.chatopera.cc.util.bi.model;
 
-import com.chatopera.cc.basic.MainUtils;
+import com.github.xiaobo9.commons.utils.MD5Utils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -316,8 +316,9 @@ public class Level implements java.io.Serializable{
 	 * @return
 	 */
 	public String getDataid(){
-		return MainUtils.md5(this.name!=null ? this.name : "") ;
-	}
+        String str = this.name!=null ? this.name : "";
+        return MD5Utils.md5(str);
+    }
 	public String getFormatName() {
 		return formatName!=null ? formatName : this.name;
 	}

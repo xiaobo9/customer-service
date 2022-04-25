@@ -21,11 +21,12 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.*;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -200,7 +201,7 @@ public class AgentSettingsController extends Handler {
     @RequestMapping("/tag/edit")
     @Menu(type = "setting", subtype = "tag")
     public ModelAndView tagedit(ModelMap map, @Valid String id, @Valid String tagtype) {
-        map.put("tag", tagRes.findById(id).orElseThrow(EntityNotFoundException::new));
+        map.put("tag", tagRes.findById(id).orElseThrow(EntityNotFoundEx::new));
         map.addAttribute("tagtype", tagtype);
         return request(super.pageTplResponse("/apps/setting/agent/tagedit"));
     }

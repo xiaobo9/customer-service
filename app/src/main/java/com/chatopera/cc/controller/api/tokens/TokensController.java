@@ -1,15 +1,16 @@
 package com.chatopera.cc.controller.api.tokens;
 
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.auth.AuthToken;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.model.UserRole;
-import com.chatopera.cc.persistence.repository.UserRepository;
-import com.chatopera.cc.persistence.repository.UserRoleRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.entity.UserRole;
+import com.github.xiaobo9.repository.UserRepository;
+import com.github.xiaobo9.repository.UserRoleRepository;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,7 +48,7 @@ public class TokensController extends Handler {
     @RequestMapping(method = RequestMethod.POST)
     @Menu(type = "apps", subtype = "token", access = true)
     public ResponseEntity<String> login(HttpServletResponse response, @Valid String username, @Valid String password) {
-        User loginUser = userRepository.findByUsernameAndPassword(username, MainUtils.md5(password));
+        User loginUser = userRepository.findByUsernameAndPassword(username, MD5Utils.md5(password));
         if (loginUser == null || StringUtils.isBlank(loginUser.getId())) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -62,7 +63,7 @@ public class TokensController extends Handler {
         if (!StringUtils.isBlank(loginUser.getId())) {
             userRepository.save(loginUser);
         }
-        String auth = MainUtils.getUUID();
+        String auth = UUIDUtils.getUUID();
         authToken.putUserByAuth(auth, loginUser);
 
         response.addCookie(new Cookie("authorization", auth));

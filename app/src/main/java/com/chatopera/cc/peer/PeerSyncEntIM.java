@@ -1,12 +1,12 @@
 package com.chatopera.cc.peer;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.model.User;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.persistence.repository.RecentUserRepository;
 import com.chatopera.cc.socketio.client.NettyClients;
-import com.chatopera.cc.socketio.message.ChatMessage;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.RecentUserRepository;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class PeerSyncEntIM {
             final String user,
             final String group,
             final String orgi,
-            final MainContext.MessageType msgType,
+            final Enums.MessageType msgType,
             final ChatMessage data
     ) {
         logger.info(
@@ -41,9 +41,9 @@ public class PeerSyncEntIM {
 
         data.setUserid(user);
 //		data.setUsername(name);
-        data.setId(MainUtils.getUUID());
+        data.setId(UUIDUtils.getUUID());
         data.setUsession(user);
-        data.setCalltype(MainContext.CallType.OUT.toString());
+        data.setCalltype(Enums.CallType.OUT.toString());
 
         if (!StringUtils.isBlank(group)) {    //如果是群聊
             data.setContextid(group);
@@ -57,10 +57,10 @@ public class PeerSyncEntIM {
             ChatMessage outMessage = new ChatMessage();
             BeanUtils.copyProperties(data, outMessage);
             NettyClients.getInstance().sendEntIMEventMessage(data.getUserid(), msgType.toString(), outMessage);    //同时将消息发送给自己
-            data.setCalltype(MainContext.CallType.IN.toString());
+            data.setCalltype(Enums.CallType.IN.toString());
             data.setContextid(user);
             data.setUserid(data.getTouser());
-            data.setId(MainUtils.getUUID());
+            data.setId(UUIDUtils.getUUID());
             chatMessageRes.save(data);    //每条消息存放两条，一个是我的对话记录 ， 另一条是对方的对话历史， 情况当前聊天记录的时候，只清理自己的
             NettyClients.getInstance().sendEntIMEventMessage(data.getTouser(), msgType.toString(), data);    //发送消息给目标用户
 

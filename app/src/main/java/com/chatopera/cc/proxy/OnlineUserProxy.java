@@ -21,14 +21,16 @@ import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.util.*;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.xiaobo9.utils.BrowserClient;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.kit.ParameterKit;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.commons.utils.BrowserClient;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -387,7 +389,7 @@ public class OnlineUserProxy {
                 if (!getAgentUserContactsRes().findOneByUseridAndOrgi(userid, orgi).isPresent()) {
                     AgentUserContacts agentUserContacts = new AgentUserContacts();
                     agentUserContacts.setAppid(appid);
-                    agentUserContacts.setChannel(MainContext.ChannelType.WEBIM.toString());
+                    agentUserContacts.setChannel(Enums.ChannelType.WEBIM.toString());
                     agentUserContacts.setContactsid(contacts.getId());
                     agentUserContacts.setUserid(userid);
                     agentUserContacts.setOrgi(orgi);
@@ -514,7 +516,7 @@ public class OnlineUserProxy {
                 onlineUser.setHostname(ip);
                 onlineUser.setSessionid(sessionid);
                 onlineUser.setOptype(optype);
-                onlineUser.setStatus(MainContext.OnlineUserStatusEnum.ONLINE.toString());
+                onlineUser.setStatus(Enums.OnlineUserStatusEnum.ONLINE.toString());
                 final BrowserClient client = BrowserClient.parseClient(request.getHeader(BrowserClient.USER_AGENT));
 
                 // 浏览器信息
@@ -529,17 +531,17 @@ public class OnlineUserProxy {
                 if ((StringUtils.isNotBlank(onlineUser.getSessionid()) && !StringUtils.equals(
                         onlineUser.getSessionid(), sessionid)) ||
                         !StringUtils.equals(
-                                MainContext.OnlineUserStatusEnum.ONLINE.toString(), onlineUser.getStatus())) {
+                                Enums.OnlineUserStatusEnum.ONLINE.toString(), onlineUser.getStatus())) {
                     // 当新的session与从DB或缓存查找的session不一致时，或者当数据库或缓存的OnlineUser状态不是ONLINE时
                     // 代表该用户登录了新的Session或从离线变为上线！
 
-                    onlineUser.setStatus(MainContext.OnlineUserStatusEnum.ONLINE.toString()); // 设置用户到上线
+                    onlineUser.setStatus(Enums.OnlineUserStatusEnum.ONLINE.toString()); // 设置用户到上线
                     onlineUser.setChannel(channel);          // 设置渠道
                     onlineUser.setAppid(appid);
                     onlineUser.setUpdatetime(now);           // 刷新更新时间
                     if (StringUtils.isNotBlank(onlineUser.getSessionid()) && !StringUtils.equals(
                             onlineUser.getSessionid(), sessionid)) {
-                        onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.DEFAULT.toString());
+                        onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
                         onlineUser.setSessionid(sessionid);  // 设置新的session信息
                         onlineUser.setLogintime(now);        // 设置更新时间
                         onlineUser.setInvitetimes(0);        // 重置邀请次数
@@ -618,8 +620,8 @@ public class OnlineUserProxy {
         if (MainContext.getContext() != null) {
             OnlineUser onlineUser = getCache().findOneOnlineUserByUserIdAndOrgi(user, orgi);
             if (onlineUser != null) {
-                onlineUser.setStatus(MainContext.OnlineUserStatusEnum.OFFLINE.toString());
-                onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.DEFAULT.toString());
+                onlineUser.setStatus(Enums.OnlineUserStatusEnum.OFFLINE.toString());
+                onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
                 onlineUser.setBetweentime((int) (new Date().getTime() - onlineUser.getLogintime().getTime()));
                 onlineUser.setUpdatetime(new Date());
                 getOnlineUserRes().save(onlineUser);
@@ -653,7 +655,7 @@ public class OnlineUserProxy {
     public static void refuseInvite(final String user) {
         getOnlineUserRes().findById(user)
                 .ifPresent(onlineUser -> {
-                    onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.REFUSE.toString());
+                    onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.REFUSE.toString());
                     onlineUser.setRefusetimes(onlineUser.getRefusetimes() + 1);
                     getOnlineUserRes().save(onlineUser);
                 });
@@ -673,7 +675,7 @@ public class OnlineUserProxy {
     public static String getKeyword(String url) {
         Map<String, String[]> values = new HashMap<>();
         try {
-            OnlineUserUtils.parseParameters(values, url, "UTF-8");
+            ParameterKit.parseParameters(values, url, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -802,10 +804,6 @@ public class OnlineUserProxy {
         return result;
     }
 
-    public static JavaType getCollectionType(Class<?> collectionClass, Class<?>... elementClasses) {
-        return objectMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
-    }
-
     /**
      * 创建Skype联系人的onlineUser记录
      *
@@ -816,7 +814,7 @@ public class OnlineUserProxy {
     public static OnlineUser createNewOnlineUserWithContactAndChannel(final Contacts contact, final User logined, final String channel) {
         final Date now = new Date();
         OnlineUser onlineUser = new OnlineUser();
-        onlineUser.setId(MainUtils.getUUID());
+        onlineUser.setId(UUIDUtils.getUUID());
         onlineUser.setUserid(onlineUser.getId());
         onlineUser.setLogintime(now);
         onlineUser.setUpdateuser(logined.getId());

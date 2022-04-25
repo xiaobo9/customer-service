@@ -15,7 +15,7 @@
  */
 package com.chatopera.cc.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +68,6 @@ public class SystemEnvHelper {
      * @return
      */
     public static String parseFromApplicationProps(final String property) {
-        // 将 propert转化为环境变量
         String P = StringUtils.upperCase(property);
 
         P = StringUtils.replaceChars(P, "-", "_");

@@ -17,18 +17,22 @@
 package com.chatopera.cc.controller.admin.system;
 
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.hibernate.HibernateDao;
-import com.chatopera.cc.persistence.repository.MetadataRepository;
-import com.chatopera.cc.persistence.repository.SysDicRepository;
-import com.chatopera.cc.persistence.repository.TablePropertiesRepository;
 import com.chatopera.cc.util.CskefuList;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.metadata.DatabaseMetaDataHandler;
 import com.chatopera.cc.util.metadata.UKColumnMetadata;
 import com.chatopera.cc.util.metadata.UKTableMetaData;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.MetadataTable;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.TableProperties;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.MetadataRepository;
+import com.github.xiaobo9.repository.SysDicRepository;
+import com.github.xiaobo9.repository.TablePropertiesRepository;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
@@ -216,7 +220,7 @@ public class MetadataController extends Handler {
                                         //当前记录没有被添加过，进行正常添加
                                         metaDataTable.setTablename(table);
                                         metaDataTable.setOrgi(user.getOrgi());
-                                        metaDataTable.setId(MainUtils.md5(metaDataTable.getTablename()));
+                                        metaDataTable.setId(MD5Utils.md5(metaDataTable.getTablename()));
                                         metaDataTable.setTabledirid("0");
                                         metaDataTable.setCreater(user.getId());
                                         metaDataTable.setCreatername(user.getUsername());

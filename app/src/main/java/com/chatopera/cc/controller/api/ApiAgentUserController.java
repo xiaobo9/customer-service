@@ -20,22 +20,26 @@ import com.chatopera.cc.acd.ACDAgentDispatcher;
 import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
-import com.chatopera.cc.basic.DateFormatEnum;
-import com.chatopera.cc.basic.MainContext.*;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.bean.AgentUserAudit;
+import com.github.xiaobo9.commons.exception.ServerException;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
-import com.chatopera.cc.persistence.repository.AgentUserRepository;
-import com.chatopera.cc.persistence.repository.UserRepository;
 import com.chatopera.cc.proxy.AgentUserProxy;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.AgentServiceRepository;
+import com.github.xiaobo9.repository.AgentUserRepository;
+import com.github.xiaobo9.repository.UserRepository;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -161,7 +165,7 @@ public class ApiAgentUserController extends Handler {
         if (StringUtils.isNotBlank(agentUserId) &&
                 StringUtils.isNotBlank(transAgentId) &&
                 StringUtils.isNotBlank(agentServiceId)) {
-            final User targetAgent = userRes.findById(transAgentId).orElseThrow(EntityNotFoundException::new);
+            final User targetAgent = userRes.findById(transAgentId).orElseThrow(EntityNotFoundEx::new);
             final AgentService agentService = agentServiceRes.findByIdAndOrgi(agentServiceId, orgi);
 
             /**
@@ -222,18 +226,18 @@ public class ApiAgentUserController extends Handler {
                     Message outMessage = new Message();
                     outMessage.setMessage(
                             acdMessageHelper.getSuccessMessage(agentService, agentUser.getChannel(), orgi));
-                    outMessage.setMessageType(MediaType.TEXT.toString());
-                    outMessage.setCalltype(CallType.IN.toString());
+                    outMessage.setMessageType(Enums.MediaType.TEXT.toString());
+                    outMessage.setCalltype(Enums.CallType.IN.toString());
                     outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                     outMessage.setAgentUser(agentUser);
                     outMessage.setAgentService(agentService);
 
                     if (StringUtils.isNotBlank(agentUser.getUserid())) {
                         peerSyncIM.send(
-                                ReceiverType.VISITOR,
-                                ChannelType.toValue(agentUser.getChannel()),
+                                Enums.ReceiverType.VISITOR,
+                                Enums.ChannelType.toValue(agentUser.getChannel()),
                                 agentUser.getAppid(),
-                                MessageType.STATUS,
+                                Enums.MessageType.STATUS,
                                 agentUser.getUserid(),
                                 outMessage,
                                 true);
@@ -243,8 +247,8 @@ public class ApiAgentUserController extends Handler {
                     outMessage.setChannelMessage(agentUser);
                     outMessage.setAgentUser(agentUser);
                     peerSyncIM.send(
-                            ReceiverType.AGENT, ChannelType.WEBIM,
-                            agentUser.getAppid(), MessageType.NEW, agentService.getAgentno(),
+                            Enums.ReceiverType.AGENT, Enums.ChannelType.WEBIM,
+                            agentUser.getAppid(), Enums.MessageType.NEW, agentService.getAgentno(),
                             outMessage, true);
 
                     // 通知消息给前坐席
@@ -252,8 +256,8 @@ public class ApiAgentUserController extends Handler {
                         // 如果当前坐席不是登录用户，因为登录用户会从RestAPI返回转接的结果
                         // 该登录用户可能是坐席监控或当前坐席，那么，如果是坐席监控，就有必要
                         // 通知前坐席这个事件
-                        peerSyncIM.send(ReceiverType.AGENT, ChannelType.WEBIM, agentUser.getAppid(),
-                                MessageType.TRANSOUT,
+                        peerSyncIM.send(Enums.ReceiverType.AGENT, Enums.ChannelType.WEBIM, agentUser.getAppid(),
+                                Enums.MessageType.TRANSOUT,
                                 currentAgentno, outMessage, true);
                     }
                 }
@@ -303,7 +307,7 @@ public class ApiAgentUserController extends Handler {
                 // 删除访客-坐席关联关系，包括缓存
                 try {
                     acdAgentService.finishAgentUser(agentUser, orgi);
-                } catch (CSKefuException e) {
+                } catch (ServerException e) {
                     // 未能删除成功
                     logger.error("[end]", e);
                 }

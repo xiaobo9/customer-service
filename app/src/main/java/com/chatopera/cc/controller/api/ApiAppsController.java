@@ -10,16 +10,16 @@
  */
 package com.chatopera.cc.controller.api;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.model.InviteRecord;
-import com.chatopera.cc.model.OnlineUser;
-import com.chatopera.cc.persistence.repository.InviteRecordRepository;
-import com.chatopera.cc.persistence.repository.OnlineUserRepository;
 import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.InviteRecord;
+import com.github.xiaobo9.entity.OnlineUser;
+import com.github.xiaobo9.repository.InviteRecordRepository;
+import com.github.xiaobo9.repository.OnlineUserRepository;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang.StringUtils;
@@ -98,7 +98,7 @@ public class ApiAppsController extends Handler {
 
         if (onlineUser != null) {
             logger.info("[invite] userid {}, agentno {}, orgi {}", userid, agentno, orgi);
-            onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.INVITE.toString());
+            onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.INVITE.toString());
             onlineUser.setInvitetimes(onlineUser.getInvitetimes() + 1);
             onlineUserRes.save(onlineUser);
 

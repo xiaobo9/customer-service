@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.persistence.impl;
 
-import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.UserRepository;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

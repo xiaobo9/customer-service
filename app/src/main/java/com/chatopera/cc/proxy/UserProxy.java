@@ -13,11 +13,11 @@ package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.*;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -81,7 +81,7 @@ public class UserProxy {
 
 
             if (StringUtils.isNotBlank(user.getPassword())) {
-                user.setPassword(MainUtils.md5(user.getPassword()));
+                user.setPassword(MD5Utils.md5(user.getPassword()));
             }
             userRes.save(user);
 
@@ -101,7 +101,7 @@ public class UserProxy {
 
 
     public User findById(final String id) {
-        return userRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        return userRes.findById(id).orElseThrow(EntityNotFoundEx::new);
     }
 
     public List<String> findUserIdsInOrgan(final String organ) {
@@ -561,7 +561,7 @@ public class UserProxy {
 
         for (final OrganUser organ : organs) {
             // 添加直属部门到organs
-            final Organ o = organRes.findById(organ.getOrgan()).orElseThrow(EntityNotFoundException::new);
+            final Organ o = organRes.findById(organ.getOrgan()).orElseThrow(EntityNotFoundEx::new);
             user.getOrgans().put(organ.getOrgan(), o);
             if (o.isSkill()) {
                 skills.put(o.getId(), o.getName());

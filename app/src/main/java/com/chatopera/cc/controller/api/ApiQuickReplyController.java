@@ -17,12 +17,12 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.QuickReply;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.entity.QuickReply;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -58,7 +58,7 @@ public class ApiQuickReplyController extends Handler {
     @Menu(type = "apps", subtype = "quickreply", access = true)
     public ResponseEntity<RestResult> list(HttpServletRequest request, String id, @Valid String cate, @Valid String q, Integer p, Integer ps) {
         if (StringUtils.isNotBlank(id)) {
-            QuickReply quickReply = quickReplyRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            QuickReply quickReply = quickReplyRepository.findById(id).orElseThrow(EntityNotFoundEx::new);
             return new ResponseEntity<>(new RestResult(RestResultType.OK, quickReply), HttpStatus.OK);
         }
 

@@ -2,20 +2,18 @@ package com.chatopera.cc.socketio.handler;
 
 import com.alibaba.fastjson.JSONObject;
 import com.chatopera.cc.activemq.BrokerPublisher;
-import com.chatopera.cc.basic.*;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.AgentStatusRepository;
-import com.chatopera.cc.persistence.repository.WorkSessionRepository;
+import com.chatopera.cc.activemq.MqMessage;
+import com.chatopera.cc.basic.Constants;
+import com.chatopera.cc.basic.IPUtils;
+import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.proxy.AgentProxy;
 import com.chatopera.cc.proxy.AgentSessionProxy;
 import com.chatopera.cc.proxy.AgentUserProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.AgentStatusMessage;
-import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.cc.socketio.message.InterventMessage;
 import com.chatopera.cc.socketio.message.Message;
 import com.corundumstudio.socketio.AckRequest;
@@ -26,6 +24,15 @@ import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.AgentStatusRepository;
+import com.github.xiaobo9.repository.WorkSessionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 
@@ -67,7 +74,7 @@ public class AgentEventHandler {
         final String orgi = handshakeData.getSingleUrlParam("orgi");
         final String session = handshakeData.getSingleUrlParam("session");
         final String admin = handshakeData.getSingleUrlParam("admin");
-        final String connectid = MainUtils.getUUID();
+        final String connectid = UUIDUtils.getUUID();
         log.info("[onConnect] user: {}, orgi: {}, session: {}, admin: {}, connectid {}", userid, orgi, session, admin, connectid);
 
         if (StringUtils.isBlank(userid) || StringUtils.isBlank(session)) {
@@ -145,9 +152,8 @@ public class AgentEventHandler {
             payload.put("userId", userid);
             payload.put("orgi", orgi);
             payload.put("isAdmin", StringUtils.isNotBlank(admin) && admin.equalsIgnoreCase("true"));
-            brokerPublisher.send(Constants.WEBIM_SOCKETIO_AGENT_DISCONNECT, payload.toJSONString(),
-                    false,
-                    Constants.WEBIM_SOCKETIO_AGENT_OFFLINE_THRESHOLD);
+            brokerPublisher.send(new MqMessage().destination(Constants.WEBIM_SOCKETIO_AGENT_DISCONNECT)
+                    .payload(payload.toJSONString()).type(MqMessage.Type.QUEUE).delay(Constants.WEBIM_SOCKETIO_AGENT_OFFLINE_THRESHOLD));
         }
     }
 
@@ -194,7 +200,7 @@ public class AgentEventHandler {
                 // 该session信息不合法
                 log.info("[onIntervetionEvent] invalid sessionId {}", session);
                 // 强制退出
-                client.sendEvent(MainContext.MessageType.LEAVE.toString());
+                client.sendEvent(Enums.MessageType.LEAVE.toString());
                 return;
             }
 
@@ -206,7 +212,7 @@ public class AgentEventHandler {
              * 消息体
              */
             ChatMessage chatMessage = new ChatMessage();
-            chatMessage.setId(MainUtils.getUUID());
+            chatMessage.setId(UUIDUtils.getUUID());
             chatMessage.setMessage(received.getContent());
             chatMessage.setCreatetime(now);
             chatMessage.setUpdatetime(now.getTime());
@@ -238,9 +244,9 @@ public class AgentEventHandler {
 
 
             // 消息类型
-            chatMessage.setType(MainContext.MessageType.MESSAGE.toString());
+            chatMessage.setType(Enums.MessageType.MESSAGE.toString());
             chatMessage.setMsgtype(received.toMediaType().toString());
-            chatMessage.setCalltype(MainContext.CallType.OUT.toString());
+            chatMessage.setCalltype(Enums.CallType.OUT.toString());
 
             agentProxy.sendChatMessageByAgent(chatMessage, agentUser);
         } else {
@@ -283,7 +289,7 @@ public class AgentEventHandler {
             // 该session信息不合法
             log.info("[onMessageEvent] invalid sessionId {}", session);
             // 强制退出
-            client.sendEvent(MainContext.MessageType.LEAVE.toString());
+            client.sendEvent(Enums.MessageType.LEAVE.toString());
             return;
         }
 
@@ -304,12 +310,12 @@ public class AgentEventHandler {
             /**
              * 消息体
              */
-            received.setCalltype(MainContext.CallType.OUT.toString());
+            received.setCalltype(Enums.CallType.OUT.toString());
             if (StringUtils.isNotBlank(agentUser.getAgentno())) {
                 received.setTouser(agentUser.getUserid());
             }
 
-            received.setId(MainUtils.getUUID());
+            received.setId(UUIDUtils.getUUID());
             received.setChannel(agentUser.getChannel());
             received.setUsession(agentUser.getUserid());
             received.setUsername(agentUser.getAgentname());
@@ -318,10 +324,10 @@ public class AgentEventHandler {
             received.setAgentserviceid(agentUser.getAgentserviceid());
             received.setCreater(agentUser.getAgentno());
 
-            if (StringUtils.equals(MainContext.MediaType.COOPERATION.toString(), received.getMsgtype())) {
-                received.setMsgtype(MainContext.MediaType.COOPERATION.toString());
+            if (StringUtils.equals(Enums.MediaType.COOPERATION.toString(), received.getMsgtype())) {
+                received.setMsgtype(Enums.MediaType.COOPERATION.toString());
             } else {
-                received.setMsgtype(MainContext.MediaType.TEXT.toString());
+                received.setMsgtype(Enums.MediaType.TEXT.toString());
             }
 
             agentProxy.sendChatMessageByAgent(received, agentUser);

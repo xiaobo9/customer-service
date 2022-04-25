@@ -18,17 +18,18 @@ package com.chatopera.cc.controller.apps.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Dict;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.service.cube.CubeService;
-import com.chatopera.cc.service.cube.DataSourceService;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.cube.CubeService;
+import com.chatopera.cc.service.cube.DataSourceService;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.bi.ReportData;
 import com.chatopera.cc.util.bi.UKExcelUtil;
 import com.chatopera.cc.util.bi.model.Level;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.entity.SysDic;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,6 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -149,7 +149,7 @@ public class StatsController extends Handler {
             }
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-Report-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Report"));
         new UKExcelUtil(reportData, response.getOutputStream(), "满意度统计").createFile();
     }
 
@@ -204,7 +204,7 @@ public class StatsController extends Handler {
         }
         mapR.put("orgi", super.getOrgi(request));
         ReportData reportData = new CubeService("consult.xml", path, dataSource, mapR).execute("SELECT {[Measures].[咨询数量],[Measures].[平均等待时长（秒）],[Measures].[平均咨询时长（秒）]} on columns , NonEmptyCrossJoin([time].[日期].members , NonEmptyCrossJoin([skill].[技能组].members,[agent].[坐席].members)) on rows  FROM [咨询]");
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-Report-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Report"));
         new UKExcelUtil(reportData, response.getOutputStream(), "客服坐席统计").createFile();
     }
 }

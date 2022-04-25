@@ -17,17 +17,17 @@
 
 package com.chatopera.cc.controller.apps;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.AttachmentFile;
-import com.chatopera.cc.model.KbsTopic;
-import com.chatopera.cc.model.KbsType;
 import com.chatopera.cc.persistence.es.KbsTopicRepository;
-import com.chatopera.cc.persistence.repository.AttachmentRepository;
-import com.chatopera.cc.persistence.repository.KbsTypeRepository;
-import com.chatopera.cc.persistence.repository.TagRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.AttachmentFile;
+import com.github.xiaobo9.entity.KbsTopic;
+import com.github.xiaobo9.entity.KbsType;
+import com.github.xiaobo9.repository.AttachmentRepository;
+import com.github.xiaobo9.repository.KbsTypeRepository;
+import com.github.xiaobo9.repository.TagRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,7 +110,7 @@ public class KbsController extends Handler {
 	@Menu(type="apps", subtype="kbs")
 	public ModelAndView add(ModelMap map , HttpServletRequest request ,@Valid String typeid){
     	map.addAttribute("kbsTypeResList", kbsTypeRes.findByOrgi(super.getOrgi(request))) ;
-    	map.addAttribute("tags", tagRes.findByOrgiAndTagtype(super.getOrgi(request) , MainContext.ModelType.KBS.toString())) ;
+    	map.addAttribute("tags", tagRes.findByOrgiAndTagtype(super.getOrgi(request) , Enums.ModelType.KBS.toString())) ;
     	if(!StringUtils.isBlank(typeid) && !typeid.equals("0")){
 			map.addAttribute("kbsType", kbsTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request))) ;
 		}
@@ -147,14 +147,14 @@ public class KbsController extends Handler {
     		//保存附件
     		for(MultipartFile file : files){
     			if(file.getSize() > 0){			//文件尺寸 限制 ？在 启动 配置中 设置 的最大值，其他地方不做限制
-    				String fileid = MainUtils.md5(file.getBytes()) ;	//使用 文件的 MD5作为 ID，避免重复上传大文件
+                    String fileid = MD5Utils.md5(file.getBytes());	//使用 文件的 MD5作为 ID，避免重复上传大文件
     				if(!StringUtils.isBlank(fileid)){
 		    			AttachmentFile attachmentFile = new AttachmentFile() ;
 		    			attachmentFile.setCreater(super.getUser(request).getId());
 		    			attachmentFile.setOrgi(super.getOrgi(request));
 		    			attachmentFile.setDataid(dataid);
 		    			attachmentFile.setModelid(modelid);
-		    			attachmentFile.setModel(MainContext.ModelType.WORKORDERS.toString());
+		    			attachmentFile.setModel(Enums.ModelType.WORKORDERS.toString());
 		    			attachmentFile.setFilelength((int) file.getSize());
 		    			if(file.getContentType()!=null && file.getContentType().length() > 255){
 		    				attachmentFile.setFiletype(file.getContentType().substring(0 , 255));

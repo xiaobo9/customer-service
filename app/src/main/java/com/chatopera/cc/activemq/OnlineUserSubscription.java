@@ -51,7 +51,8 @@ public class OnlineUserSubscription {
      */
     public void publish(final JsonObject j) {
         j.addProperty("node", appNodeId);
-        brokerPublisher.send(Constants.INSTANT_MESSAGING_MQ_TOPIC_ONLINEUSER, j.toString(), true);
+        brokerPublisher.send(new MqMessage().destination(Constants.INSTANT_MESSAGING_MQ_TOPIC_ONLINEUSER)
+                .payload(j.toString()).type(MqMessage.Type.TOPIC));
 
     }
 

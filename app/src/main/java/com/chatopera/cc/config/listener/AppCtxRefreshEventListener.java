@@ -22,19 +22,16 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.plugins.IPluginConfigurer;
 import com.chatopera.cc.basic.plugins.PluginRegistry;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.BlackEntity;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.model.SystemConfig;
-import com.chatopera.cc.persistence.repository.BlackListRepository;
-import com.chatopera.cc.persistence.repository.SysDicRepository;
-import com.chatopera.cc.persistence.repository.SystemConfigRepository;
-import com.chatopera.cc.persistence.repository.TablePropertiesRepository;
+import com.github.xiaobo9.entity.BlackEntity;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.SystemConfig;
+import com.github.xiaobo9.repository.BlackListRepository;
+import com.github.xiaobo9.repository.SysDicRepository;
+import com.github.xiaobo9.repository.SystemConfigRepository;
+import com.github.xiaobo9.repository.TablePropertiesRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
@@ -42,7 +39,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 @Component
-public class AppCtxRefreshEventListener implements ApplicationListener<ContextRefreshedEvent>, ApplicationContextAware {
+public class AppCtxRefreshEventListener implements ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(AppCtxRefreshEventListener.class);
 
@@ -147,8 +144,4 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
         }
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        MainContext.setApplicationContext(applicationContext);
-    }
 }

@@ -15,8 +15,8 @@
  */
 package com.chatopera.cc.cache;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 
 public class RedisKey {
 
@@ -51,7 +51,7 @@ public class RedisKey {
      * @return
      */
     public static String getAgentStatusReadyHashKey(final String orgi) {
-        return getAgentStatusHashKeyByStatusStr(orgi, MainContext.AgentStatusEnum.READY.toString());
+        return getAgentStatusHashKeyByStatusStr(orgi, AgentStatusEnum.READY.toString());
     }
 
     /**
@@ -61,7 +61,7 @@ public class RedisKey {
      * @return
      */
     public static String getAgentStatusNotReadyHashKey(final String orgi) {
-        return getAgentStatusHashKeyByStatusStr(orgi, MainContext.AgentStatusEnum.NOTREADY.toString());
+        return getAgentStatusHashKeyByStatusStr(orgi, AgentStatusEnum.NOTREADY.toString());
     }
 
 

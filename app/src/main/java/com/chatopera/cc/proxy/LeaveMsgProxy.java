@@ -15,9 +15,9 @@
  */
 package com.chatopera.cc.proxy;
 
-import com.chatopera.cc.model.LeaveMsg;
-import com.chatopera.cc.model.SNSAccount;
-import com.chatopera.cc.persistence.repository.SNSAccountRepository;
+import com.github.xiaobo9.entity.LeaveMsg;
+import com.github.xiaobo9.entity.SNSAccount;
+import com.github.xiaobo9.repository.SNSAccountRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

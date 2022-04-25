@@ -17,9 +17,9 @@
 package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Dict;
-import com.chatopera.cc.model.SysDic;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.SysDic;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,27 +33,27 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/res")
-public class SysDicResourceController extends Handler{
-	
+public class SysDicResourceController extends Handler {
+
     @RequestMapping("/dic.html")
-    @Menu(type = "resouce" , subtype = "dic" , access = true)
-    public ModelAndView index(ModelMap map , HttpServletResponse response, @Valid String id, @Valid String name, @Valid String attr , @Valid String style) throws IOException {
-    	List<SysDic> itemList = new ArrayList<SysDic>() ;
-    	SysDic sysDic = Dict.getInstance().getDicItem(id) ;
-    	if(sysDic!=null){
-	    	SysDic dic = Dict.getInstance().getDicItem(sysDic.getDicid()) ;
-			List<SysDic> sysDicList = Dict.getInstance().getSysDic(dic.getCode());
-	    	for(SysDic item : sysDicList){
-	    		if(item.getParentid().equals(id)){
-	    			itemList.add(item) ;
-	    		}
-	    	}
-    	}
-    	map.addAttribute("sysDicList", itemList) ;
-    	map.addAttribute("name", name) ;
-    	map.addAttribute("attr", attr) ;
-    	map.addAttribute("style", style) ;
-    	return request(super.pageTplResponse("/public/select"));
+    @Menu(type = "resouce", subtype = "dic", access = true)
+    public ModelAndView index(ModelMap map, HttpServletResponse response, @Valid String id, @Valid String name, @Valid String attr, @Valid String style) throws IOException {
+        List<SysDic> itemList = new ArrayList<SysDic>();
+        SysDic sysDic = Dict.getInstance().getDicItem(id);
+        if (sysDic != null) {
+            SysDic dic = Dict.getInstance().getDicItem(sysDic.getDicid());
+            List<SysDic> sysDicList = Dict.getInstance().getSysDic(dic.getCode());
+            for (SysDic item : sysDicList) {
+                if (item.getParentid().equals(id)) {
+                    itemList.add(item);
+                }
+            }
+        }
+        map.addAttribute("sysDicList", itemList);
+        map.addAttribute("name", name);
+        map.addAttribute("attr", attr);
+        map.addAttribute("style", style);
+        return request(super.pageTplResponse("/public/select"));
     }
-    
+
 }

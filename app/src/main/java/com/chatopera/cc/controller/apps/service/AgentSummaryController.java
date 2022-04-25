@@ -16,19 +16,20 @@
  */
 package com.chatopera.cc.controller.apps.service;
 
-import com.chatopera.cc.basic.DateFormatEnum;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
-import com.chatopera.cc.persistence.repository.MetadataRepository;
-import com.chatopera.cc.persistence.repository.ServiceSummaryRepository;
-import com.chatopera.cc.persistence.repository.TagRepository;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.AgentServiceRepository;
+import com.github.xiaobo9.repository.MetadataRepository;
+import com.github.xiaobo9.repository.ServiceSummaryRepository;
+import com.github.xiaobo9.repository.TagRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,7 +47,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Controller
@@ -95,7 +95,7 @@ public class AgentSummaryController extends Handler {
                 list.add(exp.in(organs.keySet()));
                 list.add(cb.equal(root.get("orgi").as(String.class), orgi));
                 list.add(cb.equal(root.get("process").as(boolean.class), 0));
-                list.add(cb.notEqual(root.get("channel").as(String.class), MainContext.ChannelType.PHONE.toString()));
+                list.add(cb.notEqual(root.get("channel").as(String.class), Enums.ChannelType.PHONE.toString()));
                 try {
                     if (!StringUtils.isBlank(begin) && begin.matches("[\\d]{4}-[\\d]{2}-[\\d]{2}")) {
                         list.add(cb.greaterThanOrEqualTo(root.get("createtime").as(Date.class), DateFormatEnum.DAY.parse(begin)));
@@ -114,7 +114,7 @@ public class AgentSummaryController extends Handler {
         map.addAttribute("begin", begin);
         map.addAttribute("end", end);
 
-        map.addAttribute("tags", tagRes.findByOrgiAndTagtype(super.getOrgi(request), MainContext.ModelType.SUMMARY.toString()));
+        map.addAttribute("tags", tagRes.findByOrgiAndTagtype(super.getOrgi(request), Enums.ModelType.SUMMARY.toString()));
 
         return request(super.createAppsTempletResponse("/apps/service/summary/index"));
     }
@@ -124,7 +124,7 @@ public class AgentSummaryController extends Handler {
     public ModelAndView process(ModelMap map, HttpServletRequest request, @Valid final String id) {
         AgentServiceSummary summary = serviceSummaryRes.findByIdAndOrgi(id, super.getOrgi(request));
         map.addAttribute("summary", summary);
-        map.put("summaryTags", tagRes.findByOrgiAndTagtype(super.getOrgi(request), MainContext.ModelType.SUMMARY.toString()));
+        map.put("summaryTags", tagRes.findByOrgiAndTagtype(super.getOrgi(request), Enums.ModelType.SUMMARY.toString()));
         if (summary != null && !StringUtils.isBlank(summary.getAgentserviceid())) {
             AgentService service = agentServiceRes.findByIdAndOrgi(summary.getAgentserviceid(), super.getOrgi(request));
             map.addAttribute("service", service);
@@ -160,10 +160,10 @@ public class AgentSummaryController extends Handler {
             MetadataTable table = metadataRes.findByTablename("uk_servicesummary");
             List<Map<String, Object>> values = new ArrayList<>();
             for (AgentServiceSummary event : statusEventList) {
-                values.add(MainUtils.transBean2Map(event));
+                values.add(ObjectKit.transBean2Map(event));
             }
 
-            response.setHeader("content-disposition", "attachment;filename=UCKeFu-Summary-History-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+            response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Summary-History"));
 
             ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
             excelProcess.process();
@@ -177,18 +177,17 @@ public class AgentSummaryController extends Handler {
         Organ currentOrgan = super.getOrgan(request);
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Iterable<AgentServiceSummary> statusEventList = serviceSummaryRes.findByChannelNotAndOrgiAndSkillIn(
-                MainContext.ChannelType.PHONE.toString(), super.getOrgi(request), organs.keySet(), new PageRequest(0, 10000));
+                Enums.ChannelType.PHONE.toString(), super.getOrgi(request), organs.keySet(), new PageRequest(0, 10000));
         MetadataTable table = metadataRes.findByTablename("uk_servicesummary");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (AgentServiceSummary statusEvent : statusEventList) {
-            values.add(MainUtils.transBean2Map(statusEvent));
+            values.add(ObjectKit.transBean2Map(statusEvent));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-Summary-History-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Summary-History"));
 
         ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
         excelProcess.process();
-        return;
     }
 
     @RequestMapping("/expsearch")
@@ -197,12 +196,11 @@ public class AgentSummaryController extends Handler {
         final String orgi = super.getOrgi(request);
         Page<AgentServiceSummary> page = serviceSummaryRes.findAll(new Specification<AgentServiceSummary>() {
             @Override
-            public Predicate toPredicate(Root<AgentServiceSummary> root, CriteriaQuery<?> query,
-                                         CriteriaBuilder cb) {
+            public Predicate toPredicate(Root<AgentServiceSummary> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
                 List<Predicate> list = new ArrayList<Predicate>();
                 list.add(cb.and(cb.equal(root.get("process").as(boolean.class), 0)));
                 list.add(cb.equal(root.get("orgi").as(String.class), orgi));
-                list.add(cb.and(cb.notEqual(root.get("channel").as(String.class), MainContext.ChannelType.PHONE.toString())));
+                list.add(cb.and(cb.notEqual(root.get("channel").as(String.class), Enums.ChannelType.PHONE.toString())));
                 try {
                     if (!StringUtils.isBlank(begin) && begin.matches("[\\d]{4}-[\\d]{2}-[\\d]{2} [\\d]{2}:[\\d]{2}:[\\d]{2}")) {
                         list.add(cb.and(cb.greaterThanOrEqualTo(root.get("createtime").as(Date.class), DateFormatEnum.DAY_TIME.parse(begin))));
@@ -216,14 +214,14 @@ public class AgentSummaryController extends Handler {
                 Predicate[] p = new Predicate[list.size()];
                 return cb.and(list.toArray(p));
             }
-        }, new PageRequest(0, 10000, Sort.Direction.DESC, "createtime"));
+        }, PageRequest.of(0, 10000, Sort.Direction.DESC, "createtime"));
 
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (AgentServiceSummary summary : page) {
-            values.add(MainUtils.transBean2Map(summary));
+            values.add(ObjectKit.transBean2Map(summary));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-Summary-History-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Summary-History"));
 
         MetadataTable table = metadataRes.findByTablename("uk_servicesummary");
 

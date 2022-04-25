@@ -18,22 +18,25 @@ package com.chatopera.cc.acd;
 
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
-import com.chatopera.cc.basic.DateFormatEnum;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.AgentStatusRepository;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.AgentStatusProxy;
 import com.chatopera.cc.proxy.AgentUserProxy;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.SerializeUtil;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,10 +109,10 @@ public class ACDAgentService {
                     AgentUserStatusEnum.INQUENE.toString(),
                     ctx.getAgentService().getStatus())) {
                 // 通知消息到坐席
-                MainContext.getPeerSyncIM().send(MainContext.ReceiverType.AGENT,
-                        MainContext.ChannelType.WEBIM,
+                MainContext.getPeerSyncIM().send(Enums.ReceiverType.AGENT,
+                        Enums.ChannelType.WEBIM,
                         ctx.getAppid(),
-                        MainContext.MessageType.NEW,
+                        Enums.MessageType.NEW,
                         ctx.getAgentService().getAgentno(),
                         ctx, true);
             }
@@ -119,17 +122,17 @@ public class ACDAgentService {
              */
             Message outMessage = new Message();
             outMessage.setMessage(ctx.getMessage());
-            outMessage.setMessageType(MainContext.MessageType.MESSAGE.toString());
-            outMessage.setCalltype(MainContext.CallType.IN.toString());
+            outMessage.setMessageType(Enums.MessageType.MESSAGE.toString());
+            outMessage.setCalltype(Enums.CallType.IN.toString());
             outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
             outMessage.setNoagent(ctx.isNoagent());
             if (ctx.getAgentService() != null) {
                 outMessage.setAgentserviceid(ctx.getAgentService().getId());
             }
 
-            MainContext.getPeerSyncIM().send(MainContext.ReceiverType.VISITOR,
-                    MainContext.ChannelType.WEBIM, ctx.getAppid(),
-                    MainContext.MessageType.NEW, ctx.getOnlineUserId(), outMessage, true);
+            MainContext.getPeerSyncIM().send(Enums.ReceiverType.VISITOR,
+                    Enums.ChannelType.WEBIM, ctx.getAppid(),
+                    Enums.MessageType.NEW, ctx.getOnlineUserId(), outMessage, true);
 
 
         } else {
@@ -177,7 +180,7 @@ public class ACDAgentService {
                 String.join("|", agentStatus.getSkills().keySet()), agentStatus.isBusy());
 
         if ((!StringUtils.equals(
-                MainContext.AgentStatusEnum.READY.toString(), agentStatus.getStatus())) || agentStatus.isBusy()) {
+                AgentStatusEnum.READY.toString(), agentStatus.getStatus())) || agentStatus.isBusy()) {
             // 该坐席处于非就绪状态，或该坐席处于置忙
             // 不分配坐席
             return;
@@ -266,8 +269,8 @@ public class ACDAgentService {
                     agentService,
                     agentUser.getChannel(),
                     agentUser.getOrgi()));
-            outMessage.setMessageType(MainContext.MediaType.TEXT.toString());
-            outMessage.setCalltype(MainContext.CallType.IN.toString());
+            outMessage.setMessageType(Enums.MediaType.TEXT.toString());
+            outMessage.setCalltype(Enums.CallType.IN.toString());
             outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
 
             if (StringUtils.isNotBlank(agentUser.getUserid())) {
@@ -276,15 +279,15 @@ public class ACDAgentService {
 
                 // 向访客推送消息
                 peerSyncIM.send(
-                        MainContext.ReceiverType.VISITOR,
-                        MainContext.ChannelType.toValue(agentUser.getChannel()), agentUser.getAppid(),
-                        MainContext.MessageType.STATUS, agentUser.getUserid(), outMessage, true
+                        Enums.ReceiverType.VISITOR,
+                        Enums.ChannelType.toValue(agentUser.getChannel()), agentUser.getAppid(),
+                        Enums.MessageType.STATUS, agentUser.getUserid(), outMessage, true
                 );
 
                 // 向坐席推送消息
-                peerSyncIM.send(MainContext.ReceiverType.AGENT, MainContext.ChannelType.WEBIM,
+                peerSyncIM.send(Enums.ReceiverType.AGENT, Enums.ChannelType.WEBIM,
                         agentUser.getAppid(),
-                        MainContext.MessageType.NEW, agentUser.getAgentno(), outMessage, true);
+                        Enums.MessageType.NEW, agentUser.getAgentno(), outMessage, true);
 
                 // 通知更新在线数据
                 agentStatusProxy.broadcastAgentsStatus(agentUser.getOrgi(), "agent", "pickup", agentStatus.getAgentno());
@@ -357,7 +360,7 @@ public class ACDAgentService {
                     // 开启了质检，并且是有效对话
                     if (sessionConfig.isQuality()) {
                         // 未分配质检任务
-                        service.setQualitystatus(MainContext.QualityStatusEnum.NODIS.toString());
+                        service.setQualitystatus(Enums.QualityStatusEnum.NODIS.toString());
                     }
                 }
 
@@ -366,7 +369,7 @@ public class ACDAgentService {
                  */
                 if ((!sessionConfig.isQuality()) || service.getUserasks() == 0) {
                     // 未开启质检 或无效对话无需质检
-                    service.setQualitystatus(MainContext.QualityStatusEnum.NO.toString());
+                    service.setQualitystatus(Enums.QualityStatusEnum.NO.toString());
                 }
                 agentServiceRes.save(service);
             }
@@ -383,7 +386,7 @@ public class ACDAgentService {
             /**
              * 发送到访客端的通知
              */
-            switch (MainContext.ChannelType.toValue(agentUser.getChannel())) {
+            switch (Enums.ChannelType.toValue(agentUser.getChannel())) {
                 case WEBIM:
                     // WebIM 发送对话结束事件
                     // 向访客发送消息
@@ -391,24 +394,24 @@ public class ACDAgentService {
                     outMessage.setAgentStatus(agentStatus);
                     outMessage.setMessage(acdMessageHelper.getServiceFinishMessage(agentUser.getChannel(), agentUser.getSkill(), orgi));
                     outMessage.setMessageType(AgentUserStatusEnum.END.toString());
-                    outMessage.setCalltype(MainContext.CallType.IN.toString());
+                    outMessage.setCalltype(Enums.CallType.IN.toString());
                     outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                     outMessage.setAgentUser(agentUser);
 
                     // 向访客发送消息
                     peerSyncIM.send(
-                            MainContext.ReceiverType.VISITOR,
-                            MainContext.ChannelType.toValue(agentUser.getChannel()), agentUser.getAppid(),
-                            MainContext.MessageType.STATUS, agentUser.getUserid(), outMessage, true
+                            Enums.ReceiverType.VISITOR,
+                            Enums.ChannelType.toValue(agentUser.getChannel()), agentUser.getAppid(),
+                            Enums.MessageType.STATUS, agentUser.getUserid(), outMessage, true
                     );
 
                     if (agentStatus != null) {
                         // 坐席在线，通知结束会话
                         outMessage.setChannelMessage(agentUser);
                         outMessage.setAgentUser(agentUser);
-                        peerSyncIM.send(MainContext.ReceiverType.AGENT, MainContext.ChannelType.WEBIM,
+                        peerSyncIM.send(Enums.ReceiverType.AGENT, Enums.ChannelType.WEBIM,
                                 agentUser.getAppid(),
-                                MainContext.MessageType.END, agentUser.getAgentno(), outMessage, true);
+                                Enums.MessageType.END, agentUser.getAgentno(), outMessage, true);
                     }
                     break;
                 case PHONE:
@@ -416,7 +419,7 @@ public class ACDAgentService {
                     logger.info(
                             "[finishAgentService] send notify to callout channel agentno {}", agentUser.getAgentno());
                     NettyClients.getInstance().sendCalloutEventMessage(
-                            agentUser.getAgentno(), MainContext.MessageType.END.toString(), agentUser);
+                            agentUser.getAgentno(), Enums.MessageType.END.toString(), agentUser);
                     break;
                 default:
                     logger.info(
@@ -428,7 +431,7 @@ public class ACDAgentService {
             final OnlineUser onlineUser = onlineUserRes.findOneByUseridAndOrgi(
                     agentUser.getUserid(), agentUser.getOrgi());
             if (onlineUser != null) {
-                onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.DEFAULT.toString());
+                onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
                 onlineUserRes.save(onlineUser);
                 logger.info(
                         "[finishAgentService] onlineUser id {}, status {}, invite status {}", onlineUser.getId(),
@@ -457,11 +460,11 @@ public class ACDAgentService {
      * @param orgi
      * @return
      */
-    public void finishAgentUser(final AgentUser agentUser, final String orgi) throws CSKefuException {
+    public void finishAgentUser(final AgentUser agentUser, final String orgi) throws ServerException {
         logger.info("[finishAgentUser] userId {}, orgi {}", agentUser.getUserid(), orgi);
 
         if (agentUser == null || agentUser.getId() == null) {
-            throw new CSKefuException("Invalid agentUser info");
+            throw new ServerException("Invalid agentUser info");
         }
 
         if (!StringUtils.equals(AgentUserStatusEnum.END.toString(), agentUser.getStatus())) {
@@ -523,12 +526,12 @@ public class ACDAgentService {
             if (agentStatus == null) {
                 // 没有满足条件的坐席，留言
                 agentService.setLeavemsg(true);
-                agentService.setLeavemsgstatus(MainContext.LeaveMsgStatus.NOTPROCESS.toString()); //未处理的留言
+                agentService.setLeavemsgstatus(Enums.LeaveMsgStatus.NOTPROCESS.toString()); //未处理的留言
             }
 
             if (onlineUser != null) {
                 //  更新OnlineUser对象，变更为默认状态，可以接受邀请
-                onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.DEFAULT.toString());
+                onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
             }
         } else if (agentStatus != null) {
             agentService.setAgent(agentStatus.getAgentno());
@@ -549,7 +552,7 @@ public class ACDAgentService {
 
         if (finished || agentStatus != null) {
             agentService.setAgentuserid(agentUser.getId());
-            agentService.setInitiator(MainContext.ChatInitiatorType.USER.toString());
+            agentService.setInitiator(Enums.ChatInitiatorType.USER.toString());
 
             long waittingtime = 0;
             if (agentUser.getWaittingtimestart() != null) {
@@ -619,7 +622,7 @@ public class ACDAgentService {
          * 更新OnlineUser对象，变更为服务中，不可邀请
          */
         if (onlineUser != null && !finished) {
-            onlineUser.setInvitestatus(MainContext.OnlineUserInviteStatus.INSERV.toString());
+            onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.INSERV.toString());
             onlineUserRes.save(onlineUser);
         }
 

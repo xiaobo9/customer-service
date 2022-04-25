@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.persistence.impl;
 
-import com.chatopera.cc.model.Organ;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.OrganRepository;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.repository.OrganRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -16,8 +16,8 @@
  */
 package com.chatopera.cc.basic.resource;
 
-import com.chatopera.cc.model.JobDetail;
 import com.chatopera.cc.util.es.UKDataBean;
+import com.github.xiaobo9.entity.JobDetail;
 
 import java.util.HashMap;
 import java.util.Map;

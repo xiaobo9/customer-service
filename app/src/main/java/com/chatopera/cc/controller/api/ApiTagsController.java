@@ -18,11 +18,11 @@ package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.exception.CSKefuRestException;
-import com.chatopera.cc.model.Tag;
-import com.chatopera.cc.persistence.repository.TagRepository;
+import com.github.xiaobo9.commons.exception.RestApiException;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.json.GsonTools;
+import com.github.xiaobo9.entity.Tag;
+import com.github.xiaobo9.repository.TagRepository;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -101,12 +100,12 @@ public class ApiTagsController extends Handler {
      * @param request
      * @param body
      * @return
-     * @throws CSKefuRestException
+     * @throws RestApiException
      * @throws GsonTools.JsonObjectExtensionConflictException
      */
     @RequestMapping(method = RequestMethod.POST)
     @Menu(type = "apps", subtype = "tags", access = true)
-    public ResponseEntity<String> operations(HttpServletRequest request, @RequestBody final String body) throws CSKefuRestException, GsonTools.JsonObjectExtensionConflictException {
+    public ResponseEntity<String> operations(HttpServletRequest request, @RequestBody final String body) throws RestApiException, GsonTools.JsonObjectExtensionConflictException {
         final JsonObject j = (new JsonParser()).parse(body).getAsJsonObject();
         logger.info("[contact tags] operations payload {}", j.toString());
         JsonObject json = new JsonObject();

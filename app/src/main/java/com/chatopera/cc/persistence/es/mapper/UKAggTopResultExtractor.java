@@ -16,8 +16,7 @@
  */
 package com.chatopera.cc.persistence.es.mapper;
 
-import com.chatopera.cc.model.UKAgg;
-import com.chatopera.cc.persistence.es.mapper.UKResultMapper;
+import com.github.xiaobo9.entity.UKAgg;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;

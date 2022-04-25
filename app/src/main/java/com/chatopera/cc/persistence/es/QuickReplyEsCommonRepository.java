@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.model.QuickReply;
+import com.github.xiaobo9.entity.QuickReply;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

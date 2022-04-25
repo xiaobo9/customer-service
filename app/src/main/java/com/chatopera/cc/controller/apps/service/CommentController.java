@@ -17,14 +17,13 @@
 package com.chatopera.cc.controller.apps.service;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.AgentService;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.repository.AgentServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;

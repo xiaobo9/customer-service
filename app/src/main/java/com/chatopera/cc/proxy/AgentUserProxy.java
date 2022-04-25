@@ -16,17 +16,18 @@
 package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.acd.ACDPolicyService;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.commons.exception.ServerException;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.persistence.repository.*;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.AgentStatusRepository;
 import com.chatopera.cc.socketio.message.Message;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.repository.*;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -112,9 +113,9 @@ public class AgentUserProxy {
      * @param contactid
      * @param logined
      * @return
-     * @throws CSKefuException
+     * @throws ServerException
      */
-    public AgentUser figureAgentUserBeforeChatWithContactInfo(final String channels, final String contactid, final User logined) throws CSKefuException {
+    public AgentUser figureAgentUserBeforeChatWithContactInfo(final String channels, final String contactid, final User logined) throws ServerException {
         // 聊天依赖的对象
         AgentUser agentUser = null;
         OnlineUser onlineUser;
@@ -125,7 +126,7 @@ public class AgentUserProxy {
             String channel = StringUtils.split(channels, ",")[0];
 
             // 查找联系人
-            final Contacts contact = contactsRes.findById(contactid).orElseThrow(EntityNotFoundException::new);
+            final Contacts contact = contactsRes.findById(contactid).orElseThrow(EntityNotFoundEx::new);
 
             // 查找 OnlineUser
             onlineUser = onlineUserRes.findOneByContactidAndOrigAndChannel(
@@ -160,10 +161,10 @@ public class AgentUserProxy {
             Message outMessage = new Message();
             outMessage.setChannelMessage(agentUser);
             outMessage.setAgentUser(agentUser);
-            peerSyncIM.send(MainContext.ReceiverType.AGENT,
-                    MainContext.ChannelType.WEBIM,
+            peerSyncIM.send(Enums.ReceiverType.AGENT,
+                    Enums.ChannelType.WEBIM,
                     agentUser.getAppid(),
-                    MainContext.MessageType.NEW,
+                    Enums.MessageType.NEW,
                     logined.getId(),
                     outMessage, true);
         } else {
@@ -387,14 +388,14 @@ public class AgentUserProxy {
      * @param status
      * @param creator
      * @return
-     * @throws CSKefuException
+     * @throws ServerException
      */
     public AgentUser createAgentUserWithContactAndAgentAndChannelAndStatus(
             final OnlineUser onlineUser,
             final Contacts contact,
             final User agent,
             final String channel,
-            final String status, final User creator) throws CSKefuException {
+            final String status, final User creator) throws ServerException {
         logger.info("[createAgentUserWithContactAndAgentAndChannelAndStatus] create new agent user");
         final Date now = new Date();
         AgentUser agentUser = new AgentUser();
@@ -413,13 +414,13 @@ public class AgentUserProxy {
         agentUser.setOrgi(creator.getOrgi());
 
         // 获取 appId
-        if (StringUtils.equals(channel, MainContext.ChannelType.SKYPE.toString())) {
+        if (StringUtils.equals(channel, Enums.ChannelType.SKYPE.toString())) {
             final SNSAccount snsAccount = snsAccountRes.findOneBySnstypeAndOrgi(
-                    MainContext.ChannelType.SKYPE.toString(), agent.getOrgi());
+                    Enums.ChannelType.SKYPE.toString(), agent.getOrgi());
             if (snsAccount != null) {
                 agentUser.setAppid(snsAccount.getSnsid());
             } else {
-                throw new CSKefuException("Skype Channel is not available.");
+                throw new ServerException("Skype Channel is not available.");
             }
         }
 
@@ -456,12 +457,12 @@ public class AgentUserProxy {
      * @param agentuserid
      * @param orgi
      * @return
-     * @throws CSKefuException
+     * @throws ServerException
      */
-    public AgentUser resolveAgentUser(final String userid, final String agentuserid, final String orgi) throws CSKefuException {
+    public AgentUser resolveAgentUser(final String userid, final String agentuserid, final String orgi) throws ServerException {
         Optional<AgentUser> opt = cacheService.findOneAgentUserByUserIdAndOrgi(userid, orgi);
         if (!opt.isPresent()) {
-            return agentUserRes.findById(agentuserid).orElseThrow(()->new EntityNotFoundException("Invalid transfer request, agent user not exist."));
+            return agentUserRes.findById(agentuserid).orElseThrow(()->new EntityNotFoundEx("Invalid transfer request, agent user not exist."));
 
         }
         return opt.get();

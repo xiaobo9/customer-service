@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.util;
 
-import com.chatopera.cc.model.JobDetail;
+import com.github.xiaobo9.entity.JobDetail;
 
 import java.util.Date;
 

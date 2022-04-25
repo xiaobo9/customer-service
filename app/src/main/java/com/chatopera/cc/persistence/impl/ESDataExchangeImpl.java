@@ -18,11 +18,11 @@ package com.chatopera.cc.persistence.impl;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.OrganRepository;
-import com.chatopera.cc.persistence.repository.UKefuCallOutTaskRepository;
-import com.chatopera.cc.persistence.repository.UserRepository;
 import com.chatopera.cc.util.es.UKDataBean;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.OrganRepository;
+import com.github.xiaobo9.repository.UKefuCallOutTaskRepository;
+import com.github.xiaobo9.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;

@@ -16,6 +16,7 @@
  */
 package com.chatopera.cc.basic;
 
+import com.github.xiaobo9.commons.enums.Enums;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -37,11 +38,11 @@ public class MainContextTest extends TestCase {
     }
 
     public void testChannelTypeEnum() {
-        logger.info("[testChannelTypeEnum] toString {}", MainContext.ChannelType.WEBIM);
-        logger.info("[testChannelTypeEnum] valueOf {} ", MainContext.ChannelType.toValue("webim"));
+        logger.info("[testChannelTypeEnum] toString {}", Enums.ChannelType.WEBIM);
+        logger.info("[testChannelTypeEnum] valueOf {} ", Enums.ChannelType.toValue("webim"));
 
-        assertEquals(MainContext.ChannelType.WEBIM.toString(), "webim");
-        assertEquals(MainContext.ChannelType.toValue("webim"), MainContext.ChannelType.WEBIM);
+        assertEquals(Enums.ChannelType.WEBIM.toString(), "webim");
+        assertEquals(Enums.ChannelType.toValue("webim"), Enums.ChannelType.WEBIM);
     }
 
 }

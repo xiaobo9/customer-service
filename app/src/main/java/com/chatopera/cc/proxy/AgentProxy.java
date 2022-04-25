@@ -1,19 +1,21 @@
 package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.ThumbnailUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.service.UploadService;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.commons.exception.ServerException;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
-import com.chatopera.cc.persistence.repository.*;
-import com.chatopera.cc.socketio.message.ChatMessage;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.AgentStatusRepository;
+import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.message.Message;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -83,9 +85,9 @@ public class AgentProxy {
 
         // 更新当前用户状态
         agentStatus.setUsers(cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi()));
-        agentStatus.setStatus(MainContext.AgentStatusEnum.READY.toString());
+        agentStatus.setStatus(AgentStatusEnum.READY.toString());
 
-        logger.info("[ready] set agent {}, status {}", agentStatus.getAgentno(), MainContext.AgentStatusEnum.READY);
+        logger.info("[ready] set agent {}, status {}", agentStatus.getAgentno(), AgentStatusEnum.READY);
 
         // 更新数据库
         agentStatusRes.save(agentStatus);
@@ -130,20 +132,20 @@ public class AgentProxy {
 
         // 发送消息给在线访客(此处也会生成对话聊天历史和会话监控消息)
         peerSyncIM.send(
-                MainContext.ReceiverType.VISITOR,
-                MainContext.ChannelType.toValue(agentUser.getChannel()),
+                Enums.ReceiverType.VISITOR,
+                Enums.ChannelType.toValue(agentUser.getChannel()),
                 agentUser.getAppid(),
-                MainContext.MessageType.MESSAGE,
+                Enums.MessageType.MESSAGE,
                 chatMessage.getTouser(),
                 outMessage,
                 true);
 
         // 发送消息给坐席（返回消息给坐席自己）
         peerSyncIM.send(
-                MainContext.ReceiverType.AGENT,
-                MainContext.ChannelType.WEBIM,
+                Enums.ReceiverType.AGENT,
+                Enums.ChannelType.WEBIM,
                 agentUser.getAppid(),
-                MainContext.MessageType.MESSAGE,
+                Enums.MessageType.MESSAGE,
                 agentUser.getAgentno(),
                 outMessage,
                 true);
@@ -164,7 +166,7 @@ public class AgentProxy {
         chatMessage.setFilesize((int) multipart.getSize());
         chatMessage.setAttachmentid(sf.getId());
         chatMessage.setMessage(sf.getFileUrl());
-        chatMessage.setId(MainUtils.getUUID());
+        chatMessage.setId(UUIDUtils.getUUID());
         chatMessage.setContextid(agentUser.getContextid());
         chatMessage.setAgentserviceid(agentUser.getAgentserviceid());
         chatMessage.setChannel(agentUser.getChannel());
@@ -175,16 +177,16 @@ public class AgentProxy {
         chatMessage.setCreater(creator.getId());
         chatMessage.setUsername(creator.getUname());
 
-        chatMessage.setCalltype(MainContext.CallType.OUT.toString());
+        chatMessage.setCalltype(Enums.CallType.OUT.toString());
         if (StringUtils.isNotBlank(agentUser.getAgentno())) {
             chatMessage.setTouser(agentUser.getUserid());
         }
 
         if (multipart.getContentType() != null && multipart.getContentType().indexOf(
                 Constants.ATTACHMENT_TYPE_IMAGE) >= 0) {
-            chatMessage.setMsgtype(MainContext.MediaType.IMAGE.toString());
+            chatMessage.setMsgtype(Enums.MediaType.IMAGE.toString());
         } else {
-            chatMessage.setMsgtype(MainContext.MediaType.FILE.toString());
+            chatMessage.setMsgtype(Enums.MediaType.FILE.toString());
         }
 
         Message outMessage = new Message();
@@ -205,18 +207,18 @@ public class AgentProxy {
              * 通知文件上传消息
              */
             // 发送消息给访客
-            peerSyncIM.send(MainContext.ReceiverType.VISITOR,
-                    MainContext.ChannelType.toValue(agentUser.getChannel()),
-                    agentUser.getAppid(), MainContext.MessageType.MESSAGE,
+            peerSyncIM.send(Enums.ReceiverType.VISITOR,
+                    Enums.ChannelType.toValue(agentUser.getChannel()),
+                    agentUser.getAppid(), Enums.MessageType.MESSAGE,
                     agentUser.getUserid(),
                     outMessage,
                     true);
 
             // 发送给坐席自己
-            peerSyncIM.send(MainContext.ReceiverType.AGENT,
-                    MainContext.ChannelType.WEBIM,
+            peerSyncIM.send(Enums.ReceiverType.AGENT,
+                    Enums.ChannelType.WEBIM,
                     agentUser.getAppid(),
-                    MainContext.MessageType.MESSAGE,
+                    Enums.MessageType.MESSAGE,
                     agentUser.getAgentno(), outMessage, true);
 
         } else {
@@ -232,12 +234,12 @@ public class AgentProxy {
      * @param multipart
      * @return
      * @throws IOException
-     * @throws CSKefuException
+     * @throws ServerException
      */
     public StreamingFile saveFileIntoMySQLBlob(final User creator, final MultipartFile multipart) throws
-            IOException, CSKefuException {
+            IOException, ServerException {
 
-        String fileid = MainUtils.getUUID();
+        String fileid = UUIDUtils.getUUID();
         StreamingFile sf = new StreamingFile();
 
         // 保存到本地
@@ -278,20 +280,20 @@ public class AgentProxy {
      * @param fileid
      * @return
      * @throws IOException
-     * @throws CSKefuException
+     * @throws ServerException
      */
     public AttachmentFile processAttachmentFile(
             final User owner, final MultipartFile multipart,
-            final String fileid) throws IOException, CSKefuException {
+            final String fileid) throws IOException, ServerException {
         if (multipart.getSize() == 0) {
-            throw new CSKefuException("Empty upload file size.");
+            throw new ServerException("Empty upload file size.");
         }
 
         // 文件尺寸 限制 ？在 启动 配置中 设置 的最大值，其他地方不做限制
         AttachmentFile attachmentFile = new AttachmentFile();
         attachmentFile.setCreater(owner.getId());
         attachmentFile.setOrgi(owner.getOrgi());
-        attachmentFile.setModel(MainContext.ModelType.WEBIM.toString());
+        attachmentFile.setModel(Enums.ModelType.WEBIM.toString());
         attachmentFile.setFilelength((int) multipart.getSize());
         if (multipart.getContentType() != null && multipart.getContentType().length() > 255) {
             attachmentFile.setFiletype(multipart.getContentType().substring(0, 255));

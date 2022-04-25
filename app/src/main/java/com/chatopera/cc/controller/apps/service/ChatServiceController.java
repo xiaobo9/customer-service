@@ -20,20 +20,20 @@ import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.ACDVisitorDispatcher;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
-import com.chatopera.cc.basic.DateFormatEnum;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.*;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.IP;
 import com.chatopera.cc.util.IPTools;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -223,7 +223,7 @@ public class ChatServiceController extends Handler {
     public ModelAndView transfersave(HttpServletRequest request, @Valid String id, @Valid String agentno, @Valid String memo) {
         if (StringUtils.isNotBlank(id)) {
             AgentService agentService = agentServiceRes.findByIdAndOrgi(id, super.getOrgi(request));
-            final User targetAgent = userRes.findById(agentno).orElseThrow(EntityNotFoundException::new);
+            final User targetAgent = userRes.findById(agentno).orElseThrow(EntityNotFoundEx::new);
             AgentUser agentUser = null;
             Optional<AgentUser> agentUserOpt = cacheService.findOneAgentUserByUserIdAndOrgi(agentService.getUserid(), super.getOrgi(request));
             if (agentUserOpt.isPresent()) {
@@ -256,18 +256,18 @@ public class ChatServiceController extends Handler {
                         Message outMessage = new Message();
                         outMessage.setMessage(
                                 acdMessageHelper.getSuccessMessage(agentService, agentUser.getChannel(), super.getOrgi(request)));
-                        outMessage.setMessageType(MainContext.MediaType.TEXT.toString());
-                        outMessage.setCalltype(MainContext.CallType.IN.toString());
+                        outMessage.setMessageType(Enums.MediaType.TEXT.toString());
+                        outMessage.setCalltype(Enums.CallType.IN.toString());
                         outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                         outMessage.setAgentUser(agentUser);
                         outMessage.setAgentService(agentService);
 
                         if (org.apache.commons.lang.StringUtils.isNotBlank(agentUser.getUserid())) {
                             peerSyncIM.send(
-                                    MainContext.ReceiverType.VISITOR,
-                                    MainContext.ChannelType.toValue(agentUser.getChannel()),
+                                    Enums.ReceiverType.VISITOR,
+                                    Enums.ChannelType.toValue(agentUser.getChannel()),
                                     agentUser.getAppid(),
-                                    MainContext.MessageType.STATUS,
+                                    Enums.MessageType.STATUS,
                                     agentUser.getUserid(),
                                     outMessage,
                                     true
@@ -278,8 +278,8 @@ public class ChatServiceController extends Handler {
                         outMessage.setChannelMessage(agentUser);
                         outMessage.setAgentUser(agentUser);
                         peerSyncIM.send(
-                                MainContext.ReceiverType.AGENT, MainContext.ChannelType.WEBIM,
-                                agentUser.getAppid(), MainContext.MessageType.NEW, agentService.getAgentno(),
+                                Enums.ReceiverType.AGENT, Enums.ChannelType.WEBIM,
+                                agentUser.getAppid(), Enums.MessageType.NEW, agentService.getAgentno(),
                                 outMessage, true
                         );
 
@@ -380,7 +380,7 @@ public class ChatServiceController extends Handler {
                                 agentService.getContactsid(),
                                 onlineUser.getOwner(),
                                 true,
-                                MainContext.ChatInitiatorType.AGENT.toString()));
+                                Enums.ChatInitiatorType.AGENT.toString()));
                     }
                 }
             }
@@ -471,7 +471,7 @@ public class ChatServiceController extends Handler {
             agentUser.setSkill(skillid);
             agentUserRes.save(agentUser);
             ACDComposeContext ctx = acdMessageHelper.getComposeContextWithAgentUser(
-                    agentUser, false, MainContext.ChatInitiatorType.USER.toString());
+                    agentUser, false, Enums.ChatInitiatorType.USER.toString());
             acdVisitorDispatcher.enqueue(ctx);
         }
         return request(super.pageTplResponse("redirect:/service/quene/index.html"));

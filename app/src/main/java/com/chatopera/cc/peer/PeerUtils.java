@@ -1,7 +1,7 @@
 package com.chatopera.cc.peer;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.socketio.message.ChatMessage;
+import com.chatopera.cc.model.ChatMessage;
 import org.apache.commons.lang.StringUtils;
 
 public class PeerUtils {

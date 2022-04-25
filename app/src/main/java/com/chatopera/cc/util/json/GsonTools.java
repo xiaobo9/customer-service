@@ -15,48 +15,18 @@ package com.chatopera.cc.util.json;
  * limitations under the License.
  */
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
-import java.util.List;
 import java.util.Map;
 
 public class GsonTools {
 
-    public static enum ConflictStrategy {
+    public enum ConflictStrategy {
 
         THROW_EXCEPTION, PREFER_FIRST_OBJ, PREFER_SECOND_OBJ, PREFER_NON_NULL;
     }
-
-    /**
-     * 将Java POJO 转化为 JSON
-     *
-     * @param obj
-     * @param <T>
-     * @param <R>
-     * @return
-     */
-    public static <T, R> T toJson(final R obj) {
-        Gson gson = new Gson();
-        JsonParser parser = new JsonParser();
-        return (T) parser.parse(gson.toJson(obj));
-    }
-
-    /**
-     * 将Java POJO List 转化为 JsonArray
-     *
-     * @param objs
-     * @param <T>
-     * @param <R>
-     * @return
-     */
-    public static <T, R> JsonArray toJSONArray(final List<R> objs) {
-        JsonArray ja = new JsonArray();
-        for (final R item : objs) {
-            ja.add((JsonObject) toJson(item));
-        }
-        return ja;
-    }
-
 
     public static class JsonObjectExtensionConflictException extends Exception {
 

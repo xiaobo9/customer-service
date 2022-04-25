@@ -15,8 +15,8 @@
  */
 package com.chatopera.cc.socketio.message;
 
-import com.chatopera.cc.basic.MainContext.InterventMessageType;
-import com.chatopera.cc.basic.MainContext.MediaType;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.enums.Enums.MediaType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
@@ -30,7 +30,7 @@ public class InterventMessage implements java.io.Serializable {
 
     private String supervisorid;      // 监控者用户ID
     private String agentuserid;       // 访客坐席会话ID
-    private InterventMessageType msgtype;           // 消息类型
+    private Enums.InterventMessageType msgtype;           // 消息类型
     private String content;
     private JsonObject extra;
     private String session;           // 登录会话ID
@@ -51,11 +51,11 @@ public class InterventMessage implements java.io.Serializable {
         this.agentuserid = agentuserid;
     }
 
-    public InterventMessageType getMsgtype() {
+    public Enums.InterventMessageType getMsgtype() {
         return msgtype;
     }
 
-    public void setMsgtype(InterventMessageType msgtype) {
+    public void setMsgtype(Enums.InterventMessageType msgtype) {
         this.msgtype = msgtype;
     }
 

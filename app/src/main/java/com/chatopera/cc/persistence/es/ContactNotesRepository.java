@@ -16,7 +16,7 @@
 
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.model.ContactNotes;
+import com.github.xiaobo9.entity.ContactNotes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;

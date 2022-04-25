@@ -16,9 +16,11 @@
  */
 package com.chatopera.cc.config.listener;
 
+import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.Favorites;
-import com.chatopera.cc.model.WorkOrders;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.Favorites;
+import com.github.xiaobo9.entity.WorkOrders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -32,8 +34,17 @@ public class ApplicationStartupListener implements ApplicationListener<ContextRe
     @Autowired
     ElasticsearchTemplate elasticSearchTemplate;
 
+    @Autowired
+    private ACDPolicyService acdPolicyService;
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
+        elasticSearchTemplate();
+
+        AgentStatus.policyService((organId, organ) -> acdPolicyService.initSessionConfig(organId, organ));
+    }
+
+    private void elasticSearchTemplate() {
         if (!elasticSearchTemplate.indexExists(WorkOrders.class)) {
             elasticSearchTemplate.createIndex(WorkOrders.class);
         }

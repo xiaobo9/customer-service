@@ -1,9 +1,9 @@
 package com.chatopera.cc.peer;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.AgentStatus;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.compose4j.AbstractContext;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentStatus;
 
 import java.util.Date;
 
@@ -17,13 +17,13 @@ public class PeerContext extends AbstractContext {
     private boolean sent = false;
 
     // 渠道
-    private MainContext.ChannelType channel;
+    private Enums.ChannelType channel;
 
     // 渠道标识ID
     private String appid;
 
     // 接收者角色
-    private MainContext.ReceiverType receiverType;
+    private Enums.ReceiverType receiverType;
 
     // 接收消息人ID
     private String touser;
@@ -32,7 +32,7 @@ public class PeerContext extends AbstractContext {
     private boolean isDist;
 
     // 消息类型
-    private MainContext.MessageType msgType;
+    private Enums.MessageType msgType;
 
     public AgentStatus getAgentStatus() {
         return agentStatus;
@@ -50,11 +50,11 @@ public class PeerContext extends AbstractContext {
         this.message = message;
     }
 
-    public MainContext.ChannelType getChannel() {
+    public Enums.ChannelType getChannel() {
         return channel;
     }
 
-    public void setChannel(MainContext.ChannelType channel) {
+    public void setChannel(Enums.ChannelType channel) {
         this.channel = channel;
     }
 
@@ -66,11 +66,11 @@ public class PeerContext extends AbstractContext {
         this.appid = appid;
     }
 
-    public MainContext.ReceiverType getReceiverType() {
+    public Enums.ReceiverType getReceiverType() {
         return receiverType;
     }
 
-    public void setReceiverType(MainContext.ReceiverType receiverType) {
+    public void setReceiverType(Enums.ReceiverType receiverType) {
         this.receiverType = receiverType;
     }
 
@@ -90,11 +90,11 @@ public class PeerContext extends AbstractContext {
         isDist = dist;
     }
 
-    public MainContext.MessageType getMsgType() {
+    public Enums.MessageType getMsgType() {
         return msgType;
     }
 
-    public void setMsgType(MainContext.MessageType msgType) {
+    public void setMsgType(Enums.MessageType msgType) {
         this.msgType = msgType;
     }
 

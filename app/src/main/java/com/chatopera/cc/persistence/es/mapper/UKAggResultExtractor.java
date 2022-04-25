@@ -16,9 +16,8 @@
  */
 package com.chatopera.cc.persistence.es.mapper;
 
-import com.chatopera.cc.model.KbsTopic;
-import com.chatopera.cc.model.KbsTopicComment;
-import com.chatopera.cc.persistence.es.mapper.UKResultMapper;
+import com.github.xiaobo9.entity.KbsTopic;
+import com.github.xiaobo9.entity.KbsTopicComment;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.histogram.InternalDateHistogram;

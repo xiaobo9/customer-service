@@ -17,8 +17,8 @@
 
 package com.chatopera.cc.socketio.message;
 
-import com.chatopera.cc.model.*;
 import com.chatopera.compose4j.AbstractContext;
+import com.github.xiaobo9.entity.*;
 
 import java.io.Serializable;
 import java.util.List;

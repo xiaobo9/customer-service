@@ -17,7 +17,7 @@
 
 package com.chatopera.cc.model;
 
-import com.chatopera.cc.basic.MainUtils;
+import com.github.xiaobo9.commons.kit.ObjectKit;
 import org.apache.commons.codec.binary.Base64;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -139,7 +139,7 @@ public class PublishedReport implements java.io.Serializable{
 	public Report getReport() {
 		Base64 base64 = new Base64();
 		try {
-			return report!=null ? report : (report = (this.reportcontent==null?null:(Report) MainUtils.toObject(base64.decode(this.reportcontent))));
+            return report!=null ? report : (report = (this.reportcontent==null?null:(Report) ObjectKit.toObject(base64.decode(this.reportcontent))));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

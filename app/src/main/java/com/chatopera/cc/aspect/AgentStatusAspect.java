@@ -16,7 +16,7 @@
 package com.chatopera.cc.aspect;
 
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.AgentStatus;
+import com.github.xiaobo9.entity.AgentStatus;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -36,13 +36,13 @@ public class AgentStatusAspect {
     @Autowired
     private CacheService cacheService;
 
-    @After("execution(* com.chatopera.cc.persistence.repository.AgentStatusRepository.save(..))")
+    @After("execution(* com.github.xiaobo9.repository.AgentStatusRepository.save(..))")
     public void save(final JoinPoint joinPoint) {
         final AgentStatus agentStatus = (AgentStatus) joinPoint.getArgs()[0];
         cacheService.putAgentStatusByOrgi(agentStatus, agentStatus.getOrgi());
     }
 
-    @After("execution(* com.chatopera.cc.persistence.repository.AgentStatusRepository.delete(..))")
+    @After("execution(* com.github.xiaobo9.repository.AgentStatusRepository.delete(..))")
     public void delete(final JoinPoint joinPoint) {
         final AgentStatus agentStatus = (AgentStatus) joinPoint.getArgs()[0];
         cacheService.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), agentStatus.getOrgi());

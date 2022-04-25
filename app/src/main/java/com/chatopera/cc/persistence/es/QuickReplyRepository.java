@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.model.QuickReply;
+import com.github.xiaobo9.entity.QuickReply;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 public interface QuickReplyRepository extends  ElasticsearchRepository<QuickReply, String> , QuickReplyEsCommonRepository {

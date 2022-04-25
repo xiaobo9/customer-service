@@ -16,98 +16,99 @@
  */
 package com.chatopera.cc.basic.resource;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.JobDetail;
+import com.github.xiaobo9.entity.JobDetail;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
 
 /**
  * @author jaddy0302 Rivulet Resource.java 2010-3-6
- * 
  */
 public abstract class Resource {
-	
-	public static Logger log = Logger.getLogger(Resource.class.getName()) ;
 
-	public abstract void begin()  throws Exception;
-	
-	
-	public abstract void end(boolean clear)  throws Exception;
-	/**
-	 * Re connection
-	 */
-	public abstract JobDetail getJob();
-	
-	/**
-	 * Re connection
-	 */
-	public abstract void process(OutputTextFormat meta , JobDetail job)throws Exception;
+    public static Logger log = Logger.getLogger(Resource.class.getName());
 
-	/**
-	 * synchronized
-	 * Single-mode single-threaded access to records under a record
-	 * 
-	 * @return
-	 */
-	public abstract  OutputTextFormat next() throws Exception;
+    public abstract void begin() throws Exception;
 
-	/**
-	 * 
-	 * @return
-	 */
-	public abstract boolean isAvailable() ;
-	
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public abstract OutputTextFormat getText(OutputTextFormat object) throws Exception;
-	
-	/**
-	 * 
-	 */
-	public abstract void rmResource() ;
-	
-	/**
-	 * 
-	 */
-	public abstract void updateTask()throws Exception ;
-	
-	
-	/**
-	 * 
-	 * @param job
-	 * @return
-	 * @throws IllegalAccessException
-	 * @throws InstantiationException
-	 * @throws NoSuchMethodException
-	 * @throws SecurityException
-	 * @throws InvocationTargetException
-	 * @throws IllegalArgumentException
-	 */
-	public static Resource getResource(JobDetail job)
-			throws Exception{
-		return job != null
-				&& MainContext.getResource(job.getTasktype()) != null ? (Resource) MainContext
-				.getResource(job.getTasktype()).getConstructor(
-						new Class[] { JobDetail.class }).newInstance(
-						new Object[] { job })
-				: null;
 
-	}
-	
-		
-	/**
-	 * Filter
-	 * @param file
-	 * @param netFile
-	 * @return
-	 */
-	public boolean val(String inputFile , String acceptDocType){
-		String file = inputFile!=null ? inputFile.toLowerCase() :null ;
-		return file!=null && acceptDocType!=null && ((acceptDocType.indexOf(file.substring(file.lastIndexOf(".")+1))>=0||acceptDocType.indexOf("all")>=0)) ;
-	}
-	
+    public abstract void end(boolean clear) throws Exception;
+
+    /**
+     * Re connection
+     */
+    public abstract JobDetail getJob();
+
+    /**
+     * Re connection
+     */
+    public abstract void process(OutputTextFormat meta, JobDetail job) throws Exception;
+
+    /**
+     * synchronized
+     * Single-mode single-threaded access to records under a record
+     *
+     * @return
+     */
+    public abstract OutputTextFormat next() throws Exception;
+
+    /**
+     * @return
+     */
+    public abstract boolean isAvailable();
+
+
+    /**
+     * @return
+     */
+    public abstract OutputTextFormat getText(OutputTextFormat object) throws Exception;
+
+    /**
+     *
+     */
+    public abstract void rmResource();
+
+    /**
+     *
+     */
+    public abstract void updateTask() throws Exception;
+
+
+    /**
+     * @param job
+     * @return
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     * @throws NoSuchMethodException
+     * @throws SecurityException
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException
+     */
+    public static Resource getResource(JobDetail job)
+            throws Exception {
+        if (job == null) {
+            return null;
+        }
+        Class<?> resource = ResourceContext.getResource(job.getTasktype());
+        if (resource == null) {
+            return null;
+        }
+        return (Resource) resource.getConstructor(
+                new Class<?>[]{JobDetail.class}).newInstance(
+                new Object[]{job});
+
+    }
+
+
+    /**
+     * Filter
+     *
+     * @param file
+     * @param netFile
+     * @return
+     */
+    public boolean val(String inputFile, String acceptDocType) {
+        String file = inputFile != null ? inputFile.toLowerCase() : null;
+        return file != null && acceptDocType != null && ((acceptDocType.indexOf(file.substring(file.lastIndexOf(".") + 1)) >= 0 || acceptDocType.indexOf("all") >= 0));
+    }
+
 }

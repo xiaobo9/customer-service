@@ -17,12 +17,12 @@
 package com.chatopera.cc.acd.basic;
 
 import com.chatopera.cc.acd.ACDPolicyService;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.AgentService;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.SessionConfig;
 import com.chatopera.cc.util.IP;
 import com.chatopera.cc.util.IPTools;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.entity.SessionConfig;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +83,7 @@ public class ACDMessageHelper {
      */
     public String getSuccessMessage(AgentService agentService, String channel, String orgi) {
         String queneTip = "<span id='agentno'>" + agentService.getAgentusername() + "</span>";
-        if (!MainContext.ChannelType.WEBIM.toString().equals(channel)) {
+        if (!Enums.ChannelType.WEBIM.toString().equals(channel)) {
             queneTip = agentService.getAgentusername();
         }
         SessionConfig sessionConfig = acdPolicyService.initSessionConfig(agentService.getSkill(), orgi);
@@ -132,7 +132,7 @@ public class ACDMessageHelper {
             queneIndex = 0;
         }
         String queneTip = "<span id='queneindex'>" + queneIndex + "</span>";
-        if (!MainContext.ChannelType.WEBIM.toString().equals(channel)) {
+        if (!Enums.ChannelType.WEBIM.toString().equals(channel)) {
             queneTip = String.valueOf(queneIndex);
         }
         SessionConfig sessionConfig = acdPolicyService.initSessionConfig(organid, orgi);
@@ -146,7 +146,7 @@ public class ACDMessageHelper {
     public String getQueneMessage(int queneIndex, String channel, String organid, String orgi) {
 
         String queneTip = "<span id='queneindex'>" + queneIndex + "</span>";
-        if (!MainContext.ChannelType.WEBIM.toString().equals(channel)) {
+        if (!Enums.ChannelType.WEBIM.toString().equals(channel)) {
             queneTip = String.valueOf(queneIndex);
         }
         SessionConfig sessionConfig = acdPolicyService.initSessionConfig(organid, orgi);

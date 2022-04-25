@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.util.dsdata.export;
 
-import com.chatopera.cc.model.TableProperties;
+import com.github.xiaobo9.entity.TableProperties;
 
 import java.util.List;
 

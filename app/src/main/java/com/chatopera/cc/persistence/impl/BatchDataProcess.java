@@ -17,9 +17,9 @@
 package com.chatopera.cc.persistence.impl;
 
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.MetadataTable;
 import com.chatopera.cc.util.dsdata.process.JPAProcess;
 import com.chatopera.cc.util.es.UKDataBean;
+import com.github.xiaobo9.entity.MetadataTable;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 
 import java.util.Map;

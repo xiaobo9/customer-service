@@ -1,10 +1,10 @@
 package com.chatopera.cc.peer.im;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.peer.PeerContext;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.compose4j.Functional;
 import com.chatopera.compose4j.Middleware;
+import com.github.xiaobo9.commons.enums.Enums;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -38,7 +38,7 @@ public class ComposeMw2 implements Middleware<PeerContext> {
                 break;
             case VISITOR:
                 // 通过WebIM发送消息给访客
-                if (ctx.getChannel() == MainContext.ChannelType.WEBIM) {
+                if (ctx.getChannel() == Enums.ChannelType.WEBIM) {
                     ctx.setSent(sendToVisitor(ctx));
                 }
                 break;
@@ -67,7 +67,7 @@ public class ComposeMw2 implements Middleware<PeerContext> {
             case END:
                 NettyClients.getInstance().publishIMEventMessage(
                         ctx.getTouser(),
-                        MainContext.MessageType.STATUS.toString(),
+                        Enums.MessageType.STATUS.toString(),
                         ctx.getMessage(),
                         true);
                 return true;
@@ -81,7 +81,7 @@ public class ComposeMw2 implements Middleware<PeerContext> {
             case SATISFACTION:
                 NettyClients.getInstance().publishIMEventMessage(
                         ctx.getTouser(),
-                        MainContext.MessageType.SATISFACTION.toString(),
+                        Enums.MessageType.SATISFACTION.toString(),
                         ctx.getMessage(),
                         true);
                 return true;

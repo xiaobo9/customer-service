@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.aspect;
 
-import com.chatopera.cc.model.ESBean;
 import com.chatopera.cc.persistence.hibernate.HibernateDao;
 import com.chatopera.cc.util.CskefuList;
+import com.github.xiaobo9.entity.ESBean;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

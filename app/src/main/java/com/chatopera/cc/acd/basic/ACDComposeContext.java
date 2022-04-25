@@ -16,9 +16,9 @@
 
 package com.chatopera.cc.acd.basic;
 
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.IP;
+import com.github.xiaobo9.entity.*;
 
 public class ACDComposeContext extends Message {
 

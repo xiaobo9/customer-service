@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.util.es;
 
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.entity.*;
 
 import java.util.Date;
 import java.util.HashMap;

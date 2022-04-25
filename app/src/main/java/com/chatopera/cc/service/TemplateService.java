@@ -2,8 +2,8 @@ package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.Template;
-import com.chatopera.cc.persistence.repository.TemplateRepository;
+import com.github.xiaobo9.entity.Template;
+import com.github.xiaobo9.repository.TemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

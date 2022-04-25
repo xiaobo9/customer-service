@@ -17,18 +17,19 @@
 package com.chatopera.cc.socketio.util;
 
 import com.chatopera.cc.basic.Constants;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.enums.Enums.ChannelType;
+import com.github.xiaobo9.commons.enums.Enums.MessageType;
+import com.github.xiaobo9.commons.enums.Enums.ReceiverType;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainContext.ChannelType;
-import com.chatopera.cc.basic.MainContext.MessageType;
-import com.chatopera.cc.basic.MainContext.ReceiverType;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.AgentService;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.AgentUserTask;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
-import com.chatopera.cc.persistence.repository.AgentUserTaskRepository;
-import com.chatopera.cc.socketio.message.ChatMessage;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.socketio.message.Message;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.entity.AgentUserTask;
+import com.github.xiaobo9.repository.AgentServiceRepository;
+import com.github.xiaobo9.repository.AgentUserTaskRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,7 @@ public class HumanUtils {
      * @param userid
      */
     public static void processMessage(ChatMessage data, String userid) {
-        processMessage(data, MainContext.MediaType.TEXT.toString(), userid);
+        processMessage(data, Enums.MediaType.TEXT.toString(), userid);
     }
 
     /**
@@ -73,7 +74,7 @@ public class HumanUtils {
 
         if (agentUser != null && StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
             AgentService agentService = getAgentServiceRes().findById(
-                    agentUser.getAgentserviceid()).orElseThrow(EntityNotFoundException::new);
+                    agentUser.getAgentserviceid()).orElseThrow(EntityNotFoundEx::new);
             if (StringUtils.isNotBlank(agentService.getUsername())) {
                 userNickName = agentService.getUsername();
             }
@@ -87,7 +88,7 @@ public class HumanUtils {
         outMessage.setFilesize(chatMessage.getFilesize());
 
         outMessage.setMessageType(msgtype);
-        outMessage.setCalltype(MainContext.CallType.IN.toString());
+        outMessage.setCalltype(Enums.CallType.IN.toString());
         outMessage.setAgentUser(agentUser);
         outMessage.setSnsAccount(null);
 
@@ -95,8 +96,8 @@ public class HumanUtils {
         if (agentUser == null) {
             statusMessage = new Message();
             statusMessage.setMessage(chatMessage.getMessage());
-            statusMessage.setMessageType(MainContext.MessageType.STATUS.toString());
-            statusMessage.setCalltype(MainContext.CallType.OUT.toString());
+            statusMessage.setMessageType(Enums.MessageType.STATUS.toString());
+            statusMessage.setCalltype(Enums.CallType.OUT.toString());
             statusMessage.setMessage("当前坐席全忙，请稍候");
         } else {
             chatMessage.setUserid(agentUser.getUserid());
@@ -109,7 +110,7 @@ public class HumanUtils {
             // agentUser作为 session id
             chatMessage.setUsession(agentUser.getUserid());
             chatMessage.setContextid(agentUser.getContextid());
-            chatMessage.setCalltype(MainContext.CallType.IN.toString());
+            chatMessage.setCalltype(Enums.CallType.IN.toString());
             if (StringUtils.isNotBlank(agentUser.getAgentno())) {
                 chatMessage.setTouser(agentUser.getAgentno());
             }
@@ -135,7 +136,7 @@ public class HumanUtils {
         outMessage.setChannelMessage(chatMessage);
 
         // 将消息返送给 访客
-        if (StringUtils.isNotBlank(chatMessage.getUserid()) && MainContext.MessageType.MESSAGE.toString().equals(
+        if (StringUtils.isNotBlank(chatMessage.getUserid()) && Enums.MessageType.MESSAGE.toString().equals(
                 chatMessage.getType())) {
             MainContext.getPeerSyncIM().send(ReceiverType.VISITOR, ChannelType.toValue(outMessage.getChannel()),
                     outMessage.getAppid(), MessageType.MESSAGE, chatMessage.getUserid(),

@@ -1,5 +1,6 @@
 package com.github.xiaobo9.utils;
 
+import com.github.xiaobo9.commons.utils.Base62;
 import org.junit.Assert;
 import org.junit.Test;
 

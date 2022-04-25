@@ -19,20 +19,23 @@ package com.chatopera.cc.controller.apps;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.persistence.es.TopicRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.dsdata.DSData;
 import com.chatopera.cc.util.dsdata.DSDataEvent;
 import com.chatopera.cc.util.dsdata.ExcelImportProcess;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
 import com.chatopera.cc.util.dsdata.process.TopicProcess;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +53,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Controller
@@ -170,7 +172,7 @@ public class TopicController extends Handler {
     @RequestMapping("/topic/update")
     @Menu(type = "xiaoe", subtype = "knowledgeupdate")
     public ModelAndView knowledgeupdate(HttpServletRequest request, @Valid Topic topic, @Valid String type, @Valid String aiid) {
-        Topic temp = topicRes.findById(topic.getId()).orElseThrow(EntityNotFoundException::new);
+        Topic temp = topicRes.findById(topic.getId()).orElseThrow(EntityNotFoundEx::new);
         if (!StringUtils.isBlank(topic.getTitle())) {
             if (!StringUtils.isBlank(type)) {
                 topic.setCate(type);
@@ -210,7 +212,7 @@ public class TopicController extends Handler {
     @Menu(type = "xiaoe", subtype = "knowledgedelete")
     public ModelAndView knowledgedelete(HttpServletRequest request, @Valid String id, @Valid String type, @Valid String aiid) {
         if (!StringUtils.isBlank(id)) {
-            topicRes.delete(topicRes.findById(id).orElseThrow(EntityNotFoundException::new));
+            topicRes.delete(topicRes.findById(id).orElseThrow(EntityNotFoundEx::new));
             // 重新缓存
             topicItemRes.deleteAll(topicItemRes.findByTopicid(id));
 
@@ -242,7 +244,7 @@ public class TopicController extends Handler {
         if (knowledgeType == null) {
             type.setOrgi(super.getOrgi(request));
             type.setCreatetime(new Date());
-            type.setId(MainUtils.getUUID());
+            type.setId(UUIDUtils.getUUID());
             type.setTypeid(type.getId());
             type.setUpdatetime(new Date());
             if (StringUtils.isBlank(type.getParentid())) {
@@ -262,7 +264,7 @@ public class TopicController extends Handler {
     @RequestMapping("/topic/type/edit")
     @Menu(type = "xiaoe", subtype = "knowledgetypeedit")
     public ModelAndView knowledgetypeedit(ModelMap map, HttpServletRequest request, @Valid String type, @Valid String aiid) {
-        map.put("knowledgeType", knowledgeTypeRes.findById(type).orElseThrow(EntityNotFoundException::new));
+        map.put("knowledgeType", knowledgeTypeRes.findById(type).orElseThrow(EntityNotFoundEx::new));
         map.addAttribute("areaList", areaRepository.findByOrgi(super.getOrgi(request)));
 
         map.put("aiid", aiid);
@@ -323,7 +325,7 @@ public class TopicController extends Handler {
         }
         map.addAttribute("cacheList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_AREA_DIC));
 
-        map.put("knowledgeType", knowledgeTypeRes.findById(id).orElseThrow(EntityNotFoundException::new));
+        map.put("knowledgeType", knowledgeTypeRes.findById(id).orElseThrow(EntityNotFoundEx::new));
         return request(super.pageTplResponse("/apps/business/topic/area"));
     }
 
@@ -352,7 +354,7 @@ public class TopicController extends Handler {
     @Menu(type = "xiaoe", subtype = "knowledge")
     public ModelAndView impsave(ModelMap map, HttpServletRequest request, @RequestParam(value = "cusfile", required = false) MultipartFile cusfile, @Valid String type, @Valid String aiid) throws IOException {
         DSDataEvent event = new DSDataEvent();
-        String fileName = "xiaoe/" + MainUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
+        String fileName = "xiaoe/" + UUIDUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
         File excelFile = new File(path, fileName);
         MetadataTable table = metadataRes.findByTablename("uk_xiaoe_topic");
         if (table != null) {
@@ -396,10 +398,10 @@ public class TopicController extends Handler {
             MetadataTable table = metadataRes.findByTablename("uk_xiaoe_topic");
             List<Map<String, Object>> values = new ArrayList<>();
             for (Topic topic : topicList) {
-                values.add(MainUtils.transBean2Map(topic));
+                values.add(ObjectKit.transBean2Map(topic));
             }
 
-            response.setHeader("content-disposition", "attachment;filename=CSKefu-Contacts-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+            response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Contacts"));
             if (table != null) {
                 ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
                 excelProcess.process();
@@ -416,16 +418,15 @@ public class TopicController extends Handler {
         MetadataTable table = metadataRes.findByTablename("uk_xiaoe_topic");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (Topic topic : topicList) {
-            values.add(MainUtils.transBean2Map(topic));
+            values.add(ObjectKit.transBean2Map(topic));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-XiaoE-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("XiaoE"));
 
         if (table != null) {
             ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
             excelProcess.process();
         }
-        return;
     }
 
     @RequestMapping("/topic/expsearch")
@@ -437,15 +438,14 @@ public class TopicController extends Handler {
         MetadataTable table = metadataRes.findByTablename("uk_xiaoe_topic");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (Topic topic : topicList) {
-            values.add(MainUtils.transBean2Map(topic));
+            values.add(ObjectKit.transBean2Map(topic));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-XiaoE-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("XiaoE"));
 
         if (table != null) {
             ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
             excelProcess.process();
         }
-        return;
     }
 }

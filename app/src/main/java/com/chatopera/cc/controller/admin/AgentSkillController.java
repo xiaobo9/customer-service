@@ -17,9 +17,9 @@
 package com.chatopera.cc.controller.admin;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Skill;
-import com.chatopera.cc.persistence.repository.SkillRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.Skill;
+import com.github.xiaobo9.repository.SkillRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

@@ -5,7 +5,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.util.DateConverter;
 import com.chatopera.cc.util.IPTools;
 import com.chatopera.cc.util.SystemEnvHelper;
-import com.chatopera.cc.util.mobile.MobileNumberUtils;
+import com.github.xiaobo9.commons.utils.mobile.MobileNumberUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.StringUtils;

@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.model.Topic;
+import com.github.xiaobo9.entity.Topic;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.springframework.data.domain.Page;
 

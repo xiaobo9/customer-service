@@ -17,15 +17,16 @@
 package com.chatopera.cc.service.cube;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.MetadataRepository;
+import com.chatopera.cc.model.ReportFilter;
+import com.chatopera.cc.model.ReportModel;
 import com.chatopera.cc.persistence.repository.ReportFilterRepository;
-import com.chatopera.cc.persistence.repository.TemplateRepository;
-import com.chatopera.cc.service.cube.CubeService;
-import com.chatopera.cc.service.cube.DataSourceService;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.bi.ReportData;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.MetadataRepository;
+import com.github.xiaobo9.repository.TemplateRepository;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,12 +57,7 @@ public class ReportCubeService {
     @Autowired
     private MetadataRepository metadataRes;
 
-    /**
-     * @param report
-     * @return
-     * @throws Exception
-     */
-    public ReportData getReportData(ReportModel model, Cube cube, HttpServletRequest request, boolean parseParam, HashMap<String, String> semap) throws Exception {
+    public ReportData getReportData(com.chatopera.cc.model.ReportModel model, Cube cube, HttpServletRequest request, boolean parseParam, HashMap<String, String> semap) throws Exception {
 
         processFilter(model, cube, request);
 
@@ -119,15 +115,8 @@ public class ReportCubeService {
 
     /**
      * 生成结算数据SQL
-     *
-     * @param model
-     * @param cube
-     * @param request
-     * @param queryLog
-     * @return
-     * @throws Exception
      */
-    public String createCubeSQL(ReportModel model, Cube cube,
+    public String createCubeSQL(com.chatopera.cc.model.ReportModel model, Cube cube,
                                 HttpServletRequest request, boolean useStaticFilter, HashMap<String, String> semap) throws Exception {
         StringBuffer strb = new StringBuffer();
         strb.append("select ");
@@ -196,8 +185,8 @@ public class ReportCubeService {
             strb.append(" * ").append(mainTable).append(tables);
         }
         //过滤关联的表名以及左连接
-        StringBuffer filtertables = new StringBuffer();
-        StringBuffer wherecon = new StringBuffer();
+        StringBuilder filtertables = new StringBuilder();
+        StringBuilder wherecon = new StringBuilder();
         List<ReportFilter> reportFilter = model.getFilters();
         Map<String, String> tablefilterMap = new HashMap<>();
         if (!reportFilter.isEmpty()) {
@@ -274,7 +263,7 @@ public class ReportCubeService {
         return false;
     }
 
-    public String genMdx(ReportModel model, Cube cube, boolean isTable, HttpServletRequest request) {
+    public String genMdx(com.chatopera.cc.model.ReportModel model, Cube cube, boolean isTable, HttpServletRequest request) {
         StringBuffer rowstrb = new StringBuffer(), colstrb = new StringBuffer();
         StringBuffer dimstrb = new StringBuffer();
         StringBuffer coldimstrb = new StringBuffer();
@@ -384,7 +373,7 @@ public class ReportCubeService {
         }
     }
 
-    public void processFilter(ReportModel model, Cube cube, HttpServletRequest request) throws Exception {
+    public void processFilter(com.chatopera.cc.model.ReportModel model, Cube cube, HttpServletRequest request) throws Exception {
         if (model != null && !model.getFilters().isEmpty()) {
             for (ReportFilter filter : model.getFilters()) {
                 if ("range".equals(filter.getValuefiltertype())) {
@@ -406,7 +395,7 @@ public class ReportCubeService {
         }
     }
 
-    public ReportFilter processFilter(ReportModel model, ReportFilter curFilter, Cube cube, HttpServletRequest request) throws Exception {
+    public ReportFilter processFilter(com.chatopera.cc.model.ReportModel model, ReportFilter curFilter, Cube cube, HttpServletRequest request) throws Exception {
         if (model != null && !model.getFilters().isEmpty()) {
             for (ReportFilter filter : model.getFilters()) {
                 if ("range".equals(filter.getValuefiltertype())) {
@@ -469,16 +458,9 @@ public class ReportCubeService {
 
     /**
      * 生成过滤器自动获取数据SQL
-     *
-     * @param model
-     * @param cube
-     * @param request
-     * @param queryLog
-     * @return
-     * @throws Exception
      */
     public ReportFilter createCubeFilter(ReportFilter filter, Cube cube, HttpServletRequest request) throws Exception {
-        if (MainContext.FilterConValueType.AUTO.toString().equals(filter.getConvalue()) && MainContext.FilterModelType.SIGSEL.toString().equals(filter.getModeltype())) {
+        if (Enums.FilterConValueType.AUTO.toString().equals(filter.getConvalue()) && Enums.FilterModelType.SIGSEL.toString().equals(filter.getModeltype())) {
             Map<String, MetadataTable> tableMap = new HashMap<>();
             Map<String, String> tableIndexMap = new HashMap<>();
             Map<String, TableProperties> tableppyMap = new HashMap<>();
@@ -590,13 +572,9 @@ public class ReportCubeService {
 
     /**
      * 填充报表过滤器的值以及下拉值
-     *
-     * @param report
-     * @return
-     * @throws Exception
      */
     public List<ReportFilter> fillReportFilterData(List<ReportFilter> reportFilterList, HttpServletRequest request) throws Exception {
-        ReportModel model = new ReportModel();
+        com.chatopera.cc.model.ReportModel model = new ReportModel();
         model.setFilters(reportFilterList);
         processFilter(model, null, request);
         return model.getFilters();

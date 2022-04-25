@@ -25,13 +25,13 @@ import java.util.List;
 
 public interface PublishedReportRepository extends JpaRepository<PublishedReport, String> {
 
-	List<PublishedReport> findByOrgiAndDataidOrderByDataversionDesc(String orgi, String dataid);
+    List<PublishedReport> findByOrgiAndDataidOrderByDataversionDesc(String orgi, String dataid);
 
-	Page<PublishedReport> findByOrgiAndDicid(String orgi, String dicid, Pageable pageRequest);
+    Page<PublishedReport> findByOrgiAndDicid(String orgi, String dicid, Pageable pageRequest);
 
-	Page<PublishedReport> findByOrgi(String orgi, Pageable pageRequest);
+    Page<PublishedReport> findByOrgi(String orgi, Pageable pageRequest);
 
-	List<PublishedReport> findByCode(String code);
+    List<PublishedReport> findByCode(String code);
 
-	
+
 }

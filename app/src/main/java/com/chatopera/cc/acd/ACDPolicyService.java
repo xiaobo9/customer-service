@@ -18,22 +18,25 @@ package com.chatopera.cc.acd;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.SessionConfig;
-import com.chatopera.cc.persistence.repository.AgentUserRepository;
-import com.chatopera.cc.persistence.repository.OnlineUserRepository;
-import com.chatopera.cc.persistence.repository.SessionConfigRepository;
 import com.chatopera.cc.util.WebIMReport;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.entity.SessionConfig;
+import com.github.xiaobo9.repository.AgentUserRepository;
+import com.github.xiaobo9.repository.OnlineUserRepository;
+import com.github.xiaobo9.repository.SessionConfigRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 坐席自动分配策略集

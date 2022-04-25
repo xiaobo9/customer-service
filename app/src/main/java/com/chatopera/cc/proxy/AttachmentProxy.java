@@ -11,9 +11,9 @@
 
 package com.chatopera.cc.proxy;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.AttachmentFile;
-import com.chatopera.cc.persistence.repository.AttachmentRepository;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AttachmentFile;
+import com.github.xiaobo9.repository.AttachmentRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ public class AttachmentProxy {
             AttachmentFile attachmentFile = new AttachmentFile();
             attachmentFile.setCreater(creator);
             attachmentFile.setOrgi(orgi);
-            attachmentFile.setModel(MainContext.ModelType.WEBIM.toString());
+            attachmentFile.setModel(Enums.ModelType.WEBIM.toString());
             attachmentFile.setFilelength((int) file.getSize());
             if (file.getContentType() != null && file.getContentType().length() > 255) {
                 attachmentFile.setFiletype(file.getContentType().substring(0, 255));

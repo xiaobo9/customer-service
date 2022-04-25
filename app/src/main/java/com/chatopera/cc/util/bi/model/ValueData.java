@@ -17,8 +17,8 @@
 
 package com.chatopera.cc.util.bi.model;
 
-import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.model.ColumnProperties;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.ColumnProperties;
 
 import java.util.List;
 
@@ -217,8 +217,9 @@ public class ValueData implements java.io.Serializable,Cloneable{
 	 * @return
 	 */
 	public String getDataid(){
-		return MainUtils.md5(this.name!=null ? this.name : "") ;
-	}
+        String str = this.name!=null ? this.name : "";
+        return MD5Utils.md5(str);
+    }
 	public String getValueStyle() {
 		return valueStyle;
 	}

@@ -17,7 +17,7 @@
 package com.chatopera.cc.config.filter;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.model.User;
+import com.github.xiaobo9.entity.User;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import javax.servlet.*;

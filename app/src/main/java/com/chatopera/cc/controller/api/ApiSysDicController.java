@@ -19,14 +19,10 @@ package com.chatopera.cc.controller.api;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.admin.system.SysDicController;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.model.Dict;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.SysDicRepository;
-import com.chatopera.cc.util.CskefuIdGenerator;
-import com.chatopera.cc.util.Menu;
-import com.chatopera.cc.util.RestResult;
-import com.chatopera.cc.util.RestResultType;
+import com.chatopera.cc.util.*;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.SysDicRepository;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang.StringUtils;
@@ -77,6 +73,7 @@ public class ApiSysDicController extends Handler {
 
     /**
      * 创建联系人类型
+     *
      * @param creator
      * @param orgi
      * @param payload
@@ -121,6 +118,7 @@ public class ApiSysDicController extends Handler {
 
     /**
      * 数据字典
+     *
      * @param request
      * @param body
      * @return

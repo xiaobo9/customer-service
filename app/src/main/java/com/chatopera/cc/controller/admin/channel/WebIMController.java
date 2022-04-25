@@ -18,13 +18,13 @@ package com.chatopera.cc.controller.admin.channel;
 
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.CousultInvite;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.CousultInvite;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

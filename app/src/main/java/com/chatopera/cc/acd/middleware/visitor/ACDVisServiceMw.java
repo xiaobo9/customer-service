@@ -19,10 +19,10 @@ package com.chatopera.cc.acd.middleware.visitor;
 import com.chatopera.cc.acd.ACDQueueService;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.compose4j.Functional;
 import com.chatopera.compose4j.Middleware;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class ACDVisServiceMw implements Middleware<ACDComposeContext> {
 
     @Override
     public void apply(final ACDComposeContext ctx, final Functional next) {
-        ctx.setMessageType(MainContext.MessageType.STATUS.toString());
+        ctx.setMessageType(Enums.MessageType.STATUS.toString());
         /**
          * 首先交由 IMR处理 MESSAGE指令 ， 如果当前用户是在 坐席对话列表中， 则直接推送给坐席，如果不在，则执行 IMR
          */

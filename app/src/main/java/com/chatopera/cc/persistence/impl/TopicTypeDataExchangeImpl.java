@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.persistence.impl;
 
-import com.chatopera.cc.model.KnowledgeType;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.KnowledgeTypeRepository;
+import com.github.xiaobo9.entity.KnowledgeType;
+import com.github.xiaobo9.repository.KnowledgeTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

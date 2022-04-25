@@ -17,15 +17,16 @@
 package com.chatopera.cc.basic.resource;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.impl.BatchDataProcess;
 import com.chatopera.cc.persistence.impl.ESDataExchangeImpl;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.util.es.SearchTools;
 import com.chatopera.cc.util.es.UKDataBean;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageImpl;
 
@@ -83,7 +84,7 @@ public class ActivityResource extends Resource {
             formFilter = formFilterRes.findByIdAndOrgi(jobDetail.getFilterid(), this.jobDetail.getOrgi());
             List<FormFilterItem> formFilterList = formFilterItemRes.findByOrgiAndFormfilterid(this.jobDetail.getOrgi(), jobDetail.getFilterid());
             if (formFilter != null && !StringUtils.isBlank(formFilter.getFiltertype())) {
-                if (formFilter.getFiltertype().equals(MainContext.FormFilterType.BATCH.toString())) {
+                if (formFilter.getFiltertype().equals(Enums.FormFilterType.BATCH.toString())) {
                     batch = batchRes.findByIdAndOrgi(formFilter.getBatid(), this.jobDetail.getOrgi());
                     if (batch != null && !StringUtils.isBlank(batch.getActid())) {
                         metadataTable = metadataRes.findByTablename(batch.getActid());
@@ -129,9 +130,9 @@ public class ActivityResource extends Resource {
                 task.setOrgi(this.jobDetail.getOrgi());
 
                 if (this.isRecovery()) {
-                    task.setExectype(MainContext.ActivityExecType.RECOVERY.toString());
+                    task.setExectype(Enums.ActivityExecType.RECOVERY.toString());
                 } else {
-                    task.setExectype(MainContext.ActivityExecType.DEFAULT.toString());
+                    task.setExectype(Enums.ActivityExecType.DEFAULT.toString());
                 }
 
                 task.setFilterid(formFilter.getId());
@@ -242,13 +243,13 @@ public class ActivityResource extends Resource {
                 meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_AI, null);
 //				meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_ORGAN, this.jobDetail.getExecto()) ;
                 meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_TIME, System.currentTimeMillis());
-                meta.getDataBean().getValues().put("status", MainContext.NamesDisStatusType.DISORGAN.toString());
+                meta.getDataBean().getValues().put("status", Enums.NamesDisStatusType.DISORGAN.toString());
             } else {
                 meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_AI, null);
                 meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_AGENT, null);
                 meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_ORGAN, null);
                 meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_TIME, null);
-                meta.getDataBean().getValues().put("status", MainContext.NamesDisStatusType.NOT.toString());
+                meta.getDataBean().getValues().put("status", Enums.NamesDisStatusType.NOT.toString());
             }
         } else {
             if (this.current != null && meta != null && meta.getDataBean() != null) {
@@ -279,16 +280,16 @@ public class ActivityResource extends Resource {
                  */
 
                 if ("agent".equals(this.current.getDistype())) {
-                    meta.getDataBean().getValues().put("status", MainContext.NamesDisStatusType.DISAGENT.toString());
+                    meta.getDataBean().getValues().put("status", Enums.NamesDisStatusType.DISAGENT.toString());
                     meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_AGENT, this.current.getDistarget());
                     meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_ORGAN, this.current.getOrgan());
                     this.assignInt.incrementAndGet();
                 } else if ("skill".equals(this.current.getDistype())) {
-                    meta.getDataBean().getValues().put("status", MainContext.NamesDisStatusType.DISORGAN.toString());
+                    meta.getDataBean().getValues().put("status", Enums.NamesDisStatusType.DISORGAN.toString());
                     meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_ORGAN, this.current.getDistarget());
                     this.assignorganInt.incrementAndGet();
                 } else if ("ai".equals(this.current.getDistype())) {
-                    meta.getDataBean().getValues().put("status", MainContext.NamesDisStatusType.DISAI.toString());
+                    meta.getDataBean().getValues().put("status", Enums.NamesDisStatusType.DISAI.toString());
                     meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_AI, this.current.getDistarget());
                     meta.getDataBean().getValues().put(Constants.CSKEFU_SYSTEM_DIS_ORGAN, this.current.getOrgan());
                     this.assignAiInt.incrementAndGet();

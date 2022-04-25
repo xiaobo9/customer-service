@@ -16,17 +16,16 @@
  */
 package com.chatopera.cc.controller.api;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.OnlineUser;
-import com.chatopera.cc.persistence.repository.OnlineUserRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.OnlineUser;
+import com.github.xiaobo9.repository.OnlineUserRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,7 +60,7 @@ public class ApiOnlineUserController extends Handler {
         if (!StringUtils.isBlank(userid)) {
             onlineUserList = onlineUserRepository.findByUseridAndOrgi(userid, super.getOrgi(request), super.page(request, Sort.Direction.DESC, "createtime"));
         } else {
-            onlineUserList = onlineUserRepository.findByOrgiAndStatus(super.getOrgi(request), MainContext.OnlineUserStatusEnum.ONLINE.toString(), super.page(request, Sort.Direction.DESC, "createtime"));
+            onlineUserList = onlineUserRepository.findByOrgiAndStatus(super.getOrgi(request), Enums.OnlineUserStatusEnum.ONLINE.toString(), super.page(request, Sort.Direction.DESC, "createtime"));
         }
         return new ResponseEntity<>(new RestResult(RestResultType.OK, onlineUserList), HttpStatus.OK);
     }

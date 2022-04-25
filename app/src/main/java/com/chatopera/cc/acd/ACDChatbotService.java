@@ -16,11 +16,10 @@
 
 package com.chatopera.cc.acd;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.model.AgentService;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.repository.AgentServiceRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

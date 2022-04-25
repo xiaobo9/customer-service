@@ -16,13 +16,9 @@
  */
 package com.chatopera.cc.socketio.handler;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.IMGroupUser;
-import com.chatopera.cc.model.User;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncEntIM;
-import com.chatopera.cc.persistence.repository.IMGroupUserRepository;
 import com.chatopera.cc.socketio.client.NettyClients;
-import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.cc.socketio.message.Message;
 import com.corundumstudio.socketio.AckRequest;
 import com.corundumstudio.socketio.SocketIOClient;
@@ -30,6 +26,10 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.IMGroupUser;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.IMGroupUserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,8 +66,8 @@ public class EntIMEventHandler {
                     Message outMessage = new Message();
                     outMessage.setMessage("online");
                     outMessage.setContextid(user);
-                    outMessage.setMessageType(MainContext.MessageType.MESSAGE.toString());
-                    outMessage.setCalltype(MainContext.CallType.IN.toString());
+                    outMessage.setMessageType(Enums.MessageType.MESSAGE.toString());
+                    outMessage.setCalltype(Enums.CallType.IN.toString());
                     client.getNamespace().getBroadcastOperations().sendEvent("status", outMessage); //广播所有人，用户上线
                 }
                 if (!StringUtils.isBlank(user)) {
@@ -103,8 +103,8 @@ public class EntIMEventHandler {
                     Message outMessage = new Message();
                     outMessage.setMessage("offline");
                     outMessage.setContextid(user);
-                    outMessage.setMessageType(MainContext.MessageType.MESSAGE.toString());
-                    outMessage.setCalltype(MainContext.CallType.IN.toString());
+                    outMessage.setMessageType(Enums.MessageType.MESSAGE.toString());
+                    outMessage.setCalltype(Enums.CallType.IN.toString());
                     client.getNamespace().getBroadcastOperations().sendEvent("status", outMessage); //广播所有人，用户上线
                 }
 
@@ -132,6 +132,6 @@ public class EntIMEventHandler {
         String orgi = client.getHandshakeData().getSingleUrlParam("orgi");
 
 
-        peerSyncEntIM.send(user, group, orgi, MainContext.MessageType.MESSAGE, data);
+        peerSyncEntIM.send(user, group, orgi, Enums.MessageType.MESSAGE, data);
     }
 }  

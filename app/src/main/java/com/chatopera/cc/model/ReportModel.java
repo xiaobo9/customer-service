@@ -20,6 +20,12 @@ package com.chatopera.cc.model;
 
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.util.bi.ReportData;
+import com.github.xiaobo9.bean.ChartProperties;
+import com.github.xiaobo9.entity.ColumnProperties;
+import com.github.xiaobo9.entity.DrillDown;
+import com.github.xiaobo9.entity.Template;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -37,8 +43,8 @@ public class ReportModel implements java.io.Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private String id = MainUtils.getUUID();
-	private String posx ;
+	private String id = UUIDUtils.getUUID();
+    private String posx ;
 	private String posy ;
 	private String poswidth;
 	private String posheight;
@@ -732,7 +738,7 @@ public class ReportModel implements java.io.Serializable {
 	public ChartProperties getChartProperties() {
 		Base64 base64 = new Base64();
 		try {
-			return chartProperties!=null ? chartProperties : (chartProperties = (this.chartcontent==null?null:(ChartProperties) MainUtils.toObject(base64.decode(this.chartcontent))));
+            return chartProperties!=null ? chartProperties : (chartProperties = (this.chartcontent==null?null:(ChartProperties) ObjectKit.toObject(base64.decode(this.chartcontent))));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -16,8 +16,8 @@
  */
 package com.chatopera.cc.util.dsdata.process;
 
-import com.chatopera.cc.model.Contacts;
 import com.chatopera.cc.persistence.es.ContactsRepository;
+import com.github.xiaobo9.entity.Contacts;
 
 public class ContactsProcess implements JPAProcess{
 	

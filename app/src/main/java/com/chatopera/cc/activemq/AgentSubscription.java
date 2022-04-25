@@ -13,14 +13,19 @@ package com.chatopera.cc.activemq;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.util.SerializeUtil;
+import com.github.xiaobo9.commons.jackson.JacksonUtils;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
+
+import java.io.Serializable;
 
 /**
  * WebIM Agent
@@ -43,27 +48,35 @@ public class AgentSubscription {
      */
     public void publish(JsonObject j) {
         j.addProperty("node", appNodeId);
-        brokerPublisher.send(Constants.INSTANT_MESSAGING_MQ_TOPIC_AGENT, j.toString(), true);
+        brokerPublisher.send(new MqMessage().destination(Constants.INSTANT_MESSAGING_MQ_TOPIC_AGENT)
+                .payload(j.toString()).type(MqMessage.Type.TOPIC));
     }
 
     @JmsListener(destination = Constants.INSTANT_MESSAGING_MQ_TOPIC_AGENT, containerFactory = "jmsListenerContainerTopic")
     public void onMessage(final String payload) {
         logger.info("[onMessage] payload {}", payload);
-        JsonParser parser = new JsonParser();
-        JsonObject j = parser.parse(payload).getAsJsonObject();
-        logger.debug("[onMessage] message body {}", j.toString());
         try {
-            if (!j.has("id")) {
+            JsonData jsonData = JacksonUtils.readValue(payload, JsonData.class);
+            logger.debug("[onMessage] message body {}", jsonData);
+
+            if (jsonData.getId() == null) {
                 logger.warn("[onMessage] Invalid payload, id is null");
                 return;
             }
 
-            NettyClients.getInstance().sendAgentEventMessage(
-                    j.get("id").getAsString(),
-                    j.get("event").getAsString(),
-                    SerializeUtil.deserialize(j.get("data").getAsString()));
+            Serializable data = SerializeUtil.deserialize(jsonData.getData());
+            NettyClients.getInstance().sendAgentEventMessage(jsonData.getId(), jsonData.getEvent(), data);
         } catch (Exception e) {
             logger.error("onMessage", e);
         }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    static class JsonData {
+        private String id;
+        private String event;
+        private String data;
     }
 }

@@ -20,29 +20,35 @@
  import com.chatopera.cc.acd.ACDAgentService;
  import com.chatopera.cc.acd.ACDWorkMonitor;
  import com.chatopera.cc.activemq.BrokerPublisher;
+ import com.chatopera.cc.activemq.MqMessage;
  import com.chatopera.cc.basic.Constants;
  import com.chatopera.cc.basic.MainContext;
- import com.chatopera.cc.basic.MainUtils;
  import com.chatopera.cc.basic.ThumbnailUtils;
- import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
  import com.chatopera.cc.cache.CacheService;
  import com.chatopera.cc.controller.Handler;
- import com.chatopera.cc.exception.CSKefuException;
- import com.chatopera.cc.exception.EntityNotFoundException;
- import com.chatopera.cc.model.*;
+ import com.github.xiaobo9.model.UploadStatus;
+ import com.github.xiaobo9.commons.exception.ServerException;
+ import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+ import com.chatopera.cc.model.ChatMessage;
  import com.chatopera.cc.peer.PeerSyncIM;
  import com.chatopera.cc.persistence.blob.JpaBlobHelper;
  import com.chatopera.cc.persistence.es.ChatMessageEsRepository;
  import com.chatopera.cc.persistence.es.ContactsRepository;
  import com.chatopera.cc.persistence.es.QuickReplyRepository;
  import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
- import com.chatopera.cc.persistence.repository.*;
+ import com.github.xiaobo9.commons.enums.Enums;
+ import com.github.xiaobo9.entity.*;
+ import com.github.xiaobo9.repository.AgentStatusRepository;
+ import com.chatopera.cc.persistence.repository.ChatMessageRepository;
  import com.chatopera.cc.proxy.*;
- import com.chatopera.cc.socketio.message.ChatMessage;
  import com.chatopera.cc.socketio.message.Message;
  import com.chatopera.cc.util.Menu;
  import com.chatopera.cc.util.PinYinTools;
  import com.chatopera.cc.util.PropertiesEventUtil;
+ import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+ import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+ import com.github.xiaobo9.repository.*;
+ import com.github.xiaobo9.commons.utils.UUIDUtils;
  import freemarker.template.TemplateException;
  import org.apache.commons.lang.StringUtils;
  import org.slf4j.Logger;
@@ -206,7 +212,7 @@
              HttpServletResponse response,
              @Valid String sort,
              @Valid String channels,
-             @RequestParam(name = "contactid", required = false) String contactid) throws IOException, TemplateException, CSKefuException {
+             @RequestParam(name = "contactid", required = false) String contactid) throws IOException, TemplateException, ServerException {
 
          if (StringUtils.isBlank(contactid)) {
              logger.info("[chat] empty contactid, fast return error page.");
@@ -306,7 +312,7 @@
              String iconid) throws IOException, TemplateException {
          String mainagentuserconter = "/apps/agent/mainagentuserconter";
          ModelAndView view = request(super.pageTplResponse(mainagentuserconter));
-         ChatMessage labelid = this.chatMessageRes.findById(iconid).orElse(null);
+         com.chatopera.cc.model.ChatMessage labelid = this.chatMessageRes.findById(iconid).orElse(null);
          if (labelid != null) {
              labelid.setIslabel(!labelid.isIslabel());
              chatMessageRes.save(labelid);
@@ -328,7 +334,7 @@
          AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, super.getOrgi(request));
 
          if (agentUser != null) {
-             Page<ChatMessage> agentUserMessageList = null;
+             Page<com.chatopera.cc.model.ChatMessage> agentUserMessageList = null;
              if (condition.equals("label")) {
                  agentUserMessageList = this.chatMessageRes.findByislabel(
                          agentUser.getUserid(), search, new PageRequest(0, 9999, Direction.DESC, "updatetime"));
@@ -375,7 +381,7 @@
              String channel) throws IOException, TemplateException {
          // set default Value as WEBIM
          String mainagentuser = "/apps/agent/mainagentuser";
-         switch (MainContext.ChannelType.toValue(channel)) {
+         switch (Enums.ChannelType.toValue(channel)) {
              case PHONE:
                  mainagentuser = "/apps/agent/mainagentuser_callout";
                  break;
@@ -413,7 +419,7 @@
              }
 
              PageRequest pageRequest = super.page(request, Direction.DESC, "updatetime");
-             Page<ChatMessage> messages = this.chatMessageRes.findByUsessionAndOrgi(agentUser.getUserid(), orgi, pageRequest);
+             Page<com.chatopera.cc.model.ChatMessage> messages = this.chatMessageRes.findByUsessionAndOrgi(agentUser.getUserid(), orgi, pageRequest);
              view.addObject("agentUserMessageList", messages);
              AgentService agentService = null;
              if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
@@ -424,17 +430,17 @@
                      agentServiceProxy.processRelaData(logined.getId(), orgi, agentService, map);
                  }
              }
-             if (MainContext.ChannelType.WEIXIN.toString().equals(agentUser.getChannel())) {
+             if (Enums.ChannelType.WEIXIN.toString().equals(agentUser.getChannel())) {
                  List<WeiXinUser> weiXinUserList = weiXinUserRes.findByOpenidAndOrgi(agentUser.getUserid(), orgi);
                  if (weiXinUserList.size() > 0) {
                      WeiXinUser weiXinUser = weiXinUserList.get(0);
                      view.addObject("weiXinUser", weiXinUser);
                  }
-             } else if (MainContext.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
+             } else if (Enums.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
                  OnlineUser onlineUser = onlineUserRes.findById(agentUser.getUserid()).orElse(null);
                  if (onlineUser != null) {
                      if (onlineUser.getLogintime() != null) {
-                         if (MainContext.OnlineUserStatusEnum.OFFLINE.toString().equals(onlineUser.getStatus())) {
+                         if (Enums.OnlineUserStatusEnum.OFFLINE.toString().equals(onlineUser.getStatus())) {
                              onlineUser.setBetweentime(
                                      (int) (onlineUser.getUpdatetime().getTime() - onlineUser.getLogintime().getTime()));
                          } else {
@@ -444,7 +450,7 @@
                      }
                      view.addObject("onlineUser", onlineUser);
                  }
-             } else if (MainContext.ChannelType.PHONE.toString().equals(agentUser.getChannel())) {
+             } else if (Enums.ChannelType.PHONE.toString().equals(agentUser.getChannel())) {
                  if (agentService != null && StringUtils.isNotBlank(agentService.getOwner())) {
                      StatusEvent statusEvent = this.statusEventRes.findById(agentService.getOwner()).orElse(null);
                      if (statusEvent != null) {
@@ -475,14 +481,14 @@
 
          AgentService service = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
          if (service != null) {
-             view.addObject("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
+             view.addObject("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, Enums.ModelType.USER.toString(), service.getSkill()));
          }
          view.addObject(
                  "quickReplyList", quickReplyRes.findByOrgiAndCreater(orgi, super.getUser(request).getId(), null));
          List<QuickType> quickTypeList = quickTypeRes.findByOrgiAndQuicktype(
-                 orgi, MainContext.QuickType.PUB.toString());
+                 orgi, Enums.QuickType.PUB.toString());
          List<QuickType> priQuickTypeList = quickTypeRes.findByOrgiAndQuicktypeAndCreater(
-                 orgi, MainContext.QuickType.PRI.toString(), super.getUser(request).getId());
+                 orgi, Enums.QuickType.PRI.toString(), super.getUser(request).getId());
          quickTypeList.addAll(priQuickTypeList);
          view.addObject("pubQuickTypeList", quickTypeList);
 
@@ -558,9 +564,9 @@
                  agentStatus.getAgentno(),
                  logined.isAdmin(), // 0代表admin
                  agentStatus.getAgentno(),
-                 MainContext.AgentStatusEnum.NOTREADY.toString(),
-                 MainContext.AgentStatusEnum.READY.toString(),
-                 MainContext.AgentWorkType.MEIDIACHAT.toString(),
+                 AgentStatusEnum.NOTREADY.toString(),
+                 AgentStatusEnum.READY.toString(),
+                 Enums.AgentWorkType.MEIDIACHAT.toString(),
                  orgi, null);
 
          return request(super.pageTplResponse("/public/success"));
@@ -585,7 +591,7 @@
 
          agentStatus.setBusy(false);
          agentStatus.setUpdatetime(new Date());
-         agentStatus.setStatus(MainContext.AgentStatusEnum.NOTREADY.toString());
+         agentStatus.setStatus(AgentStatusEnum.NOTREADY.toString());
          cacheService.putAgentStatusByOrgi(agentStatus, orgi);
          agentStatusRes.save(agentStatus);
 
@@ -596,9 +602,9 @@
                  agentStatus.getAgentno(),
                  logined.isAdmin(), // 0代表admin
                  agentStatus.getAgentno(),
-                 MainContext.AgentStatusEnum.READY.toString(),
-                 MainContext.AgentStatusEnum.NOTREADY.toString(),
-                 MainContext.AgentWorkType.MEIDIACHAT.toString(),
+                 AgentStatusEnum.READY.toString(),
+                 AgentStatusEnum.NOTREADY.toString(),
+                 Enums.AgentWorkType.MEIDIACHAT.toString(),
                  orgi, null);
 
          return request(super.pageTplResponse("/public/success"));
@@ -625,9 +631,9 @@
                  agentStatus.getAgentno(),
                  super.getUser(request).isAdmin(),
                  agentStatus.getAgentno(),
-                 MainContext.AgentStatusEnum.NOTBUSY.toString(),
-                 MainContext.AgentStatusEnum.BUSY.toString(),
-                 MainContext.AgentWorkType.MEIDIACHAT.toString(),
+                 AgentStatusEnum.NOTBUSY.toString(),
+                 AgentStatusEnum.BUSY.toString(),
+                 Enums.AgentWorkType.MEIDIACHAT.toString(),
                  agentStatus.getOrgi(),
                  agentStatus.getUpdatetime());
          agentStatus.setUpdatetime(new Date());
@@ -658,7 +664,7 @@
          // 设置为就绪，置闲
          agentStatus.setBusy(false);
          agentStatus.setUpdatetime(new Date());
-         agentStatus.setStatus(MainContext.AgentStatusEnum.READY.toString());
+         agentStatus.setStatus(AgentStatusEnum.READY.toString());
 
          // 更新工作记录
          acdWorkMonitor.recordAgentStatus(
@@ -667,9 +673,9 @@
                  agentStatus.getAgentno(),
                  super.getUser(request).isAdmin(),
                  agentStatus.getAgentno(),
-                 MainContext.AgentStatusEnum.BUSY.toString(),
-                 MainContext.AgentStatusEnum.NOTBUSY.toString(),
-                 MainContext.AgentWorkType.MEIDIACHAT.toString(),
+                 AgentStatusEnum.BUSY.toString(),
+                 AgentStatusEnum.NOTBUSY.toString(),
+                 Enums.AgentWorkType.MEIDIACHAT.toString(),
                  agentStatus.getOrgi(),
                  agentStatus.getUpdatetime());
 
@@ -731,7 +737,7 @@
                  // 删除访客-坐席关联关系，包括缓存
                  try {
                      acdAgentService.finishAgentUser(agentUser, orgi);
-                 } catch (CSKefuException e) {
+                 } catch (ServerException e) {
                      // 未能删除成功
                      logger.error("[end]", e);
                  }
@@ -781,7 +787,7 @@
          final String orgi = logined.getOrgi();
 
          if (StringUtils.isBlank(userid)) {
-             throw new CSKefuException("Invalid userid");
+             throw new ServerException("Invalid userid");
          }
          /**
           * 添加黑名单
@@ -798,8 +804,8 @@
          blackEntityProxy.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
 
          // 创建定时任务 取消拉黑
-         brokerPublisher.send(
-                 Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST, payload.toJSONString(), false, timeSeconds);
+         brokerPublisher.send(new MqMessage().destination(Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST)
+                 .payload(payload.toJSONString()).type(MqMessage.Type.QUEUE).delay(timeSeconds));
 
          return view;
      }
@@ -854,7 +860,7 @@
                      agentProxy.sendFileMessageByAgent(logined, agentUser, multipart, sf);
                  }
                  notify = new UploadStatus("0", sf.getFileUrl());
-             } catch (CSKefuException e) {
+             } catch (ServerException e) {
                  notify = new UploadStatus("请选择文件");
              }
          } else {
@@ -913,16 +919,16 @@
                      outMessage.setFilename(imageFile.getName());
                      outMessage.setAttachmentid(chatMessage.getAttachmentid());
                      outMessage.setFilesize((int) imageFile.length());
-                     outMessage.setMessageType(MainContext.MediaType.ACTION.toString());
-                     outMessage.setCalltype(MainContext.CallType.INVITE.toString());
+                     outMessage.setMessageType(Enums.MediaType.ACTION.toString());
+                     outMessage.setCalltype(Enums.CallType.INVITE.toString());
                      outMessage.setCreatetime(Constants.DISPLAY_DATE_FORMATTER.format(new Date()));
                      outMessage.setAgentUser(p);
 
                      peerSyncIM.send(
-                             MainContext.ReceiverType.VISITOR,
-                             MainContext.ChannelType.toValue(p.getChannel()),
+                             Enums.ReceiverType.VISITOR,
+                             Enums.ChannelType.toValue(p.getChannel()),
                              p.getAppid(),
-                             MainContext.MessageType.MESSAGE,
+                             Enums.MessageType.MESSAGE,
                              p.getUserid(),
                              outMessage,
                              true);
@@ -956,7 +962,7 @@
              @Valid String contactsid,
              @Valid String userid,
              @Valid String agentserviceid,
-             @Valid String agentuserid) throws CSKefuException {
+             @Valid String agentuserid) throws ServerException {
          logger.info(
                  "[contacts] contactsid {}, userid {}, agentserviceid {}, agentuserid {}", contactsid, userid,
                  agentserviceid, agentuserid);
@@ -1049,10 +1055,10 @@
          outMessage.setAgentUser(agentUser);
 
          peerSyncIM.send(
-                 MainContext.ReceiverType.VISITOR,
-                 MainContext.ChannelType.toValue(agentUser.getChannel()),
+                 Enums.ReceiverType.VISITOR,
+                 Enums.ChannelType.toValue(agentUser.getChannel()),
                  agentUser.getAppid(),
-                 MainContext.MessageType.SATISFACTION,
+                 Enums.MessageType.SATISFACTION,
                  agentUser.getUserid(),
                  outMessage,
                  true);
@@ -1084,7 +1090,7 @@
                  map.addAttribute(
                          "tags", tagRes.findByOrgiAndTagtypeAndSkill(
                                  super.getOrgi(request),
-                                 MainContext.ModelType.SUMMARY.toString(), service.getSkill()));
+                                 Enums.ModelType.SUMMARY.toString(), service.getSkill()));
              }
              map.addAttribute("userid", userid);
              map.addAttribute("agentserviceid", agentserviceid);
@@ -1249,9 +1255,9 @@
                  "quickReplyList",
                  quickReplyRes.findByOrgiAndCreater(super.getOrgi(request), super.getUser(request).getId(), null));
          List<QuickType> quickTypeList = quickTypeRes.findByOrgiAndQuicktype(
-                 super.getOrgi(request), MainContext.QuickType.PUB.toString());
+                 super.getOrgi(request), Enums.QuickType.PUB.toString());
          List<QuickType> priQuickTypeList = quickTypeRes.findByOrgiAndQuicktypeAndCreater(
-                 super.getOrgi(request), MainContext.QuickType.PRI.toString(), super.getUser(request).getId());
+                 super.getOrgi(request), Enums.QuickType.PRI.toString(), super.getUser(request).getId());
          quickTypeList.addAll(priQuickTypeList);
          map.addAttribute("pubQuickTypeList", quickTypeList);
 
@@ -1271,7 +1277,7 @@
          map.addAttribute(
                  "quickTypeList", quickTypeRes.findByOrgiAndQuicktypeAndCreater(
                          super.getOrgi(request),
-                         MainContext.QuickType.PRI.toString(),
+                         Enums.QuickType.PRI.toString(),
                          super.getUser(request).getId()));
          return request(super.pageTplResponse("/apps/agent/quickreply/add"));
      }
@@ -1282,7 +1288,7 @@
          if (StringUtils.isNotBlank(quickReply.getTitle()) && StringUtils.isNotBlank(quickReply.getContent())) {
              quickReply.setOrgi(super.getOrgi(request));
              quickReply.setCreater(super.getUser(request).getId());
-             quickReply.setType(MainContext.QuickType.PRI.toString());
+             quickReply.setType(Enums.QuickType.PRI.toString());
              quickReplyRes.save(quickReply);
          }
          return request(super.pageTplResponse(
@@ -1292,7 +1298,7 @@
      @RequestMapping("/quickreply/delete.html")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplydelete(ModelMap map, HttpServletRequest request, @Valid String id) {
-         QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundException::new);
+         QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundEx::new);
          quickReplyRes.delete(quickReply);
          return request(super.pageTplResponse(
                  "redirect:/agent/quicklist.html?typeid=" + quickReply.getCate()));
@@ -1301,11 +1307,11 @@
      @RequestMapping("/quickreply/edit.html")
      @Menu(type = "setting", subtype = "quickreply", admin = true)
      public ModelAndView quickreplyedit(ModelMap map, HttpServletRequest request, @Valid String id) {
-         QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundException::new);
+         QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundEx::new);
          map.put("quickReply", quickReply);
          map.put("quickType", quickTypeRes.findByIdAndOrgi(quickReply.getCate(), super.getOrgi(request)));
          map.addAttribute("quickTypeList",
-                 quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), MainContext.QuickType.PUB.toString()));
+                 quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), Enums.QuickType.PUB.toString()));
          return request(super.pageTplResponse("/apps/agent/quickreply/edit"));
      }
 
@@ -1319,7 +1325,7 @@
                      .ifPresent(temp -> {
                          quickReply.setCreatetime(temp.getCreatetime());
                      });
-             quickReply.setType(MainContext.QuickType.PUB.toString());
+             quickReply.setType(Enums.QuickType.PUB.toString());
              quickReplyRes.save(quickReply);
          }
          return request(super.pageTplResponse(
@@ -1332,7 +1338,7 @@
          map.addAttribute(
                  "quickTypeList", quickTypeRes.findByOrgiAndQuicktypeAndCreater(
                          super.getOrgi(request),
-                         MainContext.QuickType.PRI.toString(),
+                         Enums.QuickType.PRI.toString(),
                          super.getUser(request).getId()));
          if (StringUtils.isNotBlank(typeid)) {
              map.addAttribute("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request)));
@@ -1349,7 +1355,7 @@
              quickType.setOrgi(super.getOrgi(request));
              quickType.setCreater(super.getUser(request).getId());
              quickType.setCreatetime(new Date());
-             quickType.setQuicktype(MainContext.QuickType.PRI.toString());
+             quickType.setQuicktype(Enums.QuickType.PRI.toString());
              quickTypeRes.save(quickType);
          }
          return request(super.pageTplResponse(
@@ -1363,7 +1369,7 @@
          map.addAttribute(
                  "quickTypeList", quickTypeRes.findByOrgiAndQuicktypeAndCreater(
                          super.getOrgi(request),
-                         MainContext.QuickType.PRI.toString(),
+                         Enums.QuickType.PRI.toString(),
                          super.getUser(request).getId()));
          return request(super.pageTplResponse("/apps/agent/quickreply/edittype"));
      }
@@ -1422,12 +1428,12 @@
              ModelMap map,
              HttpServletRequest request,
              @RequestParam(value = "agentuser", required = true) String agentuser,
-             @Valid Contacts contacts) throws CSKefuException {
+             @Valid Contacts contacts) throws ServerException {
          logger.info("[agent ctrl] calloutcontactsave agentuser [{}]", agentuser);
-         AgentUser au = agentUserRes.findById(agentuser).orElseThrow(() -> new CSKefuException("不存在该服务记录"));
+         AgentUser au = agentUserRes.findById(agentuser).orElseThrow(() -> new ServerException("不存在该服务记录"));
 
          User logined = super.getUser(request);
-         contacts.setId(MainUtils.getUUID());
+         contacts.setId(UUIDUtils.getUUID());
          contacts.setCreater(logined.getId());
          contacts.setOrgi(logined.getOrgi());
          contacts.setPinyin(PinYinTools.getInstance().getFirstPinYin(contacts.getName()));
@@ -1437,7 +1443,7 @@
          contactsRes.save(contacts);
 
          AgentUserContacts auc = new AgentUserContacts();
-         auc.setId(MainUtils.getUUID());
+         auc.setId(UUIDUtils.getUUID());
          auc.setUsername(au.getUsername());
          auc.setOrgi(Constants.SYSTEM_ORGI);
          auc.setUserid(au.getUserid());
@@ -1458,7 +1464,7 @@
              //记录 数据变更 历史
              List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(request, contacts, data);
              if (events.size() > 0) {
-                 String modifyid = MainUtils.getUUID();
+                 String modifyid = UUIDUtils.getUUID();
                  Date modifytime = new Date();
                  for (PropertiesEvent event : events) {
                      event.setDataid(contacts.getId());

@@ -19,16 +19,17 @@ package com.chatopera.cc.controller.api;
 import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.acd.ACDWorkMonitor;
-import com.chatopera.cc.basic.MainContext;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.AgentStatusRepository;
 import com.chatopera.cc.proxy.AgentStatusProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.AgentStatusRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -94,7 +95,7 @@ public class ApiServiceQueneController extends Handler {
             @Valid String status) {
         User logined = super.getUser(request);
         AgentStatus agentStatus = null;
-        if (StringUtils.isNotBlank(status) && status.equals(MainContext.AgentStatusEnum.READY.toString())) {
+        if (StringUtils.isNotBlank(status) && status.equals(AgentStatusEnum.READY.toString())) {
 
             agentStatus = agentStatusRes.findOneByAgentnoAndOrgi(logined.getId(), logined.getOrgi()).orElseGet(() -> {
                 AgentStatus p = new AgentStatus();
@@ -121,51 +122,51 @@ public class ApiServiceQueneController extends Handler {
             agentStatus.setUsers(cacheService.getInservAgentUsersSizeByAgentnoAndOrgi(
                     agentStatus.getAgentno(),
                     super.getOrgi(request)));
-            agentStatus.setStatus(MainContext.AgentStatusEnum.READY.toString());
+            agentStatus.setStatus(AgentStatusEnum.READY.toString());
             agentStatusRes.save(agentStatus);
 
             acdWorkMonitor.recordAgentStatus(
                     agentStatus.getAgentno(), agentStatus.getUsername(), agentStatus.getAgentno(),
                     logined.isAdmin(), agentStatus.getAgentno(),
-                    MainContext.AgentStatusEnum.OFFLINE.toString(), MainContext.AgentStatusEnum.READY.toString(),
-                    MainContext.AgentWorkType.MEIDIACHAT.toString(), agentStatus.getOrgi(), null);
+                    AgentStatusEnum.OFFLINE.toString(), AgentStatusEnum.READY.toString(),
+                    Enums.AgentWorkType.MEIDIACHAT.toString(), agentStatus.getOrgi(), null);
             acdAgentService.assignVisitors(agentStatus.getAgentno(), super.getOrgi(request));
         } else if (StringUtils.isNotBlank(status)) {
-            if (status.equals(MainContext.AgentStatusEnum.NOTREADY.toString())) {
+            if (status.equals(AgentStatusEnum.NOTREADY.toString())) {
                 agentStatusRes.findOneByAgentnoAndOrgi(
                         logined.getId(), super.getOrgi(request)).ifPresent(p -> {
                     acdWorkMonitor.recordAgentStatus(
                             p.getAgentno(), p.getUsername(), p.getAgentno(),
                             logined.isAdmin(),
                             p.getAgentno(),
-                            p.isBusy() ? MainContext.AgentStatusEnum.BUSY.toString() : MainContext.AgentStatusEnum.READY.toString(),
-                            MainContext.AgentStatusEnum.NOTREADY.toString(),
-                            MainContext.AgentWorkType.MEIDIACHAT.toString(), p.getOrgi(), p.getUpdatetime());
+                            p.isBusy() ? AgentStatusEnum.BUSY.toString() : AgentStatusEnum.READY.toString(),
+                            AgentStatusEnum.NOTREADY.toString(),
+                            Enums.AgentWorkType.MEIDIACHAT.toString(), p.getOrgi(), p.getUpdatetime());
                     agentStatusRes.delete(p);
                 });
-            } else if (StringUtils.isNotBlank(status) && status.equals(MainContext.AgentStatusEnum.BUSY.toString())) {
+            } else if (StringUtils.isNotBlank(status) && status.equals(AgentStatusEnum.BUSY.toString())) {
                 agentStatusRes.findOneByAgentnoAndOrgi(
                         logined.getId(), logined.getOrgi()).ifPresent(p -> {
                     p.setBusy(true);
                     acdWorkMonitor.recordAgentStatus(
                             p.getAgentno(), p.getUsername(), p.getAgentno(),
                             logined.isAdmin(), p.getAgentno(),
-                            MainContext.AgentStatusEnum.READY.toString(), MainContext.AgentStatusEnum.BUSY.toString(),
-                            MainContext.AgentWorkType.MEIDIACHAT.toString(), p.getOrgi(),
+                            AgentStatusEnum.READY.toString(), AgentStatusEnum.BUSY.toString(),
+                            Enums.AgentWorkType.MEIDIACHAT.toString(), p.getOrgi(),
                             p.getUpdatetime());
                     p.setUpdatetime(new Date());
                     agentStatusRes.save(p);
                 });
             } else if (StringUtils.isNotBlank(status) && status.equals(
-                    MainContext.AgentStatusEnum.NOTBUSY.toString())) {
+                    AgentStatusEnum.NOTBUSY.toString())) {
                 agentStatusRes.findOneByAgentnoAndOrgi(
                         logined.getId(), logined.getOrgi()).ifPresent(p -> {
                     p.setBusy(false);
                     acdWorkMonitor.recordAgentStatus(
                             p.getAgentno(), p.getUsername(), p.getAgentno(),
                             logined.isAdmin(), p.getAgentno(),
-                            MainContext.AgentStatusEnum.BUSY.toString(), MainContext.AgentStatusEnum.READY.toString(),
-                            MainContext.AgentWorkType.MEIDIACHAT.toString(), p.getOrgi(),
+                            AgentStatusEnum.BUSY.toString(), AgentStatusEnum.READY.toString(),
+                            Enums.AgentWorkType.MEIDIACHAT.toString(), p.getOrgi(),
                             p.getUpdatetime());
 
                     p.setUpdatetime(new Date());

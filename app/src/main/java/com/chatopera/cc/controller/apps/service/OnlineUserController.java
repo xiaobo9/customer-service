@@ -16,17 +16,18 @@
  */
 package com.chatopera.cc.controller.apps.service;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.AgentService;
-import com.chatopera.cc.model.AgentServiceSummary;
-import com.chatopera.cc.model.WeiXinUser;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.persistence.repository.*;
+import com.chatopera.cc.persistence.repository.ChatMessageRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.entity.AgentServiceSummary;
+import com.github.xiaobo9.entity.WeiXinUser;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,9 +129,9 @@ public class OnlineUserController extends Handler {
 
             AgentService service = agentServiceRes.findByIdAndOrgi(agentservice, orgi);
             if (service != null) {
-                map.addAttribute("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
+                map.addAttribute("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, Enums.ModelType.USER.toString(), service.getSkill()));
             }
-            map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, MainContext.ModelType.SUMMARY.toString()));
+            map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, Enums.ModelType.SUMMARY.toString()));
             map.put("curAgentService", agentService);
 
 
@@ -138,13 +139,13 @@ public class OnlineUserController extends Handler {
                     PageRequest.of(0, 50, Direction.DESC, "updatetime")));
         }
 
-        if (MainContext.ChannelType.WEIXIN.toString().equals(channel)) {
+        if (Enums.ChannelType.WEIXIN.toString().equals(channel)) {
             List<WeiXinUser> weiXinUserList = weiXinUserRes.findByOpenidAndOrgi(userid, orgi);
             if (weiXinUserList.size() > 0) {
                 WeiXinUser weiXinUser = weiXinUserList.get(0);
                 map.put("weiXinUser", weiXinUser);
             }
-        } else if (MainContext.ChannelType.WEBIM.toString().equals(channel)) {
+        } else if (Enums.ChannelType.WEBIM.toString().equals(channel)) {
             onlineUserRes.findById(userid).ifPresent(onlineUser -> map.put("onlineUser", onlineUser));
         }
 
@@ -167,7 +168,7 @@ public class OnlineUserController extends Handler {
             map.put("title", title);
         }
 
-        map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, MainContext.ModelType.SUMMARY.toString()));
+        map.put("summaryTags", tagRes.findByOrgiAndTagtype(orgi, Enums.ModelType.SUMMARY.toString()));
 
         List<AgentServiceSummary> summaries = serviceSummaryRes.findByAgentserviceidAndOrgi(agentService.getId(), orgi);
         if (summaries.size() > 0) {

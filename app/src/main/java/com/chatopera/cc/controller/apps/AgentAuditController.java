@@ -20,19 +20,21 @@ import com.alibaba.fastjson.JSONObject;
 import com.chatopera.cc.acd.ACDAgentService;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.activemq.BrokerPublisher;
+import com.chatopera.cc.activemq.MqMessage;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.DateFormatEnum;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.model.*;
+import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.persistence.repository.*;
+import com.chatopera.cc.persistence.repository.ChatMessageRepository;
 import com.chatopera.cc.proxy.*;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -306,11 +308,11 @@ public class AgentAuditController extends Handler {
                     agentServiceProxy.processRelaData(logined.getId(), orgi, agentService, map);
                 }
             }
-            if (MainContext.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
+            if (Enums.ChannelType.WEBIM.toString().equals(agentUser.getChannel())) {
                 OnlineUser onlineUser = onlineUserRes.findById(agentUser.getUserid()).orElse(null);
                 if (onlineUser != null) {
                     if (onlineUser.getLogintime() != null) {
-                        if (MainContext.OnlineUserStatusEnum.OFFLINE.toString().equals(onlineUser.getStatus())) {
+                        if (Enums.OnlineUserStatusEnum.OFFLINE.toString().equals(onlineUser.getStatus())) {
                             onlineUser.setBetweentime(
                                     (int) (onlineUser.getUpdatetime().getTime() - onlineUser.getLogintime().getTime()));
                         } else {
@@ -338,7 +340,7 @@ public class AgentAuditController extends Handler {
 //        }
             AgentService service = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
             if (service != null) {
-                view.addObject("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, MainContext.ModelType.USER.toString(), service.getSkill()));
+                view.addObject("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, Enums.ModelType.USER.toString(), service.getSkill()));
             }
         }
         return view;
@@ -480,7 +482,7 @@ public class AgentAuditController extends Handler {
             @Valid final String currentAgentnoid,
             @Valid final String agentno,   // 会话转接给下一个坐席
             @Valid final String memo
-    ) throws CSKefuException {
+    ) throws ServerException {
         final String currentAgentno = currentAgentnoid; // 当前会话坐席的agentno
 
         final String orgi = super.getOrgi(request);
@@ -526,18 +528,18 @@ public class AgentAuditController extends Handler {
                     Message outMessage = new Message();
                     outMessage.setMessage(
                             acdMessageHelper.getSuccessMessage(agentService, agentUser.getChannel(), orgi));
-                    outMessage.setMessageType(MainContext.MediaType.TEXT.toString());
-                    outMessage.setCalltype(MainContext.CallType.IN.toString());
+                    outMessage.setMessageType(Enums.MediaType.TEXT.toString());
+                    outMessage.setCalltype(Enums.CallType.IN.toString());
                     outMessage.setCreatetime(DateFormatEnum.DAY_TIME.format(new Date()));
                     outMessage.setAgentUser(agentUser);
                     outMessage.setAgentService(agentService);
 
                     if (StringUtils.isNotBlank(agentUser.getUserid())) {
                         peerSyncIM.send(
-                                MainContext.ReceiverType.VISITOR,
-                                MainContext.ChannelType.toValue(agentUser.getChannel()),
+                                Enums.ReceiverType.VISITOR,
+                                Enums.ChannelType.toValue(agentUser.getChannel()),
                                 agentUser.getAppid(),
-                                MainContext.MessageType.STATUS,
+                                Enums.MessageType.STATUS,
                                 agentUser.getUserid(),
                                 outMessage,
                                 true
@@ -548,8 +550,8 @@ public class AgentAuditController extends Handler {
                     outMessage.setChannelMessage(agentUser);
                     outMessage.setAgentUser(agentUser);
                     peerSyncIM.send(
-                            MainContext.ReceiverType.AGENT, MainContext.ChannelType.WEBIM,
-                            agentUser.getAppid(), MainContext.MessageType.NEW, agentService.getAgentno(),
+                            Enums.ReceiverType.AGENT, Enums.ChannelType.WEBIM,
+                            agentUser.getAppid(), Enums.MessageType.NEW, agentService.getAgentno(),
                             outMessage, true
                     );
 
@@ -596,7 +598,7 @@ public class AgentAuditController extends Handler {
                 // 删除访客-坐席关联关系，包括缓存
                 try {
                     acdAgentService.finishAgentUser(agentUser, orgi);
-                } catch (CSKefuException e) {
+                } catch (ServerException e) {
                     // 未能删除成功
                     logger.error("[end]", e);
                 }
@@ -633,7 +635,7 @@ public class AgentAuditController extends Handler {
         final String orgi = logined.getOrgi();
 
         if (StringUtils.isBlank(userid)) {
-            throw new CSKefuException("Invalid userid");
+            throw new ServerException("Invalid userid");
         }
         /**
          * 添加黑名单
@@ -649,8 +651,8 @@ public class AgentAuditController extends Handler {
         blackEntityProxy.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
 
         // 创建定时任务 取消拉黑
-        brokerPublisher.send(
-                Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST, payload.toJSONString(), false, timeSeconds);
+        brokerPublisher.send(new MqMessage().destination(Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST)
+                .payload(payload.toJSONString()).type(MqMessage.Type.QUEUE).delay(timeSeconds));
 
         return view;
     }

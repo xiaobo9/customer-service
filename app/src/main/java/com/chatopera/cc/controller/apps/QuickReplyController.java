@@ -17,22 +17,25 @@
 package com.chatopera.cc.controller.apps;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.MetadataTable;
-import com.chatopera.cc.model.QuickReply;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
-import com.chatopera.cc.persistence.repository.MetadataRepository;
-import com.chatopera.cc.persistence.repository.QuickTypeRepository;
-import com.chatopera.cc.persistence.repository.ReporterRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.dsdata.DSData;
 import com.chatopera.cc.util.dsdata.DSDataEvent;
 import com.chatopera.cc.util.dsdata.ExcelImportProcess;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
 import com.chatopera.cc.util.dsdata.process.QuickReplyProcess;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
+import com.github.xiaobo9.entity.MetadataTable;
+import com.github.xiaobo9.entity.QuickReply;
+import com.github.xiaobo9.entity.QuickType;
+import com.github.xiaobo9.repository.MetadataRepository;
+import com.github.xiaobo9.repository.QuickTypeRepository;
+import com.github.xiaobo9.repository.ReporterRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +54,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Controller
@@ -76,12 +78,12 @@ public class QuickReplyController extends Handler {
     @RequestMapping("/index")
     @Menu(type = "setting", subtype = "quickreply", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String typeid) {
-        List<com.chatopera.cc.model.QuickType> quickTypeList = quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), MainContext.QuickType.PUB.toString());
+        List<QuickType> quickTypeList = quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), Enums.QuickType.PUB.toString());
         if (!StringUtils.isBlank(typeid)) {
             map.put("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request)));
             map.put("quickReplyList", quickReplyRes.getByOrgiAndCate(super.getOrgi(request), typeid, null, super.page(request)));
         } else {
-            map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request), MainContext.QuickType.PUB.toString(), null, super.page(request)));
+            map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request), Enums.QuickType.PUB.toString(), null, super.page(request)));
         }
         map.put("pubQuickTypeList", quickTypeList);
         return request(super.createAppsTempletResponse("/apps/setting/quickreply/index"));
@@ -93,7 +95,7 @@ public class QuickReplyController extends Handler {
         if (!StringUtils.isBlank(typeid) && !typeid.equals("0")) {
             map.put("quickReplyList", quickReplyRes.getByOrgiAndCate(super.getOrgi(request), typeid, null, super.page(request)));
         } else {
-            map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request), MainContext.QuickType.PUB.toString(), null, super.page(request)));
+            map.put("quickReplyList", quickReplyRes.getByOrgiAndType(super.getOrgi(request), Enums.QuickType.PUB.toString(), null, super.page(request)));
         }
         map.put("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request)));
         return request(super.pageTplResponse("/apps/setting/quickreply/replylist"));
@@ -105,7 +107,7 @@ public class QuickReplyController extends Handler {
         if (!StringUtils.isBlank(parentid)) {
             map.addAttribute("quickType", quickTypeRes.findByIdAndOrgi(parentid, super.getOrgi(request)));
         }
-        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), MainContext.QuickType.PUB.toString()));
+        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), Enums.QuickType.PUB.toString()));
         return request(super.pageTplResponse("/apps/setting/quickreply/add"));
     }
 
@@ -115,7 +117,7 @@ public class QuickReplyController extends Handler {
         if (!StringUtils.isBlank(quickReply.getTitle()) && !StringUtils.isBlank(quickReply.getContent())) {
             quickReply.setOrgi(super.getOrgi(request));
             quickReply.setCreater(super.getUser(request).getId());
-            quickReply.setType(MainContext.QuickType.PUB.toString());
+            quickReply.setType(Enums.QuickType.PUB.toString());
             quickReplyRes.save(quickReply);
         }
         return request(super.pageTplResponse("redirect:/setting/quickreply/index.html?typeid=" + quickReply.getCate()));
@@ -124,7 +126,7 @@ public class QuickReplyController extends Handler {
     @RequestMapping("/delete")
     @Menu(type = "setting", subtype = "quickreply", admin = true)
     public ModelAndView quickreplydelete(@Valid String id) {
-        QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        QuickReply quickReply = quickReplyRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         quickReplyRes.delete(quickReply);
         return request(super.pageTplResponse("redirect:/setting/quickreply/index.html?typeid=" + quickReply.getCate()));
     }
@@ -137,7 +139,7 @@ public class QuickReplyController extends Handler {
         if (quickReply != null) {
             map.put("quickType", quickTypeRes.findByIdAndOrgi(quickReply.getCate(), super.getOrgi(request)));
         }
-        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), MainContext.QuickType.PUB.toString()));
+        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), Enums.QuickType.PUB.toString()));
         return request(super.pageTplResponse("/apps/setting/quickreply/edit"));
     }
 
@@ -151,7 +153,7 @@ public class QuickReplyController extends Handler {
             if (temp != null) {
                 quickReply.setCreatetime(temp.getCreatetime());
             }
-            quickReply.setType(MainContext.QuickType.PUB.toString());
+            quickReply.setType(Enums.QuickType.PUB.toString());
             quickReplyRes.save(quickReply);
         }
         return request(super.pageTplResponse("redirect:/setting/quickreply/index.html?typeid=" + quickReply.getCate()));
@@ -160,7 +162,7 @@ public class QuickReplyController extends Handler {
     @RequestMapping({"/addtype"})
     @Menu(type = "apps", subtype = "kbs")
     public ModelAndView addtype(ModelMap map, HttpServletRequest request, @Valid String typeid) {
-        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), MainContext.QuickType.PUB.toString()));
+        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), Enums.QuickType.PUB.toString()));
         if (!StringUtils.isBlank(typeid)) {
             map.addAttribute("quickType", quickTypeRes.findByIdAndOrgi(typeid, super.getOrgi(request)));
         }
@@ -169,13 +171,13 @@ public class QuickReplyController extends Handler {
 
     @RequestMapping("/type/save")
     @Menu(type = "apps", subtype = "kbs")
-    public ModelAndView typesave(HttpServletRequest request, @Valid com.chatopera.cc.model.QuickType quickType) {
-        com.chatopera.cc.model.QuickType qr = quickTypeRes.findByOrgiAndName(super.getOrgi(request), quickType.getName());
+    public ModelAndView typesave(HttpServletRequest request, @Valid QuickType quickType) {
+        QuickType qr = quickTypeRes.findByOrgiAndName(super.getOrgi(request), quickType.getName());
         if (qr == null) {
             quickType.setOrgi(super.getOrgi(request));
             quickType.setCreater(super.getUser(request).getId());
             quickType.setCreatetime(new Date());
-            quickType.setQuicktype(MainContext.QuickType.PUB.toString());
+            quickType.setQuicktype(Enums.QuickType.PUB.toString());
             quickTypeRes.save(quickType);
         } else {
             return request(super.pageTplResponse("redirect:/setting/quickreply/index.html?msg=qr_type_exist"));
@@ -187,17 +189,17 @@ public class QuickReplyController extends Handler {
     @Menu(type = "apps", subtype = "kbs")
     public ModelAndView edittype(ModelMap map, HttpServletRequest request, String id) {
         map.addAttribute("quickType", quickTypeRes.findByIdAndOrgi(id, super.getOrgi(request)));
-        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), MainContext.QuickType.PUB.toString()));
+        map.addAttribute("quickTypeList", quickTypeRes.findByOrgiAndQuicktype(super.getOrgi(request), Enums.QuickType.PUB.toString()));
         return request(super.pageTplResponse("/apps/setting/quickreply/edittype"));
     }
 
     @RequestMapping("/type/update")
     @Menu(type = "apps", subtype = "kbs")
-    public ModelAndView typeupdate(HttpServletRequest request, @Valid com.chatopera.cc.model.QuickType quickType) {
-        com.chatopera.cc.model.QuickType tempQuickType = quickTypeRes.findByIdAndOrgi(quickType.getId(), super.getOrgi(request));
+    public ModelAndView typeupdate(HttpServletRequest request, @Valid QuickType quickType) {
+        QuickType tempQuickType = quickTypeRes.findByIdAndOrgi(quickType.getId(), super.getOrgi(request));
         if (tempQuickType != null) {
             //判断名称是否重复
-            com.chatopera.cc.model.QuickType qr = quickTypeRes.findByOrgiAndName(super.getOrgi(request), quickType.getName());
+            QuickType qr = quickTypeRes.findByOrgiAndName(super.getOrgi(request), quickType.getName());
             if (qr != null && !qr.getId().equals(quickType.getId())) {
                 return request(super.pageTplResponse("redirect:/setting/quickreply/index.html?msg=qr_type_exist&typeid=" + quickType.getId()));
             }
@@ -214,7 +216,7 @@ public class QuickReplyController extends Handler {
     @Menu(type = "apps", subtype = "kbs")
     public ModelAndView deletetype(HttpServletRequest request, @Valid String id) {
         if (!StringUtils.isBlank(id)) {
-            com.chatopera.cc.model.QuickType tempQuickType = quickTypeRes.findByIdAndOrgi(id, super.getOrgi(request));
+            QuickType tempQuickType = quickTypeRes.findByIdAndOrgi(id, super.getOrgi(request));
             quickTypeRes.delete(tempQuickType);
 
             Page<QuickReply> quickReplyList = quickReplyRes.getByOrgiAndCate(super.getOrgi(request), id, null, PageRequest.of(0, 10000));
@@ -235,20 +237,21 @@ public class QuickReplyController extends Handler {
     @Menu(type = "setting", subtype = "quickreplyimpsave")
     public ModelAndView impsave(HttpServletRequest request, @RequestParam(value = "cusfile", required = false) MultipartFile cusfile, @Valid String type) throws IOException {
         DSDataEvent event = new DSDataEvent();
-        String fileName = "quickreply/" + MainUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
-        File excelFile = new File(path, fileName);
+        String name = cusfile.getOriginalFilename();
+        String suffix = "";
+        if (name != null) {
+            suffix = name.substring(name.lastIndexOf("."));
+        }
+
+        File excelFile = new File(path, "quickreply/" + UUIDUtils.getUUID() + suffix);
         MetadataTable table = metadataRes.findByTablename("uk_quickreply");
         if (table != null) {
             FileUtils.writeByteArrayToFile(excelFile, cusfile.getBytes());
             event.setDSData(new DSData(table, excelFile, cusfile.getContentType(), super.getUser(request)));
             event.getDSData().setClazz(QuickReply.class);
             event.setOrgi(super.getOrgi(request));
-            if (!StringUtils.isBlank(type)) {
-                event.getValues().put("cate", type);
-            } else {
-                event.getValues().put("cate", Constants.DEFAULT_TYPE);
-            }
-            event.getValues().put("type", MainContext.QuickType.PUB.toString());
+            event.getValues().put("cate", StringUtils.isNotBlank(type) ? type : Constants.DEFAULT_TYPE);
+            event.getValues().put("type", Enums.QuickType.PUB.toString());
             event.getValues().put("creater", super.getUser(request).getId());
             event.getDSData().setProcess(new QuickReplyProcess(quickReplyRes));
             reporterRes.save(event.getDSData().getReport());
@@ -260,7 +263,7 @@ public class QuickReplyController extends Handler {
 
     @RequestMapping("/batdelete")
     @Menu(type = "setting", subtype = "quickreplybatdelete")
-    public ModelAndView batdelete(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids, @Valid String type) throws IOException {
+    public ModelAndView batdelete(@Valid String[] ids, @Valid String type) throws IOException {
         if (ids != null && ids.length > 0) {
             Iterable<QuickReply> topicList = quickReplyRes.findAllById(Arrays.asList(ids));
             quickReplyRes.deleteAll(topicList);
@@ -271,20 +274,10 @@ public class QuickReplyController extends Handler {
 
     @RequestMapping("/expids")
     @Menu(type = "setting", subtype = "quickreplyexpids")
-    public void expids(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids) throws IOException {
+    public void expids(HttpServletResponse response, @Valid String[] ids) throws IOException {
         if (ids != null && ids.length > 0) {
             Iterable<QuickReply> topicList = quickReplyRes.findAllById(Arrays.asList(ids));
-            MetadataTable table = metadataRes.findByTablename("uk_quickreply");
-            List<Map<String, Object>> values = new ArrayList<>();
-            for (QuickReply topic : topicList) {
-                values.add(MainUtils.transBean2Map(topic));
-            }
-
-            response.setHeader("content-disposition", "attachment;filename=UCKeFu-QuickReply-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
-            if (table != null) {
-                ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
-                excelProcess.process();
-            }
+            outPutExcel(response, topicList);
         }
 
     }
@@ -292,35 +285,28 @@ public class QuickReplyController extends Handler {
     @RequestMapping("/expall")
     @Menu(type = "setting", subtype = "quickreplyexpall")
     public void expall(HttpServletRequest request, HttpServletResponse response, @Valid String type) throws IOException {
-        Iterable<QuickReply> topicList = quickReplyRes.getQuickReplyByOrgi(super.getOrgi(request), !StringUtils.isBlank(type) ? type : null, MainContext.QuickType.PUB.toString(), null);
+        Iterable<QuickReply> topicList = quickReplyRes.getQuickReplyByOrgi(super.getOrgi(request), !StringUtils.isBlank(type) ? type : null, Enums.QuickType.PUB.toString(), null);
 
-        MetadataTable table = metadataRes.findByTablename("uk_quickreply");
-        List<Map<String, Object>> values = new ArrayList<>();
-        for (QuickReply topic : topicList) {
-            values.add(MainUtils.transBean2Map(topic));
-        }
-
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-QuickReply-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
-
-        if (table != null) {
-            ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
-            excelProcess.process();
-        }
+        outPutExcel(response, topicList);
     }
 
     @RequestMapping("/expsearch")
     @Menu(type = "setting", subtype = "quickreplyexpsearch")
     public void expall(HttpServletRequest request, HttpServletResponse response, @Valid String q, @Valid String type) throws IOException {
 
-        Iterable<QuickReply> topicList = quickReplyRes.getQuickReplyByOrgi(super.getOrgi(request), type, MainContext.QuickType.PUB.toString(), q);
+        Iterable<QuickReply> topicList = quickReplyRes.getQuickReplyByOrgi(super.getOrgi(request), type, Enums.QuickType.PUB.toString(), q);
 
+        outPutExcel(response, topicList);
+    }
+
+    private void outPutExcel(HttpServletResponse response, Iterable<QuickReply> topicList) throws IOException {
         MetadataTable table = metadataRes.findByTablename("uk_quickreply");
         List<Map<String, Object>> values = new ArrayList<>();
         for (QuickReply topic : topicList) {
-            values.add(MainUtils.transBean2Map(topic));
+            values.add(ObjectKit.transBean2Map(topic));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-QuickReply-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("QuickReply"));
 
         if (table != null) {
             ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());

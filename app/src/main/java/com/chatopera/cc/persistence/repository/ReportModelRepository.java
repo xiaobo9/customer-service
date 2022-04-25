@@ -22,10 +22,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ReportModelRepository extends JpaRepository<ReportModel, String> {
-	ReportModel findByIdAndOrgi(String id, String orgi);
-	
-	List<ReportModel> findByOrgiAndReportid(String orgi, String reportid) ;
+    ReportModel findByIdAndOrgi(String id, String orgi);
 
-	List<ReportModel> findByParentidAndOrgi(String parentid, String orgi);
-	
+    List<ReportModel> findByOrgiAndReportid(String orgi, String reportid);
+
+    List<ReportModel> findByParentidAndOrgi(String parentid, String orgi);
+
 }

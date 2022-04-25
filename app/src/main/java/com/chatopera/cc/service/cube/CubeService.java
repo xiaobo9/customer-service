@@ -17,13 +17,13 @@
 package com.chatopera.cc.service.cube;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.freemarker.FreeMarkerTplUtils;
-import com.chatopera.cc.model.ColumnProperties;
 import com.chatopera.cc.util.bi.CubeReportData;
 import com.chatopera.cc.util.bi.model.FirstTitle;
 import com.chatopera.cc.util.bi.model.Level;
 import com.chatopera.cc.util.bi.model.ValueData;
+import com.github.xiaobo9.entity.ColumnProperties;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import freemarker.template.TemplateException;
 import mondrian.olap.*;
 import mondrian.rolap.RolapCubeLevel;
@@ -52,7 +52,7 @@ public class CubeService {
         this.requestValues = requestValues;
         File mdxFileDir = new File(path, "mdx");
         FileUtils.forceMkdir(mdxFileDir);
-        schemaFile = new File(mdxFileDir, MainUtils.getUUID() + ".xml");
+        schemaFile = new File(mdxFileDir, UUIDUtils.getUUID() + ".xml");
 
         if (isContentStr) {
             FileUtils.write(schemaFile, FreeMarkerTplUtils.getTemplate(this.xml, this.requestValues), "UTF-8");    //使用系统默认编码

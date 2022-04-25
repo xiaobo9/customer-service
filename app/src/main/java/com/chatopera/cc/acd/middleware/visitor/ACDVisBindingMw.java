@@ -17,13 +17,13 @@
 package com.chatopera.cc.acd.middleware.visitor;
 
 import com.chatopera.cc.acd.basic.ACDComposeContext;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.OrganRepository;
-import com.chatopera.cc.persistence.repository.UserRepository;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.compose4j.Functional;
 import com.chatopera.compose4j.Middleware;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.OrganRepository;
+import com.github.xiaobo9.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +74,7 @@ public class ACDVisBindingMw implements Middleware<ACDComposeContext> {
             // 绑定坐席有可能是因为前端展示了技能组和坐席
             // 也有可能是坐席发送了邀请，该访客接收邀请
             ctx.getAgentUser().setAgentno(ctx.getAgentno());
-            User agent = userRes.findById(ctx.getAgentno()).orElseThrow(EntityNotFoundException::new);
+            User agent = userRes.findById(ctx.getAgentno()).orElseThrow(EntityNotFoundEx::new);
             ctx.setAgent(agent);
             ctx.getAgentUser().setAgentname(agent.getUname());
         } else {

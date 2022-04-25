@@ -24,15 +24,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ReportRepository extends JpaRepository<Report, String> {
-	Report findByIdAndOrgi(String id, String orgi);
-	
-	Page<Report> findByOrgiAndDicid(String orgi, String dicid, Pageable paramPageable) ;
-	
-	Page<Report> findByOrgi(String orgi, Pageable paramPageable) ;
-	
-	List<Report> findByOrgiAndDicid(String orgi, String dicid) ;
-	
-	int countByOrgiAndDicid(String orgi, String dicid);
-	
-	int countByOrgiAndName(String orgi, String name);
+    Report findByIdAndOrgi(String id, String orgi);
+
+    Page<Report> findByOrgiAndDicid(String orgi, String dicid, Pageable paramPageable);
+
+    Page<Report> findByOrgi(String orgi, Pageable paramPageable);
+
+    List<Report> findByOrgiAndDicid(String orgi, String dicid);
+
+    int countByOrgiAndDicid(String orgi, String dicid);
+
+    int countByOrgiAndName(String orgi, String name);
 }

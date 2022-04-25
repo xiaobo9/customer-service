@@ -17,21 +17,24 @@
 package com.chatopera.cc.controller;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.DateFormatEnum;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.Viewport;
 import com.chatopera.cc.basic.auth.AuthToken;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.api.QueryParams;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.model.StreamingFile;
-import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
-import com.chatopera.cc.persistence.repository.StreamingFileRepository;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.utils.Base62Utils;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.entity.StreamingFile;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.StreamingFileRepository;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.elasticsearch.index.query.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
@@ -47,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 
 @Controller
@@ -63,6 +67,9 @@ public class Handler {
 
     @Autowired
     private AuthToken authToken;
+
+    @Value("${enable.user.filter:false}")
+    private boolean enableUserFilter;
 
     public final static int PAGE_SIZE_BG = 1;
     public final static int PAGE_SIZE_TW = 20;
@@ -97,7 +104,7 @@ public class Handler {
         User user;
         user = new User();
         user.setId(MainUtils.getContextID(request.getSession().getId()));
-        user.setUsername(Constants.GUEST_USER + "_" + MainUtils.genIDByKey(user.getId()));
+        user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
         user.setOrgi(Constants.SYSTEM_ORGI);
         user.setSessionid(user.getId());
         return user;
@@ -139,10 +146,12 @@ public class Handler {
             // 管理员, 查看任何数据
             return true;
         }
-        // 用户在部门中，通过部门过滤数据
-        // TODO 不对contacts进行过滤，普通用户也可以查看该租户的任何数据
-//        String[] values = user.getAffiliates().toArray(new String[0]);
-//        boolQueryBuilder.filter(termsQuery("organ", values));
+        if (enableUserFilter) {
+            // 用户在部门中，通过部门过滤数据
+            // TODO 不对contacts进行过滤，普通用户也可以查看该租户的任何数据
+            String[] values = user.getAffiliates().toArray(new String[0]);
+            boolQueryBuilder.filter(termsQuery("organ", values));
+        }
         return true;
     }
 
@@ -327,7 +336,7 @@ public class Handler {
 
                     user.setUsername(struname + "@" + strcname);
                 } else {
-                    user.setUsername(Constants.GUEST_USER + "_" + MainUtils.genIDByKey(user.getId()));
+                    user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
                 }
             }
             user.setSessionid(user.getId());
@@ -357,7 +366,7 @@ public class Handler {
 
                     user.setUsername(struname + "@" + strcname);
                 } else {
-                    user.setUsername(Constants.GUEST_USER + "_" + MainUtils.genIDByKey(user.getId()));
+                    user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
                 }
             }
             user.setSessionid(user.getId());
@@ -488,7 +497,7 @@ public class Handler {
      */
     public String saveImageFileWithMultipart(MultipartFile multipart) throws IOException {
         StreamingFile sf = new StreamingFile();
-        final String fileid = MainUtils.getUUID();
+        final String fileid = UUIDUtils.getUUID();
         sf.setId(fileid);
         sf.setMime(multipart.getContentType());
         sf.setData(jpaBlobHelper.createBlob(multipart.getInputStream(), multipart.getSize()));

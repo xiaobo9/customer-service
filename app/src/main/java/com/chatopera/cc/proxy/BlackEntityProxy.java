@@ -17,12 +17,12 @@
 package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.AgentService;
-import com.chatopera.cc.model.BlackEntity;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
-import com.chatopera.cc.persistence.repository.AgentUserRepository;
-import com.chatopera.cc.persistence.repository.BlackListRepository;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.entity.BlackEntity;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.AgentServiceRepository;
+import com.github.xiaobo9.repository.AgentUserRepository;
+import com.github.xiaobo9.repository.BlackListRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

@@ -18,10 +18,13 @@ package com.chatopera.cc.controller.apps.report;
 
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.*;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.chatopera.cc.model.PublishedCube;
+import com.chatopera.cc.persistence.repository.PublishedCubeRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.commons.kit.ObjectKit;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,7 +194,7 @@ public class CubeController extends Handler {
     @RequestMapping("/delete")
     @Menu(type = "report", subtype = "cube")
     public ModelAndView quickreplydelete(@Valid String id) {
-        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         cubeRes.delete(cube);
         dimensionRes.deleteAll(dimensionRes.findByCubeid(cube.getId()));
         cubeLevelRes.deleteAll(cubeLevelRes.findByCubeid(cube.getId()));
@@ -203,7 +206,7 @@ public class CubeController extends Handler {
     @RequestMapping("/edit")
     @Menu(type = "report", subtype = "cube", admin = true)
     public ModelAndView cubeedit(ModelMap map, HttpServletRequest request, @Valid String id) {
-        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         map.put("cube", cube);
         map.put("cubeType", cubeTypeRes.findByIdAndOrgi(cube.getTypeid(), super.getOrgi(request)));
         map.addAttribute("cubeTypeList", cubeTypeRes.findByOrgi(super.getOrgi(request)));
@@ -259,7 +262,7 @@ public class CubeController extends Handler {
     @RequestMapping("/metadata/edit")
     @Menu(type = "report", subtype = "metadata", admin = true)
     public ModelAndView metadataedit(ModelMap map, final @Valid String id) {
-        map.put("cubeMetadata", cubeMetadataRes.findById(id).orElseThrow(EntityNotFoundException::new));
+        map.put("cubeMetadata", cubeMetadataRes.findById(id).orElseThrow(EntityNotFoundEx::new));
         return request(super.pageTplResponse("/apps/business/report/cube/cubemetadata/edit"));
     }
 
@@ -267,7 +270,7 @@ public class CubeController extends Handler {
     @Menu(type = "report", subtype = "metadata", admin = true)
     public ModelAndView metadataedit(@Valid CubeMetadata cubeMetadata) {
         if (!StringUtils.isBlank(cubeMetadata.getId())) {
-            CubeMetadata temp = cubeMetadataRes.findById(cubeMetadata.getId()).orElseThrow(EntityNotFoundException::new);
+            CubeMetadata temp = cubeMetadataRes.findById(cubeMetadata.getId()).orElseThrow(EntityNotFoundEx::new);
             temp.setNamealias(cubeMetadata.getNamealias());
             if ("0".equals(cubeMetadata.getMtype())) {
                 List<CubeMetadata> list = cubeMetadataRes.findByCubeid(temp.getCubeid());
@@ -294,7 +297,7 @@ public class CubeController extends Handler {
         String msg = "";
         if (!StringUtils.isBlank(cubeMetadata.getId())) {
             boolean flag = true;
-            CubeMetadata temp = cubeMetadataRes.findById(cubeMetadata.getId()).orElseThrow(EntityNotFoundException::new);
+            CubeMetadata temp = cubeMetadataRes.findById(cubeMetadata.getId()).orElseThrow(EntityNotFoundEx::new);
             String tablename = null;
             String tableid = null;
             if (temp.getTb() != null) {
@@ -357,7 +360,7 @@ public class CubeController extends Handler {
     @Menu(type = "report", subtype = "cube")
     public ModelAndView cubevalid(ModelMap map, @Valid String id) {
         boolean hasMasterTable = false;
-        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         List<CubeMetadata> cubeMetadataList = cubeMetadataRes.findByCubeid(id);
         if (!cubeMetadataList.isEmpty()) {
             for (CubeMetadata cm : cubeMetadataList) {
@@ -417,17 +420,17 @@ public class CubeController extends Handler {
         }
         User user = super.getUser(request);
         Cube cube = this.getCube(cubeid);
-        PublishedCube publishCube = new PublishedCube();
+        com.chatopera.cc.model.PublishedCube publishCube = new com.chatopera.cc.model.PublishedCube();
         MainUtils.copyProperties(cube, publishCube, "");
         publishCube.setId(null);
         Base64 base64 = new Base64();
-        publishCube.setCubecontent(base64.encodeToString(MainUtils.toBytes(cube)));
+        publishCube.setCubecontent(base64.encodeToString(ObjectKit.toBytes(cube)));
         publishCube.setDataid(cubeid);
         publishCube.setUserid(user.getId());
         publishCube.setUsername(user.getUsername());
         publishCube.setCreatetime(new Date());
 
-        List<PublishedCube> pbCubeList = publishedCubeRes.findByOrgiAndDataidOrderByDataversionDesc(super.getOrgi(request), cubeid);
+        List<com.chatopera.cc.model.PublishedCube> pbCubeList = publishedCubeRes.findByOrgiAndDataidOrderByDataversionDesc(super.getOrgi(request), cubeid);
         if (!pbCubeList.isEmpty()) {
             int maxVersion = pbCubeList.get(0).getDataversion();
             if ("yes".equals(isRecover)) {
@@ -560,7 +563,7 @@ public class CubeController extends Handler {
     }
 
     private Cube getCube(String id) {
-        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        Cube cube = cubeRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         cube.setMetadata(cubeMetadataRes.findByCubeid(id));
         cube.setMeasure(cubeMeasureRes.findByCubeid(id));
         cube.setDimension(dimensionRes.findByCubeid(id));

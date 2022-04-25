@@ -16,6 +16,7 @@
 package com.chatopera.cc.proxy;
 
 import com.chatopera.cc.activemq.BrokerPublisher;
+import com.chatopera.cc.activemq.MqMessage;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.cache.CacheService;
 import com.google.gson.JsonObject;
@@ -80,7 +81,8 @@ public class AgentSessionProxy {
         payload.addProperty("agentno", agentno);   // 坐席ID
         payload.addProperty("orgi", orgi);         // 租户Id
         payload.addProperty("expired", expired);    // 之后的Id
-        brokerPublisher.send(Constants.MQ_TOPIC_WEB_SESSION_SSO, payload.toString(), true);
+        brokerPublisher.send(new MqMessage().destination(Constants.MQ_TOPIC_WEB_SESSION_SSO)
+                .payload(payload.toString()).type(MqMessage.Type.TOPIC));
     }
 
 

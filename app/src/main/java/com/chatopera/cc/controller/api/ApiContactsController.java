@@ -16,19 +16,19 @@
  */
 package com.chatopera.cc.controller.api;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.Contacts;
-import com.chatopera.cc.model.User;
+import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.proxy.AgentUserProxy;
 import com.chatopera.cc.proxy.ContactsProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.entity.Contacts;
+import com.github.xiaobo9.entity.User;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -203,7 +203,7 @@ public class ApiContactsController extends Handler {
             JsonObject data = new JsonObject();
             data.addProperty("agentuserid", agentUser.getId());
             resp.add(RestUtils.RESP_KEY_DATA, data);
-        } catch (CSKefuException e) {
+        } catch (ServerException e) {
             resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_FAIL_4);
             resp.addProperty(RestUtils.RESP_KEY_ERROR, "Can not create agent user.");
             return resp;
@@ -233,14 +233,14 @@ public class ApiContactsController extends Handler {
                 p -> !p.isDatastatus());
 
         if (contactOpt.isPresent()) {
-            List<MainContext.ChannelType> channles;
+            List<Enums.ChannelType> channles;
             try {
                 channles = contactsProxy.liveApproachChannelsByContactid(
                         logined, contactsid, contactsProxy.isSkypeSetup(logined.getOrgi()));
                 if (channles.size() > 0) {
                     resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_SUCC);
                     JsonArray data = new JsonArray();
-                    for (final MainContext.ChannelType e : channles) {
+                    for (final Enums.ChannelType e : channles) {
                         data.add(e.toString());
                     }
                     resp.add(RestUtils.RESP_KEY_DATA, data);
@@ -248,7 +248,7 @@ public class ApiContactsController extends Handler {
                     resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_FAIL_2);
                     resp.addProperty(RestUtils.RESP_KEY_ERROR, "No available channel to approach contact.");
                 }
-            } catch (CSKefuException e) {
+            } catch (ServerException e) {
                 resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_FAIL_4);
                 resp.addProperty(RestUtils.RESP_KEY_ERROR, "Contact not found.");
             }

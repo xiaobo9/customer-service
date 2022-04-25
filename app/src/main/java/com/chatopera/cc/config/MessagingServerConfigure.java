@@ -17,7 +17,7 @@
 package com.chatopera.cc.config;
 
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.exception.InstantMessagingExceptionListener;
+import com.chatopera.cc.socketio.MsgExceptionListener;
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOServer;
@@ -59,7 +59,7 @@ public class MessagingServerConfigure {
     public SocketIOServer socketIOServer() throws NoSuchAlgorithmException, IOException {
         Configuration config = new Configuration();
         config.setPort(port);
-        config.setExceptionListener(new InstantMessagingExceptionListener());
+        config.setExceptionListener(new MsgExceptionListener());
 
         File sslFile = new File(path, "ssl/https.properties");
         if (sslFile.exists()) {

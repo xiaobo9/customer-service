@@ -17,17 +17,10 @@
 
 package com.chatopera.cc.controller.apps;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.es.EntCustomerRepository;
-import com.chatopera.cc.persistence.repository.MetadataRepository;
-import com.chatopera.cc.persistence.repository.PropertiesEventRepository;
-import com.chatopera.cc.persistence.repository.ReporterRepository;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.PinYinTools;
@@ -37,6 +30,17 @@ import com.chatopera.cc.util.dsdata.DSDataEvent;
 import com.chatopera.cc.util.dsdata.ExcelImportProcess;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
 import com.chatopera.cc.util.dsdata.process.EntCustomerProcess;
+import com.github.xiaobo9.bean.CustomerGroupForm;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.github.xiaobo9.commons.exception.ServerException;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.MetadataRepository;
+import com.github.xiaobo9.repository.PropertiesEventRepository;
+import com.github.xiaobo9.repository.ReporterRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -57,7 +61,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
@@ -95,7 +98,7 @@ public class CustomerController extends Handler {
                               HttpServletRequest request,
                               final @Valid String q,
                               final @Valid String ekind,
-                              final @Valid String msg) throws CSKefuException {
+                              final @Valid String msg) throws ServerException {
         logger.info("[index] query {}, ekind {}, msg {}", q, ekind, msg);
         final User user = super.getUser(request);
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -134,7 +137,7 @@ public class CustomerController extends Handler {
 
     @RequestMapping("/today.html")
     @Menu(type = "customer", subtype = "today")
-    public ModelAndView today(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
+    public ModelAndView today(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws ServerException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         User user = super.getUser(request);
         Organ currentOrgan = super.getOrgan(request);
@@ -161,7 +164,7 @@ public class CustomerController extends Handler {
 
     @RequestMapping("/week.html")
     @Menu(type = "customer", subtype = "week")
-    public ModelAndView week(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
+    public ModelAndView week(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws ServerException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
@@ -186,7 +189,7 @@ public class CustomerController extends Handler {
 
     @RequestMapping("/enterprise.html")
     @Menu(type = "customer", subtype = "enterprise")
-    public ModelAndView enterprise(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
+    public ModelAndView enterprise(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws ServerException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
@@ -198,7 +201,7 @@ public class CustomerController extends Handler {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
-        boolQueryBuilder.must(termQuery("etype", MainContext.CustomerTypeEnum.ENTERPRISE.toString()));
+        boolQueryBuilder.must(termQuery("etype", Enums.CustomerTypeEnum.ENTERPRISE.toString()));
         if (StringUtils.isNotBlank(ekind)) {
             boolQueryBuilder.must(termQuery("ekind", ekind));
             map.put("ekind", ekind);
@@ -212,7 +215,7 @@ public class CustomerController extends Handler {
 
     @RequestMapping("/personal.html")
     @Menu(type = "customer", subtype = "personal")
-    public ModelAndView personal(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
+    public ModelAndView personal(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws ServerException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
@@ -224,7 +227,7 @@ public class CustomerController extends Handler {
             return request(super.createAppsTempletResponse("/apps/business/customer/index"));
         }
 
-        boolQueryBuilder.must(termQuery("etype", MainContext.CustomerTypeEnum.PERSONAL.toString()));
+        boolQueryBuilder.must(termQuery("etype", Enums.CustomerTypeEnum.PERSONAL.toString()));
 
         if (StringUtils.isNotBlank(ekind)) {
             boolQueryBuilder.must(termQuery("ekind", ekind));
@@ -240,7 +243,7 @@ public class CustomerController extends Handler {
 
     @RequestMapping("/creater.html")
     @Menu(type = "customer", subtype = "creater")
-    public ModelAndView creater(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws CSKefuException {
+    public ModelAndView creater(ModelMap map, HttpServletRequest request, @Valid String q, @Valid String ekind) throws ServerException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
@@ -285,7 +288,7 @@ public class CustomerController extends Handler {
         final User logined = super.getUser(request);
         Organ currentOrgan = super.getOrgan(request);
 
-//    	customerGroupForm.getEntcustomer().setEtype(MainContext.CustomerTypeEnum.ENTERPRISE.toString());
+//    	customerGroupForm.getEntcustomer().setEtype(Enums.CustomerTypeEnum.ENTERPRISE.toString());
         customerGroupForm.getEntcustomer().setPinyin(PinYinTools.getInstance().getFirstPinYin(customerGroupForm.getEntcustomer().getName()));
         if (currentOrgan != null && StringUtils.isBlank(customerGroupForm.getEntcustomer().getOrgan())) {
             customerGroupForm.getEntcustomer().setOrgan(currentOrgan.getId());
@@ -311,7 +314,7 @@ public class CustomerController extends Handler {
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView delete(HttpServletRequest request, @Valid EntCustomer entCustomer, @Valid String p, @Valid String ekind) {
         if (entCustomer != null) {
-            entCustomer = entCustomerRes.findById(entCustomer.getId()).orElseThrow(EntityNotFoundException::new);
+            entCustomer = entCustomerRes.findById(entCustomer.getId()).orElseThrow(EntityNotFoundEx::new);
             entCustomer.setDatastatus(true);                            //客户和联系人都是 逻辑删除
             entCustomerRes.save(entCustomer);
         }
@@ -321,7 +324,7 @@ public class CustomerController extends Handler {
     @RequestMapping("/edit.html")
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String ekind) {
-        map.addAttribute("entCustomer", entCustomerRes.findById(id).orElseThrow(EntityNotFoundException::new));
+        map.addAttribute("entCustomer", entCustomerRes.findById(id).orElseThrow(EntityNotFoundEx::new));
         map.addAttribute("ekindId", ekind);
         return request(super.pageTplResponse("/apps/business/customer/edit"));
     }
@@ -331,14 +334,14 @@ public class CustomerController extends Handler {
     public ModelAndView update(HttpServletRequest request, @Valid CustomerGroupForm customerGroupForm, @Valid String ekindId) {
         final User logined = super.getUser(request);
         EntCustomer entcustomer = customerGroupForm.getEntcustomer();
-        EntCustomer customer = entCustomerRes.findById(entcustomer.getId()).orElseThrow(EntityNotFoundException::new);
+        EntCustomer customer = entCustomerRes.findById(entcustomer.getId()).orElseThrow(EntityNotFoundEx::new);
         String msg = "";
 
         //记录 数据变更 历史
         List<PropertiesEvent> events = PropertiesEventUtil.processPropertiesModify(request, entcustomer, customer);
         if (events.size() > 0) {
             msg = "edit_entcustomer_success";
-            String modifyid = MainUtils.getUUID();
+            String modifyid = UUIDUtils.getUUID();
             Date modifytime = new Date();
             for (PropertiesEvent event : events) {
                 event.setDataid(entcustomer.getId());
@@ -370,7 +373,7 @@ public class CustomerController extends Handler {
     @Menu(type = "customer", subtype = "customer")
     public ModelAndView impsave(ModelMap map, HttpServletRequest request, @RequestParam(value = "cusfile", required = false) MultipartFile cusfile, @Valid String ekind) throws IOException {
         DSDataEvent event = new DSDataEvent();
-        String fileName = "customer/" + MainUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
+        String fileName = "customer/" + UUIDUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
         File excelFile = new File(path, fileName);
 
         Organ currentOrgan = super.getOrgan(request);
@@ -404,21 +407,19 @@ public class CustomerController extends Handler {
             MetadataTable table = metadataRes.findByTablename("uk_entcustomer");
             List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
             for (EntCustomer customer : entCustomerList) {
-                values.add(MainUtils.transBean2Map(customer));
+                values.add(ObjectKit.transBean2Map(customer));
             }
 
-            response.setHeader("content-disposition", "attachment;filename=UCKeFu-EntCustomer-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+            response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("EntCustomer"));
 
             ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
             excelProcess.process();
         }
-
-        return;
     }
 
     @RequestMapping("/expall")
     @Menu(type = "customer", subtype = "customer")
-    public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String ekind) throws IOException, CSKefuException {
+    public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String ekind) throws IOException, ServerException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         User user = super.getUser(request);
         if (!esOrganFilter(user, boolQueryBuilder)) {
@@ -441,19 +442,18 @@ public class CustomerController extends Handler {
         MetadataTable table = metadataRes.findByTablename("uk_entcustomer");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (EntCustomer customer : entCustomerList) {
-            values.add(MainUtils.transBean2Map(customer));
+            values.add(ObjectKit.transBean2Map(customer));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-EntCustomer-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("EntCustomer"));
 
         ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
         excelProcess.process();
-        return;
     }
 
     @RequestMapping("/expsearch")
     @Menu(type = "customer", subtype = "customer")
-    public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String q, @Valid String ekind) throws IOException, CSKefuException {
+    public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String q, @Valid String ekind) throws IOException, ServerException {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         User user = super.getUser(request);
         if (!esOrganFilter(user, boolQueryBuilder)) {
@@ -477,14 +477,12 @@ public class CustomerController extends Handler {
         MetadataTable table = metadataRes.findByTablename("uk_entcustomer");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (EntCustomer customer : entCustomerList) {
-            values.add(MainUtils.transBean2Map(customer));
+            values.add(ObjectKit.transBean2Map(customer));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-EntCustomer-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("EntCustomer"));
 
         ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
         excelProcess.process();
-
-        return;
     }
 }

@@ -23,14 +23,11 @@ import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.model.Contacts;
-import com.chatopera.cc.model.CousultInvite;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.proxy.AgentUserProxy;
 import com.chatopera.cc.proxy.OnlineUserProxy;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.AgentStatusMessage;
-import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.cc.socketio.util.HumanUtils;
 import com.chatopera.cc.socketio.util.IMServiceUtils;
 import com.chatopera.cc.util.IP;
@@ -41,6 +38,10 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.Contacts;
+import com.github.xiaobo9.entity.CousultInvite;
+import com.github.xiaobo9.repository.AgentServiceRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +118,7 @@ public class IMEventHandler {
                 /**
                  * 更新坐席服务类型
                  */
-                IMServiceUtils.shiftOpsType(user, orgi, MainContext.OptType.HUMAN);
+                IMServiceUtils.shiftOpsType(user, orgi, Enums.OptType.HUMAN);
 
                 IP ipdata = null;
                 if ((StringUtils.isNotBlank(ip))) {
@@ -140,7 +141,7 @@ public class IMEventHandler {
                         browser,
                         "",
                         ipdata,
-                        MainContext.ChannelType.WEBIM.toString(),
+                        Enums.ChannelType.WEBIM.toString(),
                         skill,
                         agent,
                         title,
@@ -148,7 +149,7 @@ public class IMEventHandler {
                         traceid,
                         user,
                         isInvite,
-                        MainContext.ChatInitiatorType.USER.toString());
+                        Enums.ChatInitiatorType.USER.toString());
                 getAcdVisitorDispatcher().enqueue(ctx);
                 ACDServiceRouter.getAcdAgentService().notifyAgentUserProcessResult(ctx);
             } else {
@@ -197,7 +198,7 @@ public class IMEventHandler {
             p.setEmail(contacts.getEmail());
             p.setResion(contacts.getMemo());
             p.setChatbotops(false); // 非机器人客服
-            p.setOpttype(MainContext.OptType.HUMAN.toString());
+            p.setOpttype(Enums.OptType.HUMAN.toString());
             getAgentUserProxy().save(p);
         });
 

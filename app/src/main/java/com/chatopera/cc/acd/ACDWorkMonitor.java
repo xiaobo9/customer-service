@@ -15,18 +15,18 @@
  */
 package com.chatopera.cc.acd;
 
-import com.chatopera.cc.basic.DateFormatEnum;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.AgentReport;
-import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.model.WorkMonitor;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
-import com.chatopera.cc.persistence.repository.AgentUserRepository;
-import com.chatopera.cc.persistence.repository.WorkMonitorRepository;
 import com.chatopera.cc.proxy.OrganProxy;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.entity.AgentReport;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.entity.WorkMonitor;
+import com.github.xiaobo9.repository.AgentServiceRepository;
+import com.github.xiaobo9.repository.AgentUserRepository;
+import com.github.xiaobo9.repository.WorkMonitorRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,19 +166,19 @@ public class ACDWorkMonitor {
             if (lasttime != null) {
                 workMonitor.setDuration((int) (System.currentTimeMillis() - lasttime.getTime()) / 1000);
             }
-            if (status.equals(MainContext.AgentStatusEnum.BUSY.toString())) {
+            if (status.equals(AgentStatusEnum.BUSY.toString())) {
                 workMonitor.setBusy(true);
             }
-            if (status.equals(MainContext.AgentStatusEnum.READY.toString())) {
+            if (status.equals(AgentStatusEnum.READY.toString())) {
                 int count = workMonitorRes.countByAgentAndDatestrAndStatusAndOrgi(
                         agent, DateFormatEnum.DAY.format(new Date()),
-                        MainContext.AgentStatusEnum.READY.toString(), orgi
+                        AgentStatusEnum.READY.toString(), orgi
                 );
                 if (count == 0) {
                     workMonitor.setFirsttime(true);
                 }
             }
-            if (current.equals(MainContext.AgentStatusEnum.NOTREADY.toString())) {
+            if (current.equals(AgentStatusEnum.NOTREADY.toString())) {
                 List<WorkMonitor> workMonitorList = workMonitorRes.findByOrgiAndAgentAndDatestrAndFirsttime(
                         orgi, agent, DateFormatEnum.DAY.format(new Date()), true);
                 if (workMonitorList.size() > 0) {

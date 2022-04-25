@@ -18,9 +18,9 @@ package com.chatopera.cc.controller.admin.system;
 
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.persistence.repository.SysDicRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.repository.SysDicRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;

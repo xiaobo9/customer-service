@@ -18,11 +18,12 @@ package com.chatopera.cc.controller.admin;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ public class RoleController extends Handler {
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String role, @Valid String msg) {
         Organ currentOrgan = super.getOrgan(request);
 
-        List<Role> roleList = roleRepository.findByOrgiAndOrgan(super.getOrgi(),currentOrgan.getId());
+        List<Role> roleList = roleRepository.findByOrgiAndOrgan(super.getOrgi(), currentOrgan.getId());
         map.addAttribute("roleList", roleList);
         map.addAttribute("msg", msg);
         if (roleList.size() > 0) {

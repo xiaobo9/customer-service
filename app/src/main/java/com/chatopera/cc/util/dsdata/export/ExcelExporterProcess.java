@@ -17,12 +17,12 @@
 package com.chatopera.cc.util.dsdata.export;
 
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.Dict;
-import com.chatopera.cc.model.MetadataTable;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.model.TableProperties;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.excel.ExcelBase;
+import com.github.xiaobo9.entity.MetadataTable;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.TableProperties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;

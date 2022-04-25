@@ -14,10 +14,11 @@ import com.chatopera.cc.acd.ACDAgentDispatcher;
 import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.persistence.repository.AgentStatusRepository;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.repository.AgentStatusRepository;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;
@@ -86,7 +87,7 @@ public class SocketioConnEventSubscription {
 
                     // 更新数据库
                     agentStatus.setBusy(false);
-                    agentStatus.setStatus(MainContext.AgentStatusEnum.OFFLINE.toString());
+                    agentStatus.setStatus(AgentStatusEnum.OFFLINE.toString());
                     agentStatus.setUpdatetime(new Date());
 
                     // 设置该坐席状态为离线
@@ -100,8 +101,8 @@ public class SocketioConnEventSubscription {
                                                      j.get("isAdmin").getAsBoolean(),
                                                      agentStatus.getAgentno(),
                                                      agentStatus.getStatus(),
-                                                     MainContext.AgentStatusEnum.OFFLINE.toString(),
-                                                     MainContext.AgentWorkType.MEIDIACHAT.toString(),
+                                                     AgentStatusEnum.OFFLINE.toString(),
+                                                     Enums.AgentWorkType.MEIDIACHAT.toString(),
                                                      agentStatus.getOrgi(), null);
                 } else if (agentStatus == null) {
                     // 该坐席已经完成离线设置

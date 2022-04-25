@@ -17,11 +17,11 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Organ;
-import com.chatopera.cc.persistence.repository.OrganRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.entity.Organ;
+import com.github.xiaobo9.repository.OrganRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

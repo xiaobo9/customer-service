@@ -17,17 +17,18 @@
 package com.chatopera.cc.controller.apps;
 
 import com.chatopera.cc.acd.ACDWorkMonitor;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +101,7 @@ public class AppsController extends Handler {
 //        TODO 此处为从数据库加载
         final Page<OnlineUser> onlineUserList = onlineUserRes.findByOrgiAndStatusAndAppidIn(
                 super.getOrgi(request),
-                MainContext.OnlineUserStatusEnum.ONLINE.toString(),
+                Enums.OnlineUserStatusEnum.ONLINE.toString(),
                 appids,
                 super.page(request, Sort.Direction.DESC, "createtime")
         );
@@ -158,7 +159,7 @@ public class AppsController extends Handler {
             if (appids.size() > 0) {
                 onlineUsers = onlineUserRes.findByOrgiAndStatusAndInAppIds(
                         super.getOrgi(request),
-                        MainContext.OnlineUserStatusEnum.ONLINE.toString(), appids);
+                        Enums.OnlineUserStatusEnum.ONLINE.toString(), appids);
 
                 userEvents = userEventRes.findByOrgiAndCreatetimeRangeAndInAppIds(super.getOrgi(request), MainUtils.getStartTime(),
                         MainUtils.getEndTime(), appids);
@@ -213,7 +214,7 @@ public class AppsController extends Handler {
     @Menu(type = "apps", subtype = "onlineuser")
     public ModelAndView onlineuser(ModelMap map, HttpServletRequest request) {
         Page<OnlineUser> onlineUserList = this.onlineUserRes.findByOrgiAndStatus(
-                super.getOrgi(request), MainContext.OnlineUserStatusEnum.ONLINE.toString(),
+                super.getOrgi(request), Enums.OnlineUserStatusEnum.ONLINE.toString(),
                 super.page(request, Sort.Direction.DESC, "createtime"));
         List<String> ids = new ArrayList<String>();
         for (OnlineUser onlineUser : onlineUserList.getContent()) {
@@ -279,7 +280,7 @@ public class AppsController extends Handler {
             tempUser.setOrgi(super.getOrgi());
             final Date now = new Date();
             if (StringUtils.isNotBlank(user.getPassword())) {
-                tempUser.setPassword(MainUtils.md5(user.getPassword()));
+                tempUser.setPassword(MD5Utils.md5(user.getPassword()));
             }
             if (tempUser.getCreatetime() == null) {
                 tempUser.setCreatetime(now);

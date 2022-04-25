@@ -19,13 +19,14 @@ package com.chatopera.cc.acd;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.acd.basic.IACDDispatcher;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
-import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.persistence.repository.AgentStatusRepository;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.repository.AgentStatusRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +77,7 @@ public class ACDAgentDispatcher implements IACDDispatcher {
         if (agentStatus != null) {
             agentStatus.setBusy(false);
             agentStatus.setUpdatetime(new Date());
-            agentStatus.setStatus(MainContext.AgentStatusEnum.NOTREADY.toString());
+            agentStatus.setStatus(AgentStatusEnum.NOTREADY.toString());
             agentStatusRes.save(agentStatus);
             cacheService.putAgentStatusByOrgi(agentStatus, ctx.getOrgi());
         }
@@ -93,7 +94,7 @@ public class ACDAgentDispatcher implements IACDDispatcher {
                 // 可能会发生maxusers超过设置的情况，如果做很多检查，会带来一定一系统开销
                 // 因为影响不大，放弃实时的检查
                 ACDComposeContext y = acdMessageHelper.getComposeContextWithAgentUser(
-                        x, false, MainContext.ChatInitiatorType.USER.toString());
+                        x, false, Enums.ChatInitiatorType.USER.toString());
                 acdVisitorDispatcher.enqueue(y);
 
                 // 因为重新分配该访客，将其从撤离的坐席中服务集合中删除

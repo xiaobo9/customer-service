@@ -16,14 +16,15 @@
 package com.chatopera.cc.cache;
 
 import com.chatopera.cc.aspect.AgentUserAspect;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
-import com.chatopera.cc.exception.CSKefuCacheException;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.AgentUserRepository;
-import com.chatopera.cc.persistence.repository.OnlineUserRepository;
+import com.github.xiaobo9.bean.AgentUserAudit;
+import com.github.xiaobo9.commons.exception.CacheEx;
 import com.chatopera.cc.util.SerializeUtil;
 import com.chatopera.cc.util.freeswitch.model.CallCenterAgent;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.AgentUserRepository;
+import com.github.xiaobo9.repository.OnlineUserRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +136,7 @@ public class CacheService {
         logger.debug("[findOneAgentStatusByAgentnoAndOrig] agentno {}, status {}", agentno, status);
 
         // 缓存中没有该坐席状态，该坐席目前是离线的
-        if (StringUtils.equals(status, MainContext.AgentStatusEnum.OFFLINE.toString())) {
+        if (StringUtils.equals(status, AgentStatusEnum.OFFLINE.toString())) {
             return null;
         }
 
@@ -154,9 +155,9 @@ public class CacheService {
     public void putAgentStatusByOrgi(AgentStatus agentStatus, String orgi) {
         String pre = getAgentStatusStatus(agentStatus.getAgentno(), orgi); // 坐席前状态
 
-        if (StringUtils.equals(pre, MainContext.AgentStatusEnum.OFFLINE.toString())) {
+        if (StringUtils.equals(pre, AgentStatusEnum.OFFLINE.toString())) {
             // 之前不存在，新建缓存
-            if ((!StringUtils.equals(agentStatus.getStatus(), MainContext.AgentStatusEnum.OFFLINE.toString()))) {
+            if ((!StringUtils.equals(agentStatus.getStatus(), AgentStatusEnum.OFFLINE.toString()))) {
                 redisCommand.setHashKV(
                         RedisKey.getAgentStatusHashKeyByStatusStr(orgi, agentStatus.getStatus()),
                         agentStatus.getAgentno(), SerializeUtil.serialize(agentStatus));
@@ -172,7 +173,7 @@ public class CacheService {
             } else {
                 // 之前存在，而且与新状态不一致
                 redisCommand.delHashKV(RedisKey.getAgentStatusHashKeyByStatusStr(orgi, pre), agentStatus.getAgentno());
-                if (!StringUtils.equals(agentStatus.getStatus(), MainContext.AgentStatusEnum.OFFLINE.toString())) {
+                if (!StringUtils.equals(agentStatus.getStatus(), AgentStatusEnum.OFFLINE.toString())) {
                     redisCommand.setHashKV(
                             RedisKey.getAgentStatusHashKeyByStatusStr(orgi, agentStatus.getStatus()),
                             agentStatus.getAgentno(), SerializeUtil.serialize(agentStatus));
@@ -233,7 +234,7 @@ public class CacheService {
      */
     public void deleteAgentStatusByAgentnoAndOrgi(final String agentno, final String orgi) {
         String status = getAgentStatusStatus(agentno, orgi);
-        if (!StringUtils.equals(MainContext.AgentStatusEnum.OFFLINE.toString(), status)) {
+        if (!StringUtils.equals(AgentStatusEnum.OFFLINE.toString(), status)) {
             redisCommand.delHashKV(RedisKey.getAgentStatusHashKeyByStatusStr(orgi, status), agentno);
         }
     }
@@ -249,11 +250,11 @@ public class CacheService {
     private String getAgentStatusStatus(final String agentno, final String orgi) {
         // 首先判断这个坐席的状态是READY还是BUSY，再去更新
         if (redisCommand.hasHashKV(RedisKey.getAgentStatusReadyHashKey(orgi), agentno)) {
-            return MainContext.AgentStatusEnum.READY.toString();
+            return AgentStatusEnum.READY.toString();
         } else if (redisCommand.hasHashKV(RedisKey.getAgentStatusNotReadyHashKey(orgi), agentno)) {
-            return MainContext.AgentStatusEnum.NOTREADY.toString();
+            return AgentStatusEnum.NOTREADY.toString();
         } else {
-            return MainContext.AgentStatusEnum.OFFLINE.toString();
+            return AgentStatusEnum.OFFLINE.toString();
         }
     }
 
@@ -799,9 +800,9 @@ public class CacheService {
     /******************************************
      * Customer Chats Audit 相关
      ******************************************/
-    public void putAgentUserAuditByOrgi(final String orgi, final AgentUserAudit audit) throws CSKefuCacheException {
+    public void putAgentUserAuditByOrgi(final String orgi, final AgentUserAudit audit) throws CacheEx {
         if (StringUtils.isBlank(audit.getAgentUserId())) {
-            throw new CSKefuCacheException("agentUserId is required.");
+            throw new CacheEx("agentUserId is required.");
         }
         redisCommand.setHashKV(
                 RedisKey.getCustomerChatsAuditKeyByOrgi(orgi), audit.getAgentUserId(), SerializeUtil.serialize(audit));

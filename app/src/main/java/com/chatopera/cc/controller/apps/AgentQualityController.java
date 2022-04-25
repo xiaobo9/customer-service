@@ -17,14 +17,14 @@
 
 package com.chatopera.cc.controller.apps;
 
-import com.chatopera.cc.basic.MainContext;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Quality;
-import com.chatopera.cc.model.QualityRequest;
-import com.chatopera.cc.model.Tag;
-import com.chatopera.cc.persistence.repository.QualityRepository;
-import com.chatopera.cc.persistence.repository.TagRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.Quality;
+import com.github.xiaobo9.bean.QualityRequest;
+import com.github.xiaobo9.entity.Tag;
+import com.github.xiaobo9.repository.QualityRepository;
+import com.github.xiaobo9.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -51,8 +51,8 @@ public class AgentQualityController extends Handler {
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
         // TODO: mdx-organ clean
 //        map.addAttribute("sessionConfig", acdPolicyService.initSessionConfig(super.getOrgi(request)));
-        map.addAttribute("qualityList", qualityRes.findByQualitytypeAndOrgi(MainContext.QualityType.CHAT.toString(), super.getOrgi(request)));
-        map.addAttribute("tagList", tagRes.findByOrgiAndTagtype(super.getOrgi(request), MainContext.TagType.QUALITY.toString()));
+        map.addAttribute("qualityList", qualityRes.findByQualitytypeAndOrgi(Enums.QualityType.CHAT.toString(), super.getOrgi(request)));
+        map.addAttribute("tagList", tagRes.findByOrgiAndTagtype(super.getOrgi(request), Enums.TagType.QUALITY.toString()));
         return request(super.createAppsTempletResponse("/apps/quality/index"));
     }
 
@@ -63,7 +63,7 @@ public class AgentQualityController extends Handler {
         String orgi = super.getOrgi(request);
 
         if (qualityArray != null && qualityArray.getTitle() != null) {
-            List<Quality> qualityList = qualityRes.findByQualitytypeAndOrgi(MainContext.QualityType.CHAT.toString(), super.getOrgi(request));
+            List<Quality> qualityList = qualityRes.findByQualitytypeAndOrgi(Enums.QualityType.CHAT.toString(), super.getOrgi(request));
             qualityRes.deleteAll(qualityList);
             List<Quality> tempList = new ArrayList<>();
             for (int i = 0; i < qualityArray.getTitle().length; i++) {
@@ -76,7 +76,7 @@ public class AgentQualityController extends Handler {
                     temp.setScore(qualityArray.getScore()[i]);
                 }
                 temp.setOrgi(super.getOrgi(request));
-                temp.setQualitytype(MainContext.QualityType.CHAT.toString());
+                temp.setQualitytype(Enums.QualityType.CHAT.toString());
                 tempList.add(temp);
             }
             if (tempList.size() > 0) {
@@ -97,7 +97,7 @@ public class AgentQualityController extends Handler {
 //                cache.deleteSessionConfigListByOrgi(orgi);
 //            }
             if (qualityArray.getTag() != null && qualityArray.getTag().length > 0) {
-                List<Tag> tagList = tagRes.findByOrgiAndTagtype(super.getOrgi(request), MainContext.TagType.QUALITY.toString());
+                List<Tag> tagList = tagRes.findByOrgiAndTagtype(super.getOrgi(request), Enums.TagType.QUALITY.toString());
                 if (tagList.size() > 0) {
                     tagRes.deleteAll(tagList);
                 }
@@ -108,7 +108,7 @@ public class AgentQualityController extends Handler {
                     temp.setCreater(super.getUser(request).getId());
                     temp.setTag(tag);
                     temp.setCreater(super.getOrgi(request));
-                    temp.setTagtype(MainContext.TagType.QUALITY.toString());
+                    temp.setTagtype(Enums.TagType.QUALITY.toString());
                     tagTempList.add(temp);
                 }
                 if (tagTempList.size() > 0) {

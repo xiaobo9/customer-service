@@ -16,12 +16,12 @@
 
 package com.chatopera.cc.aspect;
 
-import com.chatopera.cc.basic.enums.AgentUserStatusEnum;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
-import com.chatopera.cc.model.AgentUser;
 import com.chatopera.cc.proxy.AgentAuditProxy;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
+import com.github.xiaobo9.entity.AgentUser;
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -53,7 +53,7 @@ public class AgentUserAspect {
     @Autowired
     private AgentAuditProxy agentAuditProxy;
 
-    @After("execution(* com.chatopera.cc.persistence.repository.AgentUserRepository.save(..))")
+    @After("execution(* com.github.xiaobo9.repository.AgentUserRepository.save(..))")
     public void save(final JoinPoint joinPoint) {
         final AgentUser agentUser = (AgentUser) joinPoint.getArgs()[0];
         logger.info(
@@ -72,7 +72,7 @@ public class AgentUserAspect {
         cacheService.putAgentUserByOrgi(agentUser, agentUser.getOrgi());
     }
 
-    @After("execution(* com.chatopera.cc.persistence.repository.AgentUserRepository.delete(..))")
+    @After("execution(* com.github.xiaobo9.repository.AgentUserRepository.delete(..))")
     public void delete(final JoinPoint joinPoint) {
         final AgentUser agentUser = (AgentUser) joinPoint.getArgs()[0];
         logger.info(

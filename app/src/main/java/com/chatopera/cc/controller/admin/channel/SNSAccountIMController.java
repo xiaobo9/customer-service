@@ -16,16 +16,16 @@
  */
 package com.chatopera.cc.controller.admin.channel;
 
-import com.chatopera.cc.basic.MainContext;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.ConsultInviteRepository;
-import com.chatopera.cc.persistence.repository.SNSAccountRepository;
-import com.chatopera.cc.persistence.repository.SecretRepository;
 import com.chatopera.cc.proxy.OrganProxy;
 import com.chatopera.cc.util.Menu;
-import com.github.xiaobo9.utils.Base62;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.ConsultInviteRepository;
+import com.github.xiaobo9.repository.SNSAccountRepository;
+import com.github.xiaobo9.repository.SecretRepository;
+import com.github.xiaobo9.commons.utils.Base62;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -64,7 +64,7 @@ public class SNSAccountIMController extends Handler {
     @Menu(type = "admin", subtype = "im", access = false, admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String execute, @RequestParam(name = "status", required = false) String status) {
         Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
-        map.addAttribute("snsAccountList", snsAccountRes.findBySnstypeAndOrgiAndOrgan(MainContext.ChannelType.WEBIM.toString(), super.getOrgi(request), organs.keySet(), super.page(request)));
+        map.addAttribute("snsAccountList", snsAccountRes.findBySnstypeAndOrgiAndOrgan(Enums.ChannelType.WEBIM.toString(), super.getOrgi(request), organs.keySet(), super.page(request)));
 
         map.addAttribute("status", status);
         List<Secret> secretConfig = secRes.findByOrgi(super.getOrgi(request));
@@ -95,7 +95,7 @@ public class SNSAccountIMController extends Handler {
             if (count == 0) {
                 status = "new_webim_success";
                 snsAccount.setOrgi(super.getOrgi(request));
-                snsAccount.setSnstype(MainContext.ChannelType.WEBIM.toString());
+                snsAccount.setSnstype(Enums.ChannelType.WEBIM.toString());
                 snsAccount.setCreatetime(new Date());
                 User curr = super.getUser(request);
                 snsAccount.setCreater(curr.getId());
@@ -177,7 +177,7 @@ public class SNSAccountIMController extends Handler {
                 }
             }
 
-            oldSnsAccount.setSnstype(MainContext.ChannelType.WEBIM.toString());
+            oldSnsAccount.setSnstype(Enums.ChannelType.WEBIM.toString());
             snsAccountRes.save(oldSnsAccount);
         }
         return request(super.pageTplResponse("redirect:/admin/im/index.html"));

@@ -17,15 +17,21 @@
 package com.chatopera.cc.controller.apps.report;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
+import com.github.xiaobo9.bean.ChartProperties;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.service.cube.ReportCubeService;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.bi.ReportData;
+import com.github.xiaobo9.commons.utils.Base62Utils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.commons.kit.ObjectKit;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -152,7 +158,7 @@ public class ReportDesignController extends Handler {
             ChartProperties chartProperties = new ChartProperties();
             chartProperties.setChartype(tp.getCharttype());
             Base64 base64 = new Base64();
-            model.setChartcontent(base64.encodeToString(MainUtils.toBytes(chartProperties)));
+            model.setChartcontent(base64.encodeToString(ObjectKit.toBytes(chartProperties)));
             model.setTempletid(template);
             model.setMid(mid);
 
@@ -224,7 +230,7 @@ public class ReportDesignController extends Handler {
         map.addAttribute("eltemplet", t);
         if (!StringUtils.isBlank(parentid)) {
             ReportFilter filter = new ReportFilter();
-            filter.setCode(MainUtils.genID());
+            filter.setCode(Base62Utils.genID());
             filter.setReportid(id);
             filter.setOrgi(super.getOrgi(request));
             filter.setCreatetime(new Date());
@@ -237,9 +243,9 @@ public class ReportDesignController extends Handler {
             filter.setModelid(mid);
             filter.setModeltype(t.getCode());
 
-            filter.setConvalue(MainContext.FilterConValueType.INPUT.toString());
-            filter.setValuefiltertype(MainContext.FilterValuefilterType.COMPARE.toString());
-            filter.setComparetype(MainContext.FilterCompType.EQUAL.toString());
+            filter.setConvalue(Enums.FilterConValueType.INPUT.toString());
+            filter.setValuefiltertype(Enums.FilterValuefilterType.COMPARE.toString());
+            filter.setComparetype(Enums.FilterCompType.EQUAL.toString());
             filter.setFormatstr("yyyy-MM-dd");
             reportFilterRepository.save(filter);
             map.addAttribute("filter", filter);
@@ -283,7 +289,7 @@ public class ReportDesignController extends Handler {
         map.addAttribute("reportModel", model);
         map.addAttribute("element", model);
         if (model != null && !StringUtils.isBlank(model.getPublishedcubeid())) {
-            PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundException::new);
+            PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundEx::new);
             map.addAttribute("cube", cube);
             if (canGetReportData(model, cube.getCube())) {
                 ReportData reportData;
@@ -381,7 +387,7 @@ public class ReportDesignController extends Handler {
     public ModelAndView filteradd(ModelMap map, @Valid String cubeid, @Valid String dtype, @Valid String mid) {
         ModelAndView view = request(super.pageTplResponse("/apps/business/report/design/modeldesign/filteradd"));
         if (!StringUtils.isBlank(cubeid)) {
-            PublishedCube cube = publishedCubeRepository.findById(cubeid).orElseThrow(EntityNotFoundException::new);
+            PublishedCube cube = publishedCubeRepository.findById(cubeid).orElseThrow(EntityNotFoundEx::new);
             map.addAttribute("cube", cube);
             List<MetadataTable> metadataTable = new ArrayList<>();
             for (CubeMetadata cm : cube.getCube().getMetadata()) {
@@ -408,13 +414,13 @@ public class ReportDesignController extends Handler {
         String modelId = "";
         if (f != null) {
             if (StringUtils.isBlank(f.getCode())) {
-                f.setCode(MainUtils.genID());
+                f.setCode(Base62Utils.genID());
             }
             f.setOrgi(super.getOrgi(request));
             f.setCreatetime(new Date());
             f.setName(f.getTitle());
             f.setDataname(f.getTitle());
-            if (MainContext.FilterConValueType.AUTO.toString().equals(f.getConvalue()) && MainContext.FilterModelType.SIGSEL.toString().equals(f.getModeltype())) {
+            if (Enums.FilterConValueType.AUTO.toString().equals(f.getConvalue()) && Enums.FilterModelType.SIGSEL.toString().equals(f.getModeltype())) {
                 f.setCascadeid(f.getCascadeid());
                 f.setTableproperty(null);
                 if (!StringUtils.isBlank(tbppy)) {
@@ -477,7 +483,7 @@ public class ReportDesignController extends Handler {
                     } else {
                         col.setCur(dtype);
                     }
-                    col.setId(MainUtils.genID());
+                    col.setId(Base62Utils.genID());
                     CubeLevel cubeLevel = null;
                     for (Dimension dim : cube.getCube().getDimension()) {
                         for (CubeLevel level : dim.getCubeLevel()) {
@@ -518,7 +524,7 @@ public class ReportDesignController extends Handler {
                 if (!inlist) {
                     ColumnProperties col = new ColumnProperties();
                     col.setCur("measure"); // 数据结构字段
-                    col.setId(MainUtils.genID());
+                    col.setId(Base62Utils.genID());
                     CubeMeasure cubeMeasure = null;
                     for (CubeMeasure measure : cube.getCube().getMeasure()) {
                         if (measure.getId().equals(m)) {
@@ -551,7 +557,7 @@ public class ReportDesignController extends Handler {
                 }
                 if (!inlist) {
                     ReportFilter filter = new ReportFilter();
-                    filter.setId(MainUtils.genID());
+                    filter.setId(Base62Utils.genID());
                     CubeLevel cubeLevel = null;
                     if (cube.getCube() != null && cube.getCube().getDimension().size() > 0) {
                         for (Dimension dim : cube.getCube().getDimension()) {
@@ -571,13 +577,13 @@ public class ReportDesignController extends Handler {
                             filter.setTitle(cubeLevel.getName());
                             filter.setModelid(mid);
 
-                            filter.setModeltype(MainContext.FilterModelType.TEXT.toString());
-                            filter.setConvalue(MainContext.FilterConValueType.INPUT.toString());
-                            filter.setValuefiltertype(MainContext.FilterValuefilterType.COMPARE.toString());
-                            filter.setComparetype(MainContext.FilterCompType.EQUAL.toString());
+                            filter.setModeltype(Enums.FilterModelType.TEXT.toString());
+                            filter.setConvalue(Enums.FilterConValueType.INPUT.toString());
+                            filter.setValuefiltertype(Enums.FilterValuefilterType.COMPARE.toString());
+                            filter.setComparetype(Enums.FilterCompType.EQUAL.toString());
 
                             if ("select".equalsIgnoreCase(filter.getModeltype())) {
-                                filter.setConvalue(MainContext.FilterConValueType.AUTO.toString());
+                                filter.setConvalue(Enums.FilterConValueType.AUTO.toString());
                             }
                         }
                         filter.setReportid(model.getReportid());
@@ -703,7 +709,7 @@ public class ReportDesignController extends Handler {
                 rf.setFkfieldid(f.getFkfieldid());
                 rf.setFilterfieldid(f.getFilterfieldid());
 
-                if (MainContext.FilterConValueType.AUTO.toString().equals(f.getConvalue()) && MainContext.FilterModelType.SIGSEL.toString().equals(f.getModeltype())) {
+                if (Enums.FilterConValueType.AUTO.toString().equals(f.getConvalue()) && Enums.FilterModelType.SIGSEL.toString().equals(f.getModeltype())) {
                     rf.setCascadeid(f.getCascadeid());
                     rf.setTableproperty(null);
                     rf.setIsdic(f.isIsdic());
@@ -805,7 +811,7 @@ public class ReportDesignController extends Handler {
                 rf.setFkfieldid(f.getFkfieldid());
                 rf.setFilterfieldid(f.getFilterfieldid());
 
-                if (MainContext.FilterConValueType.AUTO.toString().equals(f.getConvalue()) && MainContext.FilterModelType.SIGSEL.toString().equals(f.getModeltype())) {
+                if (Enums.FilterConValueType.AUTO.toString().equals(f.getConvalue()) && Enums.FilterModelType.SIGSEL.toString().equals(f.getModeltype())) {
                     rf.setCascadeid(f.getCascadeid());
                     rf.setTableproperty(null);
                     rf.setIsdic(f.isIsdic());
@@ -1033,7 +1039,7 @@ public class ReportDesignController extends Handler {
             ChartProperties oldChartppy = model.getChartProperties();
             oldChartppy.setChartype(tp.getCharttype());
             Base64 base64 = new Base64();
-            model.setChartcontent(base64.encodeToString(MainUtils.toBytes(oldChartppy)));
+            model.setChartcontent(base64.encodeToString(ObjectKit.toBytes(oldChartppy)));
             reportModelRes.save(model);
         }
         return request(super.pageTplResponse(
@@ -1054,13 +1060,13 @@ public class ReportDesignController extends Handler {
         oldChartppy.setDataview(chartProperties.isDataview());
         oldChartppy.setFormat(StringUtils.isBlank(chartProperties.getFormat()) ? "val" : chartProperties.getFormat());
         Base64 base64 = new Base64();
-        model.setChartcontent(base64.encodeToString(MainUtils.toBytes(oldChartppy)));
+        model.setChartcontent(base64.encodeToString(ObjectKit.toBytes(oldChartppy)));
         reportModelRes.save(model);
         map.addAttribute("eltemplet", templateRes.findByIdAndOrgi(model.getTempletid(), super.getOrgi(request)));
         map.addAttribute("element", model);
         map.addAttribute("reportModel", model);
         if (!StringUtils.isBlank(model.getPublishedcubeid())) {
-            PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundException::new);
+            PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundEx::new);
             map.addAttribute("cube", cube);
             if (!model.getMeasures().isEmpty()) {
                 map.addAttribute("reportData", reportCubeService.getReportData(model, cube.getCube(), request, true, semap));
@@ -1093,7 +1099,7 @@ public class ReportDesignController extends Handler {
                 } else {
                     ReportModel model = this.getModel(id, super.getOrgi(request));
                     if (model != null && !StringUtils.isBlank(fid) && !StringUtils.isBlank(model.getPublishedcubeid())) {
-                        PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundException::new);
+                        PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundEx::new);
                         map.addAttribute("filter", reportCubeService.processFilter(model, filter, cube.getCube(), request));
                     }
                 }
@@ -1129,7 +1135,7 @@ public class ReportDesignController extends Handler {
                         map.addAttribute("filter", reportCubeService.processFilter(modelr, filter, null, request));
                     } else {
                         if (model != null && !StringUtils.isBlank(fid) && !StringUtils.isBlank(model.getPublishedcubeid())) {
-                            PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundException::new);
+                            PublishedCube cube = publishedCubeRepository.findById(model.getPublishedcubeid()).orElseThrow(EntityNotFoundEx::new);
                             map.addAttribute("filter", reportCubeService.processFilter(model, filter, cube.getCube(), request));
                         }
                     }
@@ -1197,7 +1203,7 @@ public class ReportDesignController extends Handler {
             MainUtils.copyProperties(report, publishedReport, "");
             publishedReport.setId(null);
             Base64 base64 = new Base64();
-            publishedReport.setReportcontent(base64.encodeToString(MainUtils.toBytes(report)));
+            publishedReport.setReportcontent(base64.encodeToString(ObjectKit.toBytes(report)));
             publishedReport.setDataid(reportid);
             publishedReport.setCreatetime(new Date());
             publishedReport.setCreater(user.getId());

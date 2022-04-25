@@ -18,21 +18,24 @@
 package com.chatopera.cc.controller.apps;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.ThumbnailUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.*;
+import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncEntIM;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
-import com.chatopera.cc.persistence.repository.*;
+import com.chatopera.cc.persistence.repository.ChatMessageRepository;
 import com.chatopera.cc.proxy.AttachmentProxy;
 import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.client.NettyClients;
-import com.chatopera.cc.socketio.message.ChatMessage;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.StreamingFileUtil;
+import com.github.xiaobo9.model.UploadStatus;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -354,8 +357,8 @@ public class EntIMController extends Handler {
         data.setAttachmentid(attachid);
         data.setMessage(message);
         data.setMsgtype(msgtype);
-        data.setType(MainContext.MessageType.MESSAGE.toString());
-        data.setCalltype(MainContext.CallType.OUT.toString());
+        data.setType(Enums.MessageType.MESSAGE.toString());
+        data.setCalltype(Enums.CallType.OUT.toString());
         data.setOrgi(orgi);
 
         data.setTouser(userid);
@@ -379,7 +382,7 @@ public class EntIMController extends Handler {
             return view;
         }
         UploadStatus upload;
-        String fileid = MainUtils.getUUID();
+        String fileid = UUIDUtils.getUUID();
         StreamingFile sf = new StreamingFile();
         sf.setId(fileid);
         sf.setName(multipart.getOriginalFilename());
@@ -399,9 +402,9 @@ public class EntIMController extends Handler {
                 upload = new UploadStatus("0", fileUrl);
 
                 if (paste == null) {
-                    ChatMessage fileMessage = createFileMessage(fileUrl, (int) multipart.getSize(), multipart.getName(), MainContext.MediaType.IMAGE.toString(), userid, fileid, super.getOrgi(request));
+                    ChatMessage fileMessage = createFileMessage(fileUrl, (int) multipart.getSize(), multipart.getName(), Enums.MediaType.IMAGE.toString(), userid, fileid, super.getOrgi(request));
                     fileMessage.setUsername(logined.getUname());
-                    peerSyncEntIM.send(logined.getId(), group, orgi, MainContext.MessageType.MESSAGE, fileMessage);
+                    peerSyncEntIM.send(logined.getId(), group, orgi, Enums.MessageType.MESSAGE, fileMessage);
                 }
             } else {
                 upload = new UploadStatus(invalid);
@@ -418,9 +421,9 @@ public class EntIMController extends Handler {
                 upload = new UploadStatus("0", "/res/file.html?id=" + id);
                 String file = "/res/file.html?id=" + id;
 
-                ChatMessage fileMessage = createFileMessage(file, (int) multipart.getSize(), multipart.getOriginalFilename(), MainContext.MediaType.FILE.toString(), userid, fileid, super.getOrgi(request));
+                ChatMessage fileMessage = createFileMessage(file, (int) multipart.getSize(), multipart.getOriginalFilename(), Enums.MediaType.FILE.toString(), userid, fileid, super.getOrgi(request));
                 fileMessage.setUsername(logined.getUname());
-                peerSyncEntIM.send(logined.getId(), group, orgi, MainContext.MessageType.MESSAGE, fileMessage);
+                peerSyncEntIM.send(logined.getId(), group, orgi, Enums.MessageType.MESSAGE, fileMessage);
             } else {
                 upload = new UploadStatus(invalid);
             }

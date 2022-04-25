@@ -18,17 +18,20 @@ package com.chatopera.cc.controller;
 
 import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.auth.AuthToken;
-import com.chatopera.cc.model.AgentStatus;
-import com.chatopera.cc.model.SystemConfig;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.UserRepository;
 import com.chatopera.cc.proxy.AgentProxy;
 import com.chatopera.cc.service.LoginService;
 import com.chatopera.cc.service.SystemConfigService;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.enums.AgentStatusEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.AgentStatus;
+import com.github.xiaobo9.entity.SystemConfig;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.UserRepository;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
 import org.slf4j.Logger;
@@ -170,7 +173,7 @@ public class LoginController extends Handler {
             return view;
         }
         if (user != null && user.getUsername() != null) {
-            final User loginUser = userRepository.findByUsernameAndPasswordAndDatastatus(user.getUsername(), MainUtils.md5(user.getPassword()), false);
+            final User loginUser = userRepository.findByUsernameAndPasswordAndDatastatus(user.getUsername(), MD5Utils.md5(user.getPassword()), false);
             if (loginUser != null && StringUtils.isNotBlank(loginUser.getId())) {
                 view = this.processLogin(request, loginUser, referer);
 
@@ -183,7 +186,7 @@ public class LoginController extends Handler {
 
                 // add authorization code for rest api
                 final String orgi = loginUser.getOrgi();
-                String auth = MainUtils.getUUID();
+                String auth = UUIDUtils.getUUID();
                 authToken.putUserByAuth(auth, loginUser);
                 userRepository.save(loginUser); // 更新登录状态到数据库
                 response.addCookie((new Cookie("authorization", auth)));
@@ -210,9 +213,9 @@ public class LoginController extends Handler {
                                 agentStatus.getAgentno(),
                                 user.isAdmin(), // 0代表admin
                                 agentStatus.getAgentno(),
-                                MainContext.AgentStatusEnum.OFFLINE.toString(),
-                                MainContext.AgentStatusEnum.READY.toString(),
-                                MainContext.AgentWorkType.MEIDIACHAT.toString(),
+                                AgentStatusEnum.OFFLINE.toString(),
+                                AgentStatusEnum.READY.toString(),
+                                Enums.AgentWorkType.MEIDIACHAT.toString(),
                                 orgi, null);
 
                     } catch (Exception e) {
@@ -242,7 +245,7 @@ public class LoginController extends Handler {
      * @return
      */
     private ModelAndView processLogin(final HttpServletRequest request, @NotNull final User loginUser, String referer) {
-        ModelAndView view = new ModelAndView();
+        ModelAndView view;
         if (StringUtils.isNotBlank(referer)) {
             view = new ModelAndView("redirect:" + referer);
         } else {
@@ -318,7 +321,7 @@ public class LoginController extends Handler {
         user.setUname(user.getUsername());
         user.setAdmin(true);
         if (StringUtils.isNotBlank(user.getPassword())) {
-            user.setPassword(MainUtils.md5(user.getPassword()));
+            user.setPassword(MD5Utils.md5(user.getPassword()));
         }
         user.setOrgi(super.getOrgi());
         userRepository.save(user);

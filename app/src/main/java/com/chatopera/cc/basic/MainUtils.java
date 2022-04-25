@@ -17,19 +17,23 @@
 package com.chatopera.cc.basic;
 
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.*;
 import com.chatopera.cc.service.TemplateService;
 import com.chatopera.cc.util.CronTools;
-import com.chatopera.cc.util.MD5;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.WebIMReport;
 import com.chatopera.cc.util.WeiXinReport;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.xiaobo9.mail.MailSender;
-import com.github.xiaobo9.utils.Base62;
+import com.github.xiaobo9.bean.JobTask;
+import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.commons.mail.MailSender;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.*;
 import com.googlecode.aviator.AviatorEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -47,13 +51,7 @@ import org.springframework.util.ClassUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
-import java.beans.BeanInfo;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
@@ -69,37 +67,10 @@ public class MainUtils {
 
     private static final Random random = new Random();
 
-    private static final MD5 md5 = new MD5();
-
     public static SimpleDateFormat timeRangeDateFormat = new SimpleDateFormat("HH:mm");
-
-    /**
-     * 当前时间+已过随机生成的 长整形数字
-     *
-     * @return
-     */
-    public static String genID() {
-        return Base62.encode(getUUID()).toLowerCase();
-    }
-
-    public static String genIDByKey(String key) {
-        return Base62.encode(key).toLowerCase();
-    }
-
-    public static String getUUID() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
 
     public static String getContextID(String session) {
         return session.replaceAll("-", "");
-    }
-
-    public static String md5(String str) {
-        return md5.getMD5ofStr(md5.getMD5ofStr(str));
-    }
-
-    public static String md5(byte[] bytes) {
-        return md5.getMD5ofByte(bytes);
     }
 
     public static void copyProperties(Object source, Object target, String... ignoreProperties)
@@ -297,12 +268,12 @@ public class MainUtils {
                 Object[] value = (Object[]) values.get(i);
                 if (value.length >= 2) {
                     String invitestatus = (String) value[0];
-                    if (MainContext.OnlineUserInviteStatus.DEFAULT.toString().equals(
+                    if (Enums.OnlineUserInviteStatus.DEFAULT.toString().equals(
                             invitestatus) || invitestatus == null) {
                         report.setUsers((long) value[1]);
-                    } else if (MainContext.OnlineUserInviteStatus.INVITE.toString().equals(invitestatus)) {
+                    } else if (Enums.OnlineUserInviteStatus.INVITE.toString().equals(invitestatus)) {
                         report.setInviteusers((long) value[1]);
-                    } else if (MainContext.OnlineUserInviteStatus.REFUSE.toString().equals(invitestatus)) {
+                    } else if (Enums.OnlineUserInviteStatus.REFUSE.toString().equals(invitestatus)) {
                         report.setRefuseusers((long) value[1]);
                     }
                 }
@@ -374,12 +345,12 @@ public class MainUtils {
                 Object[] value = (Object[]) values.get(i);
                 if (value.length >= 2) {
                     String invitestatus = (String) value[0];
-                    if (MainContext.OnlineUserInviteStatus.DEFAULT.toString().equals(
+                    if (Enums.OnlineUserInviteStatus.DEFAULT.toString().equals(
                             invitestatus) || invitestatus == null) {
                         report.setUsers((long) value[1]);
-                    } else if (MainContext.OnlineUserInviteStatus.ACCEPT.toString().equals(invitestatus)) {
+                    } else if (Enums.OnlineUserInviteStatus.ACCEPT.toString().equals(invitestatus)) {
                         report.setInviteusers((long) value[1]);
-                    } else if (MainContext.OnlineUserInviteStatus.REFUSE.toString().equals(invitestatus)) {
+                    } else if (Enums.OnlineUserInviteStatus.REFUSE.toString().equals(invitestatus)) {
                         report.setRefuseusers((long) value[1]);
                     }
                 }
@@ -401,63 +372,15 @@ public class MainUtils {
                 Object[] value = (Object[]) values.get(i);
                 if (value.length >= 2) {
                     String event = (String) value[0];
-                    if (MainContext.WeiXinEventType.SUB.toString().equals(event)) {
+                    if (Enums.WeiXinEventType.SUB.toString().equals(event)) {
                         report.setSubs((long) value[1]);
-                    } else if (MainContext.WeiXinEventType.UNSUB.toString().equals(event)) {
+                    } else if (Enums.WeiXinEventType.UNSUB.toString().equals(event)) {
                         report.setUnsubs((long) value[1]);
                     }
                 }
             }
         }
         return report;
-    }
-
-    public static Map<String, Object> transBean2Map(Object obj) {
-
-        if (obj == null) {
-            return null;
-        }
-        Map<String, Object> map = new HashMap<String, Object>();
-        try {
-            BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
-            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
-            for (PropertyDescriptor property : propertyDescriptors) {
-                String key = property.getName();
-
-                // 过滤class属性  
-                if (!key.equals("class")) {
-                    // 得到property对应的getter方法 
-
-                    Method readMethod = property.getReadMethod();
-
-                    if (readMethod != null) {
-                        Object value = readMethod.invoke(obj);
-                        if (value instanceof Date) {
-                            value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format((Date) value);
-                        }
-                        map.put(key, value);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("transBean2Map Error " + e);
-        }
-
-        return map;
-
-    }
-
-    public static byte[] toBytes(Object object) throws Exception {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutput = new ObjectOutputStream(out);
-        objectOutput.writeObject(object);
-        return out.toByteArray();
-    }
-
-    public static Object toObject(byte[] data) throws Exception {
-        ByteArrayInputStream input = new ByteArrayInputStream(data);
-        ObjectInputStream objectInput = new ObjectInputStream(input);
-        return objectInput.readObject();
     }
 
     public static String encryption(final String str) {
@@ -574,7 +497,7 @@ public class MainUtils {
         if (StringUtils.isNotBlank(confirm)) {
             if (secretConfig != null && secretConfig.size() > 0) {
                 Secret secret = secretConfig.get(0);
-                if (MainUtils.md5(confirm).equals(secret.getPassword())) {
+                if (MD5Utils.md5(confirm).equals(secret.getPassword())) {
                     execute = true;
                 }
             }
@@ -727,7 +650,7 @@ public class MainUtils {
     public static String encode(Object obj) {
         Base64 base64 = new Base64();
         try {
-            return base64.encodeToString(MainUtils.toBytes(obj));
+            return base64.encodeToString(ObjectKit.toBytes(obj));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -923,49 +846,42 @@ public class MainUtils {
         return workSession;
     }
 
-    /**
-     * @param plan
-     * @return
-     */
     public static String convertCrond(JobTask plan) {
-        StringBuilder strb = new StringBuilder();
+
+        String minuteRepeat = "";
+        String hourRepeat = "";
+
+        if (plan.getIsRepeat()) {
+            minuteRepeat = plan.getRepeatSpace() != null && plan.getRepeatSpace() < 60 ? "/" + plan.getRepeatSpace() : "";
+            hourRepeat = plan.getRepeatSpace() != null && plan.getRepeatSpace() > 60 ? "/" + plan.getRepeatSpace() / 60
+                    : (plan.getRepeatJustTime() != null && plan.getRepeatJustTime() > 0 ? "-" + (plan.getRunBeginHour() + plan.getRepeatJustTime())
+                    : "");
+        }
+
+        StringBuilder builder = new StringBuilder()
+                .append(plan.getRunBeginSecond()).append(" ")
+                .append(plan.getRunBeginMinute()).append(minuteRepeat).append(" ")
+                .append(plan.getRunBeginHour()).append(hourRepeat).append(" ");
+
         if ("day".equals(plan.getRunCycle())) {
-            strb.append(plan.getRunBeginSecond()).append(" ").append(plan.getRunBeginMinute())
-                    .append(plan.getIsRepeat() && plan.getRepeatSpace() != null && plan.getRepeatSpace() < 60 ? "/" + plan.getRepeatSpace() : "")
-                    .append(" ")
-                    .append(plan.getRunBeginHour())
-                    .append(plan.getIsRepeat() && plan.getRepeatSpace() != null && plan.getRepeatSpace() > 60 ? "/" + plan.getRepeatSpace() / 60 : (plan.getRepeatJustTime() != null && plan.getRepeatJustTime() > 0 ? "-" + (plan.getRunBeginHour() + plan.getRepeatJustTime()) : ""))
-                    .append(" ")
-                    .append("*")
+            builder.append("*")
                     .append(plan.getRunSpace() != null && plan.getRunSpace() > 0 ? "/" + plan.getRunSpace() : "")
                     .append(" ")
                     .append(" * ?");
         }
         if ("week".equals(plan.getRunCycle())) {
-            strb.append(plan.getRunBeginSecond()).append(" ").append(plan.getRunBeginMinute())
-                    .append(plan.getIsRepeat() && plan.getRepeatSpace() != null && plan.getRepeatSpace() < 60 ? "/" + plan.getRepeatSpace() : "")
-                    .append(" ")
-                    .append(plan.getRunBeginHour())
-                    .append(plan.getIsRepeat() && plan.getRepeatSpace() != null && plan.getRepeatSpace() > 60 ? "/" + plan.getRepeatSpace() / 60 : (plan.getRepeatJustTime() != null && plan.getRepeatJustTime() > 0 ? "-" + (plan.getRunBeginHour() + plan.getRepeatJustTime()) : ""))
-                    .append(" ")
-                    .append(plan.getRunDates() == null || plan.getRunDates().length == 0 ? "*" : "?")
+            builder.append(plan.getRunDates() == null || plan.getRunDates().length == 0 ? "*" : "?")
                     .append(" * ")
                     .append(plan.getRunDates() == null || plan.getRunDates().length == 0 ? "?" : StringUtils.join(plan.getRunDates(), ","))
                     .append(plan.getRunSpace() != null && plan.getRunSpace() > 0 ? "/" + plan.getRunSpace() : "");
         }
         if ("month".equals(plan.getRunCycle())) {
-            strb.append(plan.getRunBeginSecond()).append(" ").append(plan.getRunBeginMinute())
-                    .append(plan.getIsRepeat() && plan.getRepeatSpace() != null && plan.getRepeatSpace() < 60 ? "/" + plan.getRepeatSpace() : "")
-                    .append(" ")
-                    .append(plan.getRunBeginHour())
-                    .append(plan.getIsRepeat() && plan.getRepeatSpace() != null && plan.getRepeatSpace() > 60 ? "/" + plan.getRepeatSpace() / 60 : (plan.getRepeatJustTime() != null && plan.getRepeatJustTime() > 0 ? "-" + (plan.getRunBeginHour() + plan.getRepeatJustTime()) : ""))
-                    .append(" ")
-                    .append(plan.getRunBeginDate())
+            builder.append(plan.getRunBeginDate())
                     .append(" ")
                     .append(plan.getRunDates() == null || plan.getRunDates().length == 0 ? "*" : StringUtils.join(plan.getRunDates(), ","))
                     .append(" ").append(" ?");
         }
-        return strb.toString();
+        return builder.toString();
     }
 
     public static Date updateTaskNextFireTime(JobDetail jobDetail) {
@@ -983,33 +899,6 @@ public class MainUtils {
             }
         }
         return nextFireDate;
-    }
-
-    public static void putMapEntry(Map<String, String[]> map, String name, String value) {
-        String[] newValues;
-        String[] oldValues = map.get(name);
-        if (oldValues == null) {
-            newValues = new String[1];
-            newValues[0] = value;
-        } else {
-            newValues = new String[oldValues.length + 1];
-            System.arraycopy(oldValues, 0, newValues, 0, oldValues.length);
-            newValues[oldValues.length] = value;
-        }
-        map.put(name, newValues);
-    }
-
-    public static byte convertHexDigit(byte b) {
-        if ((b >= 48) && (b <= 57)) {
-            return (byte) (b - 48);
-        }
-        if ((b >= 97) && (b <= 102)) {
-            return (byte) (b - 97 + 10);
-        }
-        if ((b >= 65) && (b <= 70)) {
-            return (byte) (b - 65 + 10);
-        }
-        return 0;
     }
 
 }

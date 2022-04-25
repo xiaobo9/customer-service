@@ -17,15 +17,15 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.model.Contacts;
-import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.entity.Contacts;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang.StringUtils;
@@ -237,7 +237,7 @@ public class ApiWlContactsController extends Handler {
             }
 
             if (isNew) {
-                record.setId(MainUtils.getUUID());
+                record.setId(UUIDUtils.getUUID());
                 record.setCreatetime(new Date());
                 record.setCreater(creator);
             } else {

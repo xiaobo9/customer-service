@@ -17,18 +17,28 @@
 package com.chatopera.cc.controller.apps.report;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.*;
-import com.chatopera.cc.persistence.repository.*;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.chatopera.cc.model.PublishedReport;
+import com.chatopera.cc.model.Report;
+import com.chatopera.cc.model.ReportFilter;
+import com.chatopera.cc.persistence.repository.PublishedReportRepository;
+import com.chatopera.cc.persistence.repository.ReportRepository;
 import com.chatopera.cc.service.cube.ReportCubeService;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.dsdata.DSData;
 import com.chatopera.cc.util.dsdata.DSDataEvent;
 import com.chatopera.cc.util.dsdata.ExcelImportProcess;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.commons.utils.Base62Utils;
+import com.github.xiaobo9.entity.DataDic;
+import com.github.xiaobo9.entity.MetadataTable;
+import com.github.xiaobo9.repository.DataDicRepository;
+import com.github.xiaobo9.repository.MetadataRepository;
+import com.github.xiaobo9.commons.kit.ObjectKit;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +55,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Controller
@@ -95,15 +104,15 @@ public class ReportController extends Handler {
 
     @RequestMapping("/save")
     @Menu(type = "setting", subtype = "report", admin = true)
-    public ModelAndView quickreplysave(ModelMap map, HttpServletRequest request, @Valid Report report) {
+    public ModelAndView quickreplysave(ModelMap map, HttpServletRequest request, @Valid com.chatopera.cc.model.Report report) {
         ModelAndView view = request(super.pageTplResponse("redirect:/apps/report/index.html?dicid=" + report.getDicid()));
         if (!StringUtils.isBlank(report.getName())) {
             int count = reportRes.countByOrgiAndName(super.getOrgi(request), report.getName());
             if (count == 0) {
                 report.setOrgi(super.getOrgi(request));
                 report.setCreater(super.getUser(request).getId());
-                report.setReporttype(MainContext.ReportType.REPORT.toString());
-                report.setCode(MainUtils.genID());
+                report.setReporttype(Enums.ReportType.REPORT.toString());
+                report.setCode(Base62Utils.genID());
                 reportRes.save(report);
             } else {
                 view = request(super.pageTplResponse("redirect:/apps/report/index.html?msg=rt_name_exist&dicid=" + report.getDicid()));
@@ -134,9 +143,9 @@ public class ReportController extends Handler {
 
     @RequestMapping("/update")
     @Menu(type = "setting", subtype = "report", admin = true)
-    public ModelAndView quickreplyupdate(ModelMap map, HttpServletRequest request, @Valid Report report) {
+    public ModelAndView quickreplyupdate(ModelMap map, HttpServletRequest request, @Valid com.chatopera.cc.model.Report report) {
         if (!StringUtils.isBlank(report.getId())) {
-            Report temp = reportRes.findById(report.getId()).orElseThrow(EntityNotFoundException::new);
+            com.chatopera.cc.model.Report temp = reportRes.findById(report.getId()).orElseThrow(EntityNotFoundEx::new);
             if (temp != null) {
                 temp.setName(report.getName());
                 temp.setCode(report.getCode());
@@ -169,7 +178,7 @@ public class ReportController extends Handler {
             dataDic.setOrgi(super.getOrgi(request));
             dataDic.setCreater(super.getUser(request).getId());
             dataDic.setCreatetime(new Date());
-            dataDic.setTabtype(MainContext.QuickType.PUB.toString());
+            dataDic.setTabtype(Enums.QuickType.PUB.toString());
             dataDicRes.save(dataDic);
         }
         return request(super.pageTplResponse("redirect:/apps/report/index.html?dicid=" + dataDic.getId()));
@@ -235,20 +244,20 @@ public class ReportController extends Handler {
     @Menu(type = "setting", subtype = "reportimpsave")
     public ModelAndView impsave(ModelMap map, HttpServletRequest request, @RequestParam(value = "cusfile", required = false) MultipartFile cusfile, @Valid String type) throws IOException {
         DSDataEvent event = new DSDataEvent();
-        String fileName = "quickreply/" + MainUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
+        String fileName = "quickreply/" + UUIDUtils.getUUID() + cusfile.getOriginalFilename().substring(cusfile.getOriginalFilename().lastIndexOf("."));
         File excelFile = new File(path, fileName);
         MetadataTable table = metadataRes.findByTablename("uk_report");
         if (table != null) {
             FileUtils.writeByteArrayToFile(excelFile, cusfile.getBytes());
             event.setDSData(new DSData(table, excelFile, cusfile.getContentType(), super.getUser(request)));
-            event.getDSData().setClazz(Report.class);
+            event.getDSData().setClazz(com.chatopera.cc.model.Report.class);
             event.setOrgi(super.getOrgi(request));
             if (!StringUtils.isBlank(type)) {
                 event.getValues().put("cate", type);
             } else {
                 event.getValues().put("cate", Constants.DEFAULT_TYPE);
             }
-            event.getValues().put("type", MainContext.QuickType.PUB.toString());
+            event.getValues().put("type", Enums.QuickType.PUB.toString());
             event.getValues().put("creater", super.getUser(request).getId());
 //	    	exchange.getDSData().setProcess(new QuickReplyProcess(reportRes));
 //	    	reporterRes.save(exchange.getDSData().getReport()) ;
@@ -262,7 +271,7 @@ public class ReportController extends Handler {
     @Menu(type = "setting", subtype = "reportbatdelete")
     public ModelAndView batdelete(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String[] ids, @Valid String type) throws IOException {
         if (ids != null && ids.length > 0) {
-            Iterable<Report> topicList = reportRes.findAllById(Arrays.asList(ids));
+            Iterable<com.chatopera.cc.model.Report> topicList = reportRes.findAllById(Arrays.asList(ids));
             reportRes.deleteAll(topicList);
         }
 
@@ -273,14 +282,14 @@ public class ReportController extends Handler {
     @Menu(type = "setting", subtype = "reportexpids")
     public void expids(ModelMap map, HttpServletResponse response, @Valid String[] ids) throws IOException {
         if (ids != null && ids.length > 0) {
-            Iterable<Report> topicList = reportRes.findAllById(Arrays.asList(ids));
+            Iterable<com.chatopera.cc.model.Report> topicList = reportRes.findAllById(Arrays.asList(ids));
             MetadataTable table = metadataRes.findByTablename("uk_report");
             List<Map<String, Object>> values = new ArrayList<>();
-            for (Report topic : topicList) {
-                values.add(MainUtils.transBean2Map(topic));
+            for (com.chatopera.cc.model.Report topic : topicList) {
+                values.add(ObjectKit.transBean2Map(topic));
             }
 
-            response.setHeader("content-disposition", "attachment;filename=UCKeFu-Report-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+            response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Report"));
             if (table != null) {
                 ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
                 excelProcess.process();
@@ -293,15 +302,15 @@ public class ReportController extends Handler {
     @RequestMapping("/expall")
     @Menu(type = "setting", subtype = "reportexpall")
     public void expall(ModelMap map, HttpServletRequest request, HttpServletResponse response, @Valid String type) throws IOException {
-        List<Report> reportList = reportRes.findByOrgiAndDicid(super.getOrgi(request), type);
+        List<com.chatopera.cc.model.Report> reportList = reportRes.findByOrgiAndDicid(super.getOrgi(request), type);
 
         MetadataTable table = metadataRes.findByTablename("uk_report");
         List<Map<String, Object>> values = new ArrayList<Map<String, Object>>();
         for (Report report : reportList) {
-            values.add(MainUtils.transBean2Map(report));
+            values.add(ObjectKit.transBean2Map(report));
         }
 
-        response.setHeader("content-disposition", "attachment;filename=UCKeFu-Report-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".xls");
+        response.setHeader(AttachFileKit.HEADER_KEY, AttachFileKit.xlsWithDayAnd("Report"));
 
         if (table != null) {
             ExcelExporterProcess excelProcess = new ExcelExporterProcess(values, table, response.getOutputStream());
@@ -339,7 +348,7 @@ public class ReportController extends Handler {
     @RequestMapping("/pbdelete")
     @Menu(type = "setting", subtype = "pbreport", admin = true)
     public ModelAndView pbdelete(ModelMap map, @Valid String id) {
-        PublishedReport report = publishedReportRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        com.chatopera.cc.model.PublishedReport report = publishedReportRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         publishedReportRes.delete(report);
         return request(super.pageTplResponse("redirect:/apps/report/pbreportindex.html?dicid=" + report.getDicid()));
     }

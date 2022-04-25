@@ -15,9 +15,9 @@
  */
 package com.chatopera.cc.aspect;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.OnlineUser;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.OnlineUser;
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -40,11 +40,11 @@ public class OnlineUserAspect {
      *
      * @param joinPoint
      */
-    @Before("execution(* com.chatopera.cc.persistence.repository.OnlineUserRepository.save(..))")
+    @Before("execution(* com.github.xiaobo9.repository.OnlineUserRepository.save(..))")
     public void save(final JoinPoint joinPoint) {
         final OnlineUser onlineUser = (OnlineUser) joinPoint.getArgs()[0];
         if (StringUtils.isNotBlank(onlineUser.getStatus())) {
-            switch (MainContext.OnlineUserStatusEnum.toValue(onlineUser.getStatus())) {
+            switch (Enums.OnlineUserStatusEnum.toValue(onlineUser.getStatus())) {
                 case OFFLINE:
                     cacheService.deleteOnlineUserByIdAndOrgi(onlineUser.getId(), onlineUser.getOrgi());
                     break;

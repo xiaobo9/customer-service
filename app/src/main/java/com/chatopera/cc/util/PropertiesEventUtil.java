@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.util;
 
-import com.chatopera.cc.model.PropertiesEvent;
+import com.github.xiaobo9.entity.PropertiesEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.FatalBeanException;

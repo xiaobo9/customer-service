@@ -17,13 +17,13 @@
 package com.chatopera.cc.controller.apps.report;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.CubeMeasure;
-import com.chatopera.cc.model.CubeMetadata;
-import com.chatopera.cc.persistence.repository.CubeMeasureRepository;
-import com.chatopera.cc.persistence.repository.CubeMetadataRepository;
-import com.chatopera.cc.persistence.repository.TablePropertiesRepository;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.CubeMeasure;
+import com.github.xiaobo9.entity.CubeMetadata;
+import com.github.xiaobo9.repository.CubeMeasureRepository;
+import com.github.xiaobo9.repository.CubeMetadataRepository;
+import com.github.xiaobo9.repository.TablePropertiesRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -75,7 +75,7 @@ public class CubeMeasureController extends Handler {
     @RequestMapping("/delete")
     @Menu(type = "report", subtype = "cubemeasure")
     public ModelAndView quickreplydelete(@Valid String id) {
-        CubeMeasure cubeMeasure = cubeMeasureRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        CubeMeasure cubeMeasure = cubeMeasureRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         cubeMeasureRes.delete(cubeMeasure);
         return request(super.pageTplResponse("redirect:/apps/report/cube/detail.html?dimensionId=cubemeasure&id=" + cubeMeasure.getCubeid()));
     }

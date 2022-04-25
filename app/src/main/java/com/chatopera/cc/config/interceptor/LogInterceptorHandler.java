@@ -17,14 +17,14 @@
 package com.chatopera.cc.config.interceptor;
 
 import com.chatopera.cc.basic.Constants;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.IPUtils;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.RequestLog;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.RequestLogRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.RequestLog;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.RequestLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -97,7 +97,7 @@ public class LogInterceptorHandler implements HandlerInterceptor {
         // log.setHostname(request.getRemoteHost());
         log.setIp(IPUtils.getIpAddress(request));
 
-        log.setType(MainContext.LogType.REQUEST.toString());
+        log.setType(Enums.LogType.REQUEST.toString());
 
         log.setMethodname(handlerMethod.toString());
         log.setClassname(bean.getClass().toString());

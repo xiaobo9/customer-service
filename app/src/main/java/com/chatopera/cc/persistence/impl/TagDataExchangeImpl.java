@@ -1,10 +1,8 @@
 package com.chatopera.cc.persistence.impl;
 
-import com.chatopera.cc.model.Tag;
-import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.TagRepository;
-import com.chatopera.cc.persistence.repository.UserRepository;
+import com.github.xiaobo9.entity.Tag;
+import com.github.xiaobo9.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

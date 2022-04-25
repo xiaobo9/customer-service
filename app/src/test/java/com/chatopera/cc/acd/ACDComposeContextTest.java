@@ -1,7 +1,7 @@
 package com.chatopera.cc.acd;
 
 import com.chatopera.cc.acd.basic.ACDComposeContext;
-import com.chatopera.cc.model.AgentUser;
+import com.github.xiaobo9.entity.AgentUser;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

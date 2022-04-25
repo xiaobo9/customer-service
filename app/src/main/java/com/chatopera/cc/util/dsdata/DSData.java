@@ -16,11 +16,11 @@
  */
 package com.chatopera.cc.util.dsdata;
 
-import com.chatopera.cc.model.JobDetail;
-import com.chatopera.cc.model.MetadataTable;
-import com.chatopera.cc.model.Reporter;
-import com.chatopera.cc.model.User;
 import com.chatopera.cc.util.dsdata.process.JPAProcess;
+import com.github.xiaobo9.entity.JobDetail;
+import com.github.xiaobo9.entity.MetadataTable;
+import com.github.xiaobo9.entity.Reporter;
+import com.github.xiaobo9.entity.User;
 
 import java.io.File;
 

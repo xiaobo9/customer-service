@@ -17,9 +17,9 @@
 package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.User;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;

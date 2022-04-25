@@ -17,13 +17,13 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.QuickType;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
-import com.chatopera.cc.persistence.repository.QuickTypeRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.entity.QuickType;
+import com.github.xiaobo9.repository.QuickTypeRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -62,7 +62,7 @@ public class ApiQuickTypeController extends Handler {
     @Menu(type = "apps", subtype = "quicktype", access = true)
     public ResponseEntity<RestResult> list(HttpServletRequest request, @Valid String id, @Valid String quicktype) {
         if (StringUtils.isNotBlank(id)) {
-            QuickType quickType = quickTypeRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            QuickType quickType = quickTypeRepository.findById(id).orElseThrow(EntityNotFoundEx::new);
             return new ResponseEntity<>(new RestResult(RestResultType.OK, quickType), HttpStatus.OK);
         }
         List<QuickType> quickTypeList = quickTypeRepository.findByOrgiAndQuicktype(getOrgi(request), quicktype);

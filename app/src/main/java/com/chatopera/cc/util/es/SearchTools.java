@@ -18,10 +18,11 @@ package com.chatopera.cc.util.es;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.FormFilter;
-import com.chatopera.cc.model.FormFilterItem;
-import com.chatopera.cc.model.MetadataTable;
 import com.chatopera.cc.persistence.impl.ESDataExchangeImpl;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.FormFilter;
+import com.github.xiaobo9.entity.FormFilterItem;
+import com.github.xiaobo9.entity.MetadataTable;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
@@ -100,7 +101,7 @@ public class SearchTools {
     public static PageImpl<UKDataBean> dissearch(String orgi, FormFilter formFilter, List<FormFilterItem> itemList, MetadataTable metadataTable, int p, int ps) {
         BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
         queryBuilder.must(termQuery("orgi", orgi));
-        queryBuilder.must(termQuery("status", MainContext.NamesDisStatusType.NOT.toString()));
+        queryBuilder.must(termQuery("status", Enums.NamesDisStatusType.NOT.toString()));
         queryBuilder.must(termQuery("validresult", "valid"));
 
         BoolQueryBuilder orBuilder = new BoolQueryBuilder();
@@ -160,7 +161,7 @@ public class SearchTools {
     public static PageImpl<UKDataBean> recoversearch(String orgi, String cmd, String id, MetadataTable metadataTable, int p, int ps) {
         BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
         queryBuilder.must(termQuery("orgi", orgi));
-        queryBuilder.mustNot(termQuery("status", MainContext.NamesDisStatusType.NOT.toString()));
+        queryBuilder.mustNot(termQuery("status", Enums.NamesDisStatusType.NOT.toString()));
         queryBuilder.must(termQuery("validresult", "valid"));
 
         switch (cmd) {
@@ -183,10 +184,10 @@ public class SearchTools {
                 queryBuilder.must(termQuery(Constants.CSKEFU_SYSTEM_DIS_ORGAN, id));
                 break;
             case "taskskill":
-                queryBuilder.must(termQuery("taskid", id)).must(termQuery("status", MainContext.NamesDisStatusType.DISAGENT.toString()));
+                queryBuilder.must(termQuery("taskid", id)).must(termQuery("status", Enums.NamesDisStatusType.DISAGENT.toString()));
                 break;
             case "filterskill":
-                queryBuilder.must(termQuery("filterid", id)).must(termQuery("status", MainContext.NamesDisStatusType.DISAGENT.toString()));
+                queryBuilder.must(termQuery("filterid", id)).must(termQuery("status", Enums.NamesDisStatusType.DISAGENT.toString()));
                 break;
             default:
                 queryBuilder.must(termQuery("actid", "NOT_EXIST_KEY"));  //必须传入一个进来;
@@ -206,11 +207,11 @@ public class SearchTools {
         BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
         queryBuilder.must(termQuery("orgi", orgi));
         if (excludeCalled) {
-            queryBuilder.must(termQuery("callstatus", MainContext.NameStatusType.NOTCALL.toString()));
+            queryBuilder.must(termQuery("callstatus", Enums.NameStatusType.NOTCALL.toString()));
         }
         queryBuilder.must(termQuery("validresult", "valid"));
         queryBuilder.must(termQuery(Constants.CSKEFU_SYSTEM_DIS_AGENT, agent));
-        queryBuilder.must(termQuery("status", MainContext.NamesDisStatusType.DISAGENT.toString()));
+        queryBuilder.must(termQuery("status", Enums.NamesDisStatusType.DISAGENT.toString()));
 
         return search(queryBuilder, p, ps);
     }
@@ -244,10 +245,10 @@ public class SearchTools {
     public static PageImpl<UKDataBean> aisearch(String orgi, int p, int ps) {
         BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
         queryBuilder.must(termQuery("orgi", orgi));
-        queryBuilder.must(termQuery("callstatus", MainContext.NameStatusType.NOTCALL.toString()));
+        queryBuilder.must(termQuery("callstatus", Enums.NameStatusType.NOTCALL.toString()));
 
         queryBuilder.must(termQuery("validresult", "valid"));
-        queryBuilder.must(termQuery("status", MainContext.NamesDisStatusType.DISAI.toString()));
+        queryBuilder.must(termQuery("status", Enums.NamesDisStatusType.DISAI.toString()));
 
         return search(queryBuilder, p, ps);
     }
@@ -264,7 +265,7 @@ public class SearchTools {
         BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
         queryBuilder.must(termQuery("orgi", orgi));
         queryBuilder.must(termQuery("validresult", "valid"));
-        queryBuilder.must(termQuery("status", MainContext.NamesDisStatusType.DISAGENT.toString()));
+        queryBuilder.must(termQuery("status", Enums.NamesDisStatusType.DISAGENT.toString()));
         StringBuffer strb = new StringBuffer();
         if (!StringUtils.isBlank(phonenum)) {
             strb.append(phonenum);

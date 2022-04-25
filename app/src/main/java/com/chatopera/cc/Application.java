@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
-@EnableJpaRepositories("com.chatopera.cc.persistence.repository")
+@EnableJpaRepositories("com.github.xiaobo9.repository")
 @EnableElasticsearchRepositories("com.chatopera.cc.persistence.es")
 @EnableTransactionManagement
 public class Application {

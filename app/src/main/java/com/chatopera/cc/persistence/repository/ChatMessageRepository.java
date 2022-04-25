@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.persistence.repository;
 
-import com.chatopera.cc.socketio.message.ChatMessage;
+import com.chatopera.cc.model.ChatMessage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

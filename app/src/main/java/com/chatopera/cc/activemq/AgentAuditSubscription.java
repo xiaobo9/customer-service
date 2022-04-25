@@ -18,13 +18,13 @@ package com.chatopera.cc.activemq;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.exception.CSKefuException;
-import com.chatopera.cc.model.AgentUser;
-import com.chatopera.cc.model.AgentUserAudit;
-import com.chatopera.cc.persistence.repository.AgentUserRepository;
+import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.proxy.AgentAuditProxy;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.util.SerializeUtil;
+import com.github.xiaobo9.entity.AgentUser;
+import com.github.xiaobo9.bean.AgentUserAudit;
+import com.github.xiaobo9.repository.AgentUserRepository;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang.StringUtils;
@@ -104,7 +104,7 @@ public class AgentAuditSubscription {
                             json.get("agentUserId").getAsString());
                 }
             } else {
-                throw new CSKefuException("Invalid payload.");
+                throw new ServerException("Invalid payload.");
             }
         } catch (Exception e) {
             logger.error("[onMessage] error", e);

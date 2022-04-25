@@ -25,12 +25,12 @@ import java.util.List;
 
 public interface PublishedCubeRepository extends JpaRepository<PublishedCube, String> {
 
-	List<PublishedCube> findByOrgiAndDataidOrderByDataversionDesc(String orgi, String dataid);
+    List<PublishedCube> findByOrgiAndDataidOrderByDataversionDesc(String orgi, String dataid);
 
-	Page<PublishedCube> getByOrgiAndTypeid(String orgi, String typeid, Pageable pageRequest);
+    Page<PublishedCube> getByOrgiAndTypeid(String orgi, String typeid, Pageable pageRequest);
 
-	List<PublishedCube> findByIdAndOrgi(String id, String orgi);
-	
-	Page<PublishedCube> getByOrgi(String orgi, Pageable pageRequest);
-	
+    List<PublishedCube> findByIdAndOrgi(String id, String orgi);
+
+    Page<PublishedCube> getByOrgi(String orgi, Pageable pageRequest);
+
 }

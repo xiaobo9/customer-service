@@ -20,11 +20,8 @@ package com.chatopera.cc.controller.apps;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.util.Menu;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
-import javax.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/message")

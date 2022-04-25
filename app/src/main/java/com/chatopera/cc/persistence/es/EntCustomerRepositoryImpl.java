@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.model.EntCustomer;
-import com.chatopera.cc.model.User;
-import com.chatopera.cc.persistence.repository.UserRepository;
+import com.github.xiaobo9.entity.EntCustomer;
+import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.repository.UserRepository;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.sort.FieldSortBuilder;

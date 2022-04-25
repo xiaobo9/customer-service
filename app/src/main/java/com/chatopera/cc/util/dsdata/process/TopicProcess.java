@@ -17,10 +17,10 @@
 package com.chatopera.cc.util.dsdata.process;
 
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.Topic;
-import com.chatopera.cc.model.TopicItem;
 import com.chatopera.cc.persistence.es.TopicRepository;
-import com.chatopera.cc.persistence.repository.TopicItemRepository;
+import com.github.xiaobo9.entity.Topic;
+import com.github.xiaobo9.entity.TopicItem;
+import com.github.xiaobo9.repository.TopicItemRepository;
 
 import java.util.Date;
 import java.util.List;

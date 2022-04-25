@@ -17,20 +17,22 @@
 package com.chatopera.cc.controller.admin.config;
 
 import com.chatopera.cc.basic.Constants;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.Dict;
-import com.chatopera.cc.model.Secret;
-import com.chatopera.cc.model.SysDic;
-import com.chatopera.cc.model.SystemConfig;
-import com.chatopera.cc.persistence.repository.SecretRepository;
-import com.chatopera.cc.persistence.repository.SystemConfigRepository;
-import com.chatopera.cc.persistence.repository.SystemMessageRepository;
-import com.chatopera.cc.persistence.repository.TemplateRepository;
+import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.github.xiaobo9.commons.utils.MD5Utils;
+import com.github.xiaobo9.entity.Secret;
+import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.SystemConfig;
+import com.github.xiaobo9.repository.SecretRepository;
+import com.github.xiaobo9.repository.SystemConfigRepository;
+import com.github.xiaobo9.repository.SystemMessageRepository;
+import com.github.xiaobo9.repository.TemplateRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,7 +125,7 @@ public class SystemConfigController extends Handler {
         }
 
         map.addAttribute(
-                "sysMessageList", systemMessageRes.findByMsgtypeAndOrgi(MainContext.SystemMessageType.EMAIL.toString(),
+                "sysMessageList", systemMessageRes.findByMsgtypeAndOrgi(Enums.SystemMessageType.EMAIL.toString(),
                         super.getOrgi(request)));
 
         if (StringUtils.isNotBlank(execute) && execute.equals("false")) {
@@ -241,8 +243,8 @@ public class SystemConfigController extends Handler {
                 if (secretConfig != null && secretConfig.size() > 0) {
                     Secret tempSecret = secretConfig.get(0);
                     String oldpass = request.getParameter("oldpass");
-                    if (StringUtils.isNotBlank(oldpass) && MainUtils.md5(oldpass).equals(tempSecret.getPassword())) {
-                        tempSecret.setPassword(MainUtils.md5(secret.getPassword()));
+                    if (StringUtils.isNotBlank(oldpass) && MD5Utils.md5(oldpass).equals(tempSecret.getPassword())) {
+                        tempSecret.setPassword(MD5Utils.md5(secret.getPassword()));
                         msg = "1";
                         tempSecret.setEnable(true);
                         secRes.save(tempSecret);
@@ -253,7 +255,7 @@ public class SystemConfigController extends Handler {
                     secret.setOrgi(orgi);
                     secret.setCreater(super.getUser(request).getId());
                     secret.setCreatetime(new Date());
-                    secret.setPassword(MainUtils.md5(secret.getPassword()));
+                    secret.setPassword(MD5Utils.md5(secret.getPassword()));
                     secret.setEnable(true);
                     msg = "1";
                     secRes.save(secret);

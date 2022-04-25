@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.util.freeswitch.model;
 
-import com.chatopera.cc.model.Extension;
+import com.github.xiaobo9.entity.Extension;
 
 import java.util.Date;
 

@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.persistence.impl;
 
-import com.chatopera.cc.model.QuickType;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.persistence.repository.QuickTypeRepository;
+import com.github.xiaobo9.entity.QuickType;
+import com.github.xiaobo9.repository.QuickTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

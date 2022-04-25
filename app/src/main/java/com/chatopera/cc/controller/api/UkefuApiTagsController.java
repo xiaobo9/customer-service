@@ -16,12 +16,12 @@
  */
 package com.chatopera.cc.controller.api;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.persistence.repository.TagRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.repository.TagRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,6 +54,6 @@ public class UkefuApiTagsController extends Handler {
 	@RequestMapping( method = RequestMethod.GET)
 	@Menu(type = "apps" , subtype = "tags" , access = true)
     public ResponseEntity<RestResult> list(HttpServletRequest request , @Valid String type) {
-        return new ResponseEntity<>(new RestResult(RestResultType.OK, tagRes.findByOrgiAndTagtype(super.getOrgi(request) , !StringUtils.isBlank(type) ? type : MainContext.ModelType.USER.toString())), HttpStatus.OK);
+        return new ResponseEntity<>(new RestResult(RestResultType.OK, tagRes.findByOrgiAndTagtype(super.getOrgi(request) , !StringUtils.isBlank(type) ? type : Enums.ModelType.USER.toString())), HttpStatus.OK);
     }
 }

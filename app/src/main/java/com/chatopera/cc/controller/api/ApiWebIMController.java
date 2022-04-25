@@ -17,11 +17,11 @@
 package com.chatopera.cc.controller.api;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.CousultInvite;
-import com.chatopera.cc.persistence.repository.ConsultInviteRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.entity.CousultInvite;
+import com.github.xiaobo9.repository.ConsultInviteRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

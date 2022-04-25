@@ -16,13 +16,13 @@
  */
 package com.chatopera.cc.controller.api;
 
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.AgentService;
-import com.chatopera.cc.persistence.repository.AgentServiceRepository;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.entity.AgentService;
+import com.github.xiaobo9.repository.AgentServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -59,7 +59,7 @@ public class ApiLeavemsgController extends Handler {
             List<Predicate> list = new ArrayList<>();
             list.add(cb.equal(root.get("leavemsg").as(Boolean.class), true));
 
-            list.add(cb.equal(root.get("leavemsgstatus").as(String.class), MainContext.LeaveMsgStatus.NOTPROCESS.toString()));
+            list.add(cb.equal(root.get("leavemsgstatus").as(String.class), Enums.LeaveMsgStatus.NOTPROCESS.toString()));
 
             Predicate[] p = new Predicate[list.size()];
             return cb.and(list.toArray(p));

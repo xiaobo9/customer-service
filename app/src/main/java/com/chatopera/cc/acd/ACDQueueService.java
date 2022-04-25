@@ -17,7 +17,7 @@
 package com.chatopera.cc.acd;
 
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.model.AgentUser;
+import com.github.xiaobo9.entity.AgentUser;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

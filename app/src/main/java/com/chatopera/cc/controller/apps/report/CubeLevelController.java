@@ -17,16 +17,16 @@
 package com.chatopera.cc.controller.apps.report;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.exception.EntityNotFoundException;
-import com.chatopera.cc.model.CubeLevel;
-import com.chatopera.cc.model.CubeMetadata;
-import com.chatopera.cc.model.Dimension;
-import com.chatopera.cc.model.TableProperties;
-import com.chatopera.cc.persistence.repository.CubeLevelRepository;
-import com.chatopera.cc.persistence.repository.CubeMetadataRepository;
-import com.chatopera.cc.persistence.repository.DimensionRepository;
-import com.chatopera.cc.persistence.repository.TablePropertiesRepository;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.entity.CubeLevel;
+import com.github.xiaobo9.entity.CubeMetadata;
+import com.github.xiaobo9.entity.Dimension;
+import com.github.xiaobo9.entity.TableProperties;
+import com.github.xiaobo9.repository.CubeLevelRepository;
+import com.github.xiaobo9.repository.CubeMetadataRepository;
+import com.github.xiaobo9.repository.DimensionRepository;
+import com.github.xiaobo9.repository.TablePropertiesRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -108,7 +108,7 @@ public class CubeLevelController extends Handler {
     @RequestMapping("/edit")
     @Menu(type = "report", subtype = "cubelevel", admin = true)
     public ModelAndView quickreplyedit(ModelMap map, HttpServletRequest request, @Valid String id) {
-        CubeLevel cubeLevel = cubeLevelRes.findById(id).orElseThrow(EntityNotFoundException::new);
+        CubeLevel cubeLevel = cubeLevelRes.findById(id).orElseThrow(EntityNotFoundEx::new);
         map.put("cubeLevel", cubeLevel);
         Dimension dim = dimensionRes.findByIdAndOrgi(cubeLevel.getDimid(), super.getOrgi(request));
         if (dim != null) {

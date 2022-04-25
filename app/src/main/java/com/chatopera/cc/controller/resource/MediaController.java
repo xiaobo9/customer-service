@@ -16,15 +16,16 @@
  */
 package com.chatopera.cc.controller.resource;
 
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.model.AttachmentFile;
-import com.chatopera.cc.model.StreamingFile;
-import com.chatopera.cc.model.UploadStatus;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
-import com.chatopera.cc.persistence.repository.AttachmentRepository;
-import com.chatopera.cc.persistence.repository.StreamingFileRepository;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.kit.AttachFileKit;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
+import com.github.xiaobo9.entity.AttachmentFile;
+import com.github.xiaobo9.entity.StreamingFile;
+import com.github.xiaobo9.model.UploadStatus;
+import com.github.xiaobo9.repository.AttachmentRepository;
+import com.github.xiaobo9.repository.StreamingFileRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -124,7 +125,7 @@ public class MediaController extends Handler {
         ModelAndView view = request(super.pageTplResponse("/public/upload"));
         UploadStatus notify;
         if (multipart != null && Objects.requireNonNull(multipart.getOriginalFilename()).lastIndexOf(".") > 0) {
-            String fileid = MainUtils.getUUID();
+            String fileid = UUIDUtils.getUUID();
             StreamingFile sf = new StreamingFile();
             sf.setId(fileid);
             sf.setName(multipart.getOriginalFilename());
@@ -149,7 +150,7 @@ public class MediaController extends Handler {
                 StreamingFile sf = streamingFileRes.findById(attachmentFile.getFileid()).orElse(null);
                 if (sf != null) {
                     response.setContentType(attachmentFile.getFiletype());
-                    response.setHeader("Content-Disposition", "attachment;filename=" + java.net.URLEncoder.encode(attachmentFile.getTitle(), "UTF-8"));
+                    response.setHeader("Content-Disposition", AttachFileKit.nameEncode(attachmentFile.getTitle()));
                     IOUtils.copy(sf.getData().getBinaryStream(), response.getOutputStream());
                 } else {
                     logger.warn("[streaming file] can not get file id {}", attachmentFile.getFileid());
@@ -167,7 +168,7 @@ public class MediaController extends Handler {
             InputStream is = MediaController.class.getClassLoader().getResourceAsStream(TEMPLATE_DATA_PATH + filename);
             if (is != null) {
                 response.setContentType("text/plain");
-                response.setHeader("Content-Disposition", "attachment;filename=" + java.net.URLEncoder.encode(filename, "UTF-8"));
+                response.setHeader("Content-Disposition", AttachFileKit.nameEncode(filename));
                 int length;
                 byte[] data = new byte[1024];
                 while ((length = is.read(data)) > 0) {

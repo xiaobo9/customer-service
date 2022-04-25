@@ -16,9 +16,9 @@
  */
 package com.chatopera.cc.persistence.es;
 
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.model.QuickReply;
+import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.persistence.es.mapper.UKResultMapper;
+import com.github.xiaobo9.entity.QuickReply;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -78,11 +78,11 @@ public class QuickReplyRepositoryImpl implements QuickReplyEsCommonRepository {
 
         BoolQueryBuilder quickQueryBuilder = QueryBuilders.boolQuery();
 
-        quickQueryBuilder.should(termQuery("type", MainContext.QuickType.PUB.toString()));
+        quickQueryBuilder.should(termQuery("type", Enums.QuickType.PUB.toString()));
 
         BoolQueryBuilder priQueryBuilder = QueryBuilders.boolQuery();
 
-        priQueryBuilder.must(termQuery("type", MainContext.QuickType.PRI.toString()));
+        priQueryBuilder.must(termQuery("type", Enums.QuickType.PRI.toString()));
         priQueryBuilder.must(termQuery("creater", creater));
 
         quickQueryBuilder.should(priQueryBuilder);
