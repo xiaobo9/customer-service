@@ -270,7 +270,7 @@ public class IMController extends Handler {
                 String ip = IPUtils.getIpAddress(request);
                 userHistory.setHostname(ip);
                 userHistory.setIp(ip);
-                IP ipdata = IPTools.getInstance().findGeography(ip);
+                IP ipdata = IPTools.findGeography(ip);
                 userHistory.setCountry(ipdata.getCountry());
                 userHistory.setProvince(ipdata.getProvince());
                 userHistory.setCity(ipdata.getCity());
@@ -804,7 +804,7 @@ public class IMController extends Handler {
         if (StringUtils.isNotBlank(type)) {
             map.addAttribute("type", type);
         }
-        IP ipdata = IPTools.getInstance().findGeography(IPUtils.getIpAddress(request));
+        IP ipdata = IPTools.findGeography(IPUtils.getIpAddress(request));
         map.addAttribute("skillGroups", OnlineUserProxy.organ(invite.getOrgi(), ipdata, invite, true));
 
         if (consult) {

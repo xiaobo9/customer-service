@@ -360,7 +360,7 @@ public class ChatServiceController extends Handler {
                             agentService.getUserid(), agentService.getOrgi());
 
                     if (onlineUser != null) {
-                        IP ipdata = IPTools.getInstance().findGeography(onlineUser.getIp());
+                        IP ipdata = IPTools.findGeography(onlineUser.getIp());
                         acdVisitorDispatcher.enqueue(ACDMessageHelper.getWebIMComposeContext(
                                 onlineUser.getUserid(),
                                 onlineUser.getUsername(),

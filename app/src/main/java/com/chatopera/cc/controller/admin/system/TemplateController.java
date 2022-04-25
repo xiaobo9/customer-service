@@ -69,7 +69,6 @@ public class TemplateController extends Handler {
         List<Template> templateList = templateRes.findByOrgi(super.getOrgi(request));
         response.setHeader("content-disposition", "attachment;filename=UCKeFu-Template-Export-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()) + ".data");
         response.getOutputStream().write(MainUtils.toBytes(templateList));
-        return;
     }
 
     @RequestMapping("/imp")

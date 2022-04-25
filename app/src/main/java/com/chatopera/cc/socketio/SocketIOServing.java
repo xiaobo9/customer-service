@@ -16,7 +16,13 @@
  */
 package com.chatopera.cc.socketio;
 
+import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.persistence.repository.AgentStatusRepository;
+import com.chatopera.cc.proxy.AgentProxy;
+import com.chatopera.cc.proxy.AgentSessionProxy;
+import com.chatopera.cc.proxy.AgentUserProxy;
+import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.socketio.handler.AgentEventHandler;
 import com.chatopera.cc.socketio.handler.EntIMEventHandler;
 import com.chatopera.cc.socketio.handler.IMEventHandler;
@@ -33,6 +39,19 @@ public class SocketIOServing implements CommandLineRunner {
     private final SocketIONamespace imSocketNameSpace;
     private final SocketIONamespace agentSocketIONameSpace;
     private final SocketIONamespace entIMSocketIONameSpace;
+
+    @Autowired
+    private BrokerPublisher brokerPublisher;
+    @Autowired
+    private AgentStatusRepository agentStatusRes;
+    @Autowired
+    private AgentUserProxy agentUserProxy;
+    @Autowired
+    private AgentProxy agentProxy;
+    @Autowired
+    private AgentSessionProxy agentSessionProxy;
+    @Autowired
+    private UserProxy userProxy;
 
     @Autowired
     public SocketIOServing(SocketIOServer server) {
@@ -53,7 +72,14 @@ public class SocketIOServing implements CommandLineRunner {
 
     @Bean(name = "agentNamespace")
     public SocketIONamespace getAgentSocketIONameSpace(SocketIOServer server) {
-        agentSocketIONameSpace.addListeners(new AgentEventHandler(server));
+        agentSocketIONameSpace.addListeners(new AgentEventHandler(server,
+                brokerPublisher,
+                agentStatusRes,
+                agentUserProxy,
+                agentProxy,
+                agentSessionProxy,
+                userProxy
+        ));
         return agentSocketIONameSpace;
     }
 

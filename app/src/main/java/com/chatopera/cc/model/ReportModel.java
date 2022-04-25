@@ -680,6 +680,7 @@ public class ReportModel implements java.io.Serializable {
 	public void setColindex(int colindex) {
 		this.colindex = colindex;
 	}
+	@Transient
 	public Template templet() {
 		return MainUtils.getTemplate(this.templetid) ;
 	}

@@ -121,7 +121,7 @@ public class IMEventHandler {
 
                 IP ipdata = null;
                 if ((StringUtils.isNotBlank(ip))) {
-                    ipdata = IPTools.getInstance().findGeography(ip);
+                    ipdata = IPTools.findGeography(ip);
                 }
 
                 /**

@@ -17,6 +17,7 @@
 package com.chatopera.cc.config.interceptor;
 
 import com.chatopera.cc.basic.Constants;
+import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
@@ -94,7 +95,7 @@ public class LogInterceptorHandler implements HandlerInterceptor {
         log.setUrl(request.getRequestURI());
         // 避免可能的性能问题，不记录客户端主机名
         // log.setHostname(request.getRemoteHost());
-        log.setIp(request.getRemoteAddr());
+        log.setIp(IPUtils.getIpAddress(request));
 
         log.setType(MainContext.LogType.REQUEST.toString());
 

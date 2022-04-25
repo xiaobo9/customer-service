@@ -499,7 +499,7 @@ public class OnlineUserProxy {
                 // 地理信息
                 String ip = IPUtils.getIpAddress(request);
                 onlineUser.setIp(ip);
-                IP ipdata = IPTools.getInstance().findGeography(ip);
+                IP ipdata = IPTools.findGeography(ip);
                 onlineUser.setCountry(ipdata.getCountry());
                 onlineUser.setProvince(ipdata.getProvince());
                 onlineUser.setCity(ipdata.getCity());

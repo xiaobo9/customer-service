@@ -1,5 +1,6 @@
 package com.chatopera.cc.service;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -11,19 +12,18 @@ import java.io.File;
 @Service
 public class UploadService {
     public static final String UPLOAD = "upload";
+
+    @Getter
     @Value("${web.upload-path}")
-    private String path;
+    private String dataPath;
 
+    @Getter
     private String uploadPath;
-
-    public String getUploadPath() {
-        return uploadPath;
-    }
 
     @PostConstruct
     public void postConstruct() {
-        log.info("创建上传目录, {}", path);
-        File uploadDir = new File(path, UPLOAD);
+        log.info("创建上传目录, {}", dataPath);
+        File uploadDir = new File(dataPath, UPLOAD);
         uploadPath = uploadDir.getAbsolutePath();
         if (uploadDir.exists()) {
             return;
