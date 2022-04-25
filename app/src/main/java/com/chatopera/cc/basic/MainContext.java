@@ -22,10 +22,8 @@ import com.chatopera.cc.basic.resource.BatchResource;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.util.DateConverter;
 import com.chatopera.cc.util.SystemEnvHelper;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +56,6 @@ public class MainContext {
     private static PeerSyncIM peerSyncIM;
 
     static {
-        ConvertUtils.register(new DateConverter(), java.util.Date.class);
         csKeFuResourceMap.put(TaskType.ACTIVE.toString(), ActivityResource.class);
         csKeFuResourceMap.put(TaskType.BATCH.toString(), BatchResource.class);
     }
