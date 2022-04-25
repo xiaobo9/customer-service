@@ -25,8 +25,7 @@ import com.chatopera.cc.persistence.repository.JobDetailRepository;
 import com.chatopera.cc.persistence.repository.ReporterRepository;
 import com.google.common.collect.ArrayListMultimap;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.beanutils.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
@@ -230,7 +229,7 @@ public class ExcelImportProcess extends DataProcess {
             values.put("creater", event.getValues().get("creater"));
             values.put("organ", event.getValues().get("organ"));
             if (data != null && !skipDataVal) {
-                MainUtils.populate(data, values);
+                populate(data, values);
                 pages.incrementAndGet();
                 dsData.getProcess().process(data);
             } else if (data == null) {
@@ -290,6 +289,42 @@ public class ExcelImportProcess extends DataProcess {
                 batch.setNotassigned(batch.getNotassigned() + (pages.intValue() - errors.intValue()));
                 batchRes.save(batch);
             }
+        }
+    }
+
+    public static void populate(Object bean, Map<Object, Object> properties) throws IllegalAccessException, InvocationTargetException {
+        ConvertUtils.register(new Converter() {
+            @Override
+            public Object convert(Class type, Object value) {
+                if (value == null) {
+                    return null;
+                }
+                if (value instanceof Date) {
+                    return value;
+                }
+                if (!(value instanceof String)) {
+                    throw new ConversionException("只支持字符串转换 !");
+                }
+                String str = (String) value;
+                if (str.trim().equals("")) {
+                    return null;
+                }
+                try {
+                    return DateFormatEnum.DAY_TIME.parse(str);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+
+        }, Date.class);
+        if (properties == null || bean == null) {
+            return;
+        }
+        try {
+            BeanUtilsBean.getInstance().populate(bean, properties);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

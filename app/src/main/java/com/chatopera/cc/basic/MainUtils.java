@@ -16,8 +16,10 @@
  */
 package com.chatopera.cc.basic;
 
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.*;
 import com.chatopera.cc.persistence.repository.*;
+import com.chatopera.cc.service.TemplateService;
 import com.chatopera.cc.util.WebIMReport;
 import com.chatopera.cc.util.*;
 import com.chatopera.cc.util.mail.MailSender;
@@ -27,10 +29,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.googlecode.aviator.AviatorEvaluator;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.commons.beanutils.ConversionException;
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.Converter;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.jasypt.util.text.BasicTextEncryptor;
@@ -53,7 +51,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
@@ -66,6 +63,8 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class MainUtils {
+
+    private static final Random random = new Random();
 
     private static final MD5 md5 = new MD5();
 
@@ -445,45 +444,6 @@ public class MainUtils {
 
     }
 
-    public static void populate(Object bean, Map<Object, Object> properties) throws IllegalAccessException, InvocationTargetException {
-        ConvertUtils.register(new Converter() {
-            @SuppressWarnings("rawtypes")
-            @Override
-            public Object convert(Class arg0, Object arg1) {
-                if (arg1 == null) {
-                    return null;
-                }
-                if (arg1 instanceof Date) {
-                    return arg1;
-                } else if (!(arg1 instanceof String)) {
-                    throw new ConversionException("只支持字符串转换 !");
-                }
-                String str = (String) arg1;
-                if (str.trim().equals("")) {
-                    return null;
-                }
-
-                SimpleDateFormat sd = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-                try {
-                    return sd.parse(str);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-
-        }, java.util.Date.class);
-        if (properties == null || bean == null) {
-            return;
-        }
-        try {
-            BeanUtilsBean.getInstance().populate(bean, properties);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static byte[] toBytes(Object object) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectOutputStream objectOutput = new ObjectOutputStream(out);
@@ -497,21 +457,12 @@ public class MainUtils {
         return objectInput.readObject();
     }
 
-    /**
-     * @param str
-     * @return
-     */
     public static String encryption(final String str) {
         BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
         textEncryptor.setPassword(MainContext.getSystemSecrityPassword());
         return textEncryptor.encrypt(str);
     }
 
-    /**
-     * @param str
-     * @return
-     * @throws NoSuchAlgorithmException
-     */
     public static String decryption(final String str) throws NoSuchAlgorithmException {
         BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
         textEncryptor.setPassword(MainContext.getSystemSecrityPassword());
@@ -550,9 +501,6 @@ public class MainUtils {
 
     /**
      * 处理 对话消息中的图片
-     *
-     * @param message
-     * @return
      */
     public static String filterChatMessage(String message) {
         Document document = Jsoup.parse(message);
@@ -568,9 +516,6 @@ public class MainUtils {
 
     /**
      * 检查当前时间是否是在 时间范围内 ，时间范围的格式为 ： 08:30~11:30,13:30~17:30
-     *
-     * @param timeRanges
-     * @return
      */
     public static boolean isInWorkingHours(String timeRanges) {
         String timeStr = timeRangeDateFormat.format(new Date());
@@ -638,8 +583,6 @@ public class MainUtils {
 
     /**
      * 获取系统配置
-     *
-     * @return
      */
     @NotNull
     public static SystemConfig getSystemConfig() {
@@ -654,8 +597,6 @@ public class MainUtils {
 
     /**
      * 初始化呼叫中心功能里需要隐藏号码的字段
-     *
-     * @param tpRes
      */
     public static void initSystemSecField(TablePropertiesRepository tpRes) {
         if (tpRes != null) {
@@ -667,8 +608,6 @@ public class MainUtils {
 
     /**
      * 获取系统地区配置
-     *
-     * @return
      */
     public static void initSystemArea() {
         MainContext.getCache().deleteSystembyIdAndOrgi(Constants.CSKEFU_SYSTEM_AREA, Constants.SYSTEM_ORGI);
@@ -679,8 +618,6 @@ public class MainUtils {
 
     /**
      * 缓存 广告位
-     *
-     * @return
      */
     public static void initAdv(String orgi, String skill) {
         MainContext.getCache().deleteSystembyIdAndOrgi(Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi);
@@ -690,75 +627,58 @@ public class MainUtils {
     }
 
     public static Template getTemplate(String id) {
-        Template templet = null;
-        if ((templet = MainContext.getCache().findOneSystemByIdAndOrgi(id, Constants.SYSTEM_ORGI)) == null) {
-            TemplateRepository templateRes = MainContext.getContext().getBean(TemplateRepository.class);
-            templet = templateRes.findByIdAndOrgi(id, Constants.SYSTEM_ORGI);
-            MainContext.getCache().putSystemByIdAndOrgi(id, Constants.SYSTEM_ORGI, templet);
-        }
-        return templet;
+        return MainContext.getContext().getBean(TemplateService.class).getTemplate(id);
     }
 
     /**
      * 按照权重获取广告
-     *
-     * @param adpos
-     * @return
      */
-    @SuppressWarnings("unchecked")
     public static AdType getPointAdv(String adpos, String skill, String orgi) {
-        List<AdType> adTypeList = new ArrayList<AdType>();
-        List<AdType> cacheAdTypeList = MainContext.getCache().findOneSystemListByIdAndOrgi(
-                Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi);
-        if (cacheAdTypeList == null) {
+        CacheService cache = MainContext.getCache();
+        List<AdType> adTypes = cache.findOneSystemListByIdAndOrgi(Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi);
+        if (adTypes == null) {
             AdTypeRepository adRes = MainContext.getContext().getBean(AdTypeRepository.class);
-            cacheAdTypeList = adRes.findByOrgiAndSkill(orgi, skill);
-            MainContext.getCache().putSystemListByIdAndOrgi(
-                    Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi, cacheAdTypeList);
+            adTypes = adRes.findByOrgiAndSkill(orgi, skill);
+            cache.putSystemListByIdAndOrgi(Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi, adTypes);
         }
         List<SysDic> sysDicList = Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_ADPOS_DIC);
         SysDic sysDic = null;
-        if (sysDicList != null) {
-            for (SysDic dic : sysDicList) {
-                if (dic.getCode().equals(adpos)) {
-                    sysDic = dic;
-                    break;
-                }
+        for (SysDic dic : sysDicList) {
+            if (dic.getCode().equals(adpos)) {
+                sysDic = dic;
+                break;
             }
         }
-        if (adTypeList != null && sysDic != null) {
-            for (AdType adType : cacheAdTypeList) {
+        List<AdType> adTypeList = new ArrayList<>();
+        if (sysDic != null) {
+            for (AdType adType : adTypes) {
                 if (adType.getAdpos().equals(sysDic.getId())) {
                     adTypeList.add(adType);
                 }
             }
         }
-        return weitht(adTypeList);
+        return weight(adTypeList);
     }
-
-    private static Random random = new Random();
 
     /**
      * 按照权重，获取广告内容
-     *
-     * @param adList
-     * @return
      */
-    private static AdType weitht(List<AdType> adList) {
-        AdType adType = null;
+    private static AdType weight(List<AdType> adList) {
+        if (adList == null || adList.isEmpty()) {
+            return null;
+        }
         int weight = 0;
-        if (adList != null && adList.size() > 0) {
-            for (AdType ad : adList) {
-                weight += ad.getWeight();
+        for (AdType ad : adList) {
+            weight += ad.getWeight();
+        }
+        AdType adType = null;
+        int n = random.nextInt(weight), m = 0;
+        for (AdType ad : adList) {
+            if (m <= n && n < m + ad.getWeight()) {
+                adType = ad;
+                break;
             }
-            int n = random.nextInt(weight), m = 0;
-            for (AdType ad : adList) {
-                if (m <= n && n < m + ad.getWeight()) {
-                    adType = ad;
-                    break;
-                }
-                m += ad.getWeight();
-            }
+            m += ad.getWeight();
         }
         return adType;
     }
