@@ -4,18 +4,17 @@
     <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
     <springProperty scope="context" name="logPath" source="server.log.path"/>
     <springProperty scope="context" name="logLevel" source="server.log.level"/>
-    <property name="LOG_HOME" value="${logPath}" />
-    <property name="LOG_LEVEL" value="${logLevel}" />
-    
+    <property name="LOG_HOME" value="logs"/>
+
     <!-- 控制台输出 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS , GMT+8} [%-5level] [%-5thread] [%logger{20}:%line] - %msg%n</pattern>
         </encoder>
     </appender>
-    
+
     <!-- 按照每天生成日志文件 -->
-    <appender name="ERROR"  class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--日志文件输出的文件名-->
             <FileNamePattern>${LOG_HOME}/error/CSKefu.error.log.%d{yyyy-MM-dd}.log</FileNamePattern>
@@ -30,14 +29,14 @@
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
             <MaxFileSize>10MB</MaxFileSize>
         </triggeringPolicy>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印错误日志 -->  
-	        <level>ERROR</level>  
-	        <onMatch>ACCEPT</onMatch>  
-	        <onMismatch>DENY</onMismatch>  
-	    </filter>  
+        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印错误日志 -->
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
     </appender>
-    
-    <appender name="INFO"  class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+    <appender name="INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--日志文件输出的文件名-->
             <FileNamePattern>${LOG_HOME}/info/CSKefu.info.log.%d{yyyy-MM-dd}.log</FileNamePattern>
@@ -52,15 +51,15 @@
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
             <MaxFileSize>10MB</MaxFileSize>
         </triggeringPolicy>
-        
-        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印INFO日志 -->  
-	        <level>INFO</level>  
-	        <onMatch>ACCEPT</onMatch>  
-	        <onMismatch>DENY</onMismatch>  
-	    </filter>  
+
+        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印INFO日志 -->
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
     </appender>
-    
-    <appender name="DEBUG"  class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+    <appender name="DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--日志文件输出的文件名-->
             <FileNamePattern>${LOG_HOME}/debug/CSKefu.debug.log.%d{yyyy-MM-dd}.log</FileNamePattern>
@@ -75,12 +74,12 @@
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
             <MaxFileSize>10MB</MaxFileSize>
         </triggeringPolicy>
-        
-        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印DEBUG日志 -->  
-	        <level>DEBUG</level>  
-	        <onMatch>ACCEPT</onMatch>  
-	        <onMismatch>DENY</onMismatch>  
-	    </filter>  
+
+        <filter class="ch.qos.logback.classic.filter.LevelFilter"><!-- 只打印DEBUG日志 -->
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
     </appender>
 
     <!-- 设置Spring Boot 框架日志级别 -->
@@ -89,9 +88,9 @@
     <logger name="org.apache" level="info"/>
 
     <!-- 日志输出级别 -->
-    <root level="${LOG_LEVEL}">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="ERROR" />
-        <appender-ref ref="INFO" />
+    <root level="info">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ERROR"/>
+        <appender-ref ref="INFO"/>
     </root>
 </configuration>

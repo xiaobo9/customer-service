@@ -24,9 +24,12 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Dict<K, V> extends HashMap<K, V> {
 
@@ -69,30 +72,20 @@ public class Dict<K, V> extends HashMap<K, V> {
         return (V) result;
     }
 
-    @SuppressWarnings("unchecked")
+    @NotNull
     public List<SysDic> getDic(final String code) {
-        List<SysDic> result = new ArrayList<SysDic>();
         String serialized = MainContext.getRedisCommand().getHashKV(RedisKey.getSysDicHashKeyByOrgi(Constants.SYSTEM_ORGI), code);
-
-        if (StringUtils.isNotBlank(serialized)) {
-            Object obj = SerializeUtil.deserialize(serialized);
-            if (obj instanceof List) {
-                List<SysDic> sysDics = (List<SysDic>) obj;
-                for (SysDic dic : sysDics) {
-                    if (dic.getDicid().equals(dic.getParentid())) {
-                        result.add(dic);
-                    }
-                }
-            } else {
-                logger.warn("[getDic list] nothing found for code or id {} with deserialize, this is a potential error.", code);
-            }
-        } else {
-            logger.debug("[getDic list] nothing found for code or id {}", code);
+        if (StringUtils.isBlank(serialized)) {
+            return Collections.emptyList();
         }
-
-        logger.debug("[getDic list] code or id: {}, dict size {}", code, result.size());
-
-        return result;
+        Object obj = SerializeUtil.deserialize(serialized);
+        if (obj instanceof List) {
+            List<SysDic> sysDicList = (List<SysDic>) obj;
+            return sysDicList.stream()
+                    .filter(dic -> dic.getDicid().equals(dic.getParentid()))
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
     /**
