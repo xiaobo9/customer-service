@@ -16,46 +16,27 @@
  */
 package com.chatopera.cc.socketio;
 
-import com.chatopera.cc.activemq.BrokerPublisher;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.proxy.AgentProxy;
-import com.chatopera.cc.proxy.AgentSessionProxy;
-import com.chatopera.cc.proxy.AgentUserProxy;
-import com.chatopera.cc.proxy.UserProxy;
 import com.chatopera.cc.socketio.handler.AgentEventHandler;
 import com.chatopera.cc.socketio.handler.EntIMEventHandler;
 import com.chatopera.cc.socketio.handler.IMEventHandler;
 import com.corundumstudio.socketio.SocketIONamespace;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.github.xiaobo9.repository.AgentStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SocketIOServing implements CommandLineRunner {
+public class SocketIOStartRunner implements CommandLineRunner {
     private final SocketIOServer server;
     private final SocketIONamespace imSocketNameSpace;
     private final SocketIONamespace agentSocketIONameSpace;
     private final SocketIONamespace entIMSocketIONameSpace;
 
     @Autowired
-    private BrokerPublisher brokerPublisher;
-    @Autowired
-    private AgentStatusRepository agentStatusRes;
-    @Autowired
-    private AgentUserProxy agentUserProxy;
-    @Autowired
-    private AgentProxy agentProxy;
-    @Autowired
-    private AgentSessionProxy agentSessionProxy;
-    @Autowired
-    private UserProxy userProxy;
-
-    @Autowired
-    public SocketIOServing(SocketIOServer server) {
+    public SocketIOStartRunner(SocketIOServer server) {
         this.server = server;
         // 访客聊天
         imSocketNameSpace = server.addNamespace(Enums.NameSpaceEnum.IM.getNamespace());
@@ -72,15 +53,8 @@ public class SocketIOServing implements CommandLineRunner {
     }
 
     @Bean(name = "agentNamespace")
-    public SocketIONamespace getAgentSocketIONameSpace(SocketIOServer server) {
-        agentSocketIONameSpace.addListeners(new AgentEventHandler(server,
-                brokerPublisher,
-                agentStatusRes,
-                agentUserProxy,
-                agentProxy,
-                agentSessionProxy,
-                userProxy
-        ));
+    public SocketIONamespace getAgentSocketIONameSpace(AgentEventHandler agentEventHandler) {
+        agentSocketIONameSpace.addListeners(agentEventHandler);
         return agentSocketIONameSpace;
     }
 

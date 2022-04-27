@@ -1,15 +1,20 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, All rights reserved.
- * <https://www.chatopera.com>
- * This software and related documentation are provided under a license agreement containing
- * restrictions on use and disclosure and are protected by intellectual property laws.
- * Except as expressly permitted in your license agreement or allowed by law, you may not use,
- * copy, reproduce, translate, broadcast, modify, license, transmit, distribute, exhibit, perform,
- * publish, or display any part, in any form, or by any means. Reverse engineering, disassembly,
- * or decompilation of this software, unless required by law for interoperability, is prohibited.
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
@@ -26,20 +31,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.validation.constraints.NotNull;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 用户/坐席 常用方法
  */
-@Component
-public class UserProxy {
-    private final static Logger logger = LoggerFactory.getLogger(UserProxy.class);
+@Service
+public class UserService {
+    private final static Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private OrganUserRepository organUserRes;
@@ -74,11 +82,9 @@ public class UserProxy {
     public JsonObject createNewUser(final User user, Organ organ) {
         JsonObject result = new JsonObject();
         String msg = validUser(user);
-        if (StringUtils.equalsIgnoreCase(msg, "new_user_success")) {
-            // 此时 msg 是 new_user_success
+        if ("new_user_success".equalsIgnoreCase(msg)) {
             user.setSuperadmin(false); // 不支持创建第二个系统管理员
             user.setOrgi(Constants.SYSTEM_ORGI);
-
 
             if (StringUtils.isNotBlank(user.getPassword())) {
                 user.setPassword(MD5Utils.md5(user.getPassword()));
@@ -101,65 +107,40 @@ public class UserProxy {
 
 
     public User findById(final String id) {
-        return userRes.findById(id).orElseThrow(EntityNotFoundEx::new);
-    }
-
-    public List<String> findUserIdsInOrgan(final String organ) {
-        List<OrganUser> x = organUserRes.findByOrgan(organ);
-
-        if (x.size() == 0) {
-            return null;
-        }
-
-        List<String> z = new ArrayList<>();
-        for (final OrganUser y : x) {
-            z.add(y.getUserid());
-        }
-        return z;
-    }
-
-    public List<String> findUserIdsInOrgans(final Collection<String> organs) {
-
-        List<OrganUser> x = organUserRes.findByOrganIn(organs);
-
-        if (x.size() == 0) return null;
-
-        Set<String> y = new HashSet<>();
-
-        for (final OrganUser z : x) {
-            y.add(z.getUserid());
-        }
-
-        return new ArrayList<>(y);
-
+        return userRes.findById(id).orElseThrow(() -> EntityNotFoundEx.of(User.class));
     }
 
     /**
      * 通过技能组查找技能组下坐席所有信息
-     *
-     * @param organs
-     * @return
      */
+    @NotNull
     public List<User> findUserInOrgans(final Collection<String> organs) {
-        List<OrganUser> x = organUserRes.findByOrganIn(organs);
-        if (x.size() == 0) return null;
-        Set<String> y = new HashSet<>();
-        for (final OrganUser z : x) {
-            y.add(z.getUserid());
+        return findUserIds(organs, ids -> userRes.findAllById(ids));
+    }
+
+    private List<String> findUserIdsInOrgan(final String organ) {
+        return organUserRes.findByOrgan(organ).stream().map(OrganUser::getUserid).collect(Collectors.toList());
+    }
+
+    private Set<String> findUserIds(Collection<String> organs) {
+        return organUserRes.findByOrganIn(organs).stream().map(OrganUser::getUserid).collect(Collectors.toSet());
+    }
+
+    private <T> List<T> findUserIds(Collection<String> organs, Function<Set<String>, List<T>> function) {
+        Set<String> ids = findUserIds(organs);
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
         }
-        return userRes.findAllById(y);
+        return function.apply(ids);
     }
 
     public Page<User> findUserInOrgans(final Collection<String> organs, Pageable pageRequest) {
-        List<OrganUser> x = organUserRes.findByOrganIn(organs);
-        if (x.size() == 0) return null;
-        Set<String> y = new HashSet<>();
-        for (final OrganUser z : x) {
-            y.add(z.getUserid());
+        Set<String> ids = findUserIds(organs);
+        if (ids.isEmpty()) {
+            return null;
         }
-        return userRes.findByIdIn(y, pageRequest);
+        return userRes.findByIdIn(ids, pageRequest);
     }
-
 
     /**
      * 通过坐席ID查找其技能组Map
@@ -167,7 +148,7 @@ public class UserProxy {
      * @param agentno
      * @return
      */
-    public HashMap<String, String> getSkillsMapByAgentno(final String agentno) {
+    public Map<String, String> getSkillsMapByAgentno(final String agentno) {
 
         final User user = userRes.findById(agentno).orElse(null);
         if (user == null) {
@@ -178,78 +159,20 @@ public class UserProxy {
         return user.getSkills();
     }
 
-    /**
-     * 获得一个用户的直属组织机构
-     *
-     * @param userid
-     * @return
-     */
-    public List<String> findOrgansByUserid(final String userid) {
-        List<OrganUser> x = organUserRes.findByUserid(userid);
-
-        if (x.size() == 0) return null;
-
-        List<String> y = new ArrayList<>();
-
-        for (final OrganUser z : x) {
-            y.add(z.getOrgan());
-        }
-
-        return y;
+    public List<User> findByOrganInAndAgentAndDatastatus(final Collection<String> organs, boolean agent, boolean datastatus) {
+        return findUserIds(organs, ids -> userRes.findByAgentAndDatastatusAndIdIn(agent, datastatus, ids));
     }
 
-
-    public Page<User> findByOrganInAndAgentAndDatastatus(
-            final List<String> organs,
-            boolean agent,
-            boolean datastatus,
-            Pageable pageRequest) {
-        List<String> users = findUserIdsInOrgans(organs);
-
-        if (users == null) return null;
-
-        return userRes.findByAgentAndDatastatusAndIdIn(agent, datastatus, users, pageRequest);
-
-    }
-
-    public List<User> findByOrganInAndAgentAndDatastatus(
-            final Collection<String> organs,
-            boolean agent,
-            boolean datastatus) {
-        List<String> users = findUserIdsInOrgans(organs);
-
-        if (users == null) return null;
-
-        return userRes.findByAgentAndDatastatusAndIdIn(agent, datastatus, users);
-    }
-
-    public List<User> findByOrganInAndDatastatus(
-            final Collection<String> organs,
-            boolean datastatus) {
-        List<String> users = findUserIdsInOrgans(organs);
-
-        if (users == null) return null;
-
-        return userRes.findByDatastatusAndIdIn(datastatus, users);
-    }
-
-    public Page<User> findByOrganInAndDatastatusAndUsernameLike(
-            final List<String> organs,
-            final boolean datastatus,
-            final String username,
-            Pageable pageRequest) {
-        List<String> users = findUserIdsInOrgans(organs);
-        if (users == null) return null;
-        return userRes.findByDatastatusAndUsernameLikeAndIdIn(datastatus, username, users, pageRequest);
+    public List<User> findByOrganInAndDatastatus(final Collection<String> organs, boolean datastatus) {
+        return findUserIds(organs, ids -> userRes.findByDatastatusAndIdIn(datastatus, ids));
     }
 
     public List<User> findByOrganAndOrgiAndDatastatus(final String organ, final String orgi, final boolean datastatus) {
         List<String> users = findUserIdsInOrgan(organ);
-
-        if (users == null) return null;
-
+        if (users.isEmpty()) {
+            return null;
+        }
         return userRes.findByOrgiAndDatastatusAndIdIn(orgi, datastatus, users);
-
     }
 
     /**
@@ -406,83 +329,43 @@ public class UserProxy {
      * @return
      */
     public String validUser(final User user) {
-        String msg = "new_user_success";
         User exist = userRes.findByUsernameAndDatastatus(user.getUsername(), false);
         if (exist != null) {
-            msg = "username_exist";
-            return msg;
+            return "username_exist";
         }
 
         if (StringUtils.isNotBlank(user.getEmail())) {
             exist = userRes.findByEmailAndDatastatus(user.getEmail(), false);
             if (exist != null) {
-                msg = "email_exist";
-                return msg;
+                return "email_exist";
             }
         }
 
         if (StringUtils.isNotBlank(user.getMobile())) {
             exist = userRes.findByMobileAndDatastatus(user.getMobile(), false);
             if (exist != null) {
-                msg = "mobile_exist";
-                return msg;
+                return "mobile_exist";
             }
         }
-
+        String msg = "new_user_success";
         // 检查作为呼叫中心坐席的信息
         if (MainContext.hasModule(Constants.CSKEFU_MODULE_CALLCENTER) && user.isCallcenter()) {
             final PbxHost pbxHost = pbxHostRes.findById(user.getPbxhostId()).orElse(null);
-            if (pbxHost != null) {
-                Extension extension = extensionRes.findById(user.getExtensionId()).orElse(null);
-                if (extension != null) {
-                    if (StringUtils.isNotBlank(extension.getAgentno())) {
-                        // 呼叫中心该分机已经绑定
-                        msg = "extension_binded";
-                    }
-                } else {
-                    // 该分机不存在
-                    msg = "extension_not_exist";
-                }
-            } else {
+            if (pbxHost == null) {
                 // 呼叫中心的语音平台不存在
-                msg = "pbxhost_not_exist";
+                return "pbxhost_not_exist";
+            }
+            Extension extension = extensionRes.findById(user.getExtensionId()).orElse(null);
+            if (extension == null) {
+                // 该分机不存在
+                return "extension_not_exist";
+            }
+            if (StringUtils.isNotBlank(extension.getAgentno())) {
+                // 呼叫中心该分机已经绑定
+                return "extension_binded";
             }
         }
-
         return msg;
-    }
-
-
-    public List<User> findAllByCallcenterIsTrueAndDatastatusIsFalseAndOrgan(final String organ) {
-
-        final List<String> users = findUserIdsInOrgan(organ);
-
-        if (users == null) return null;
-
-        return userRes.findAllByCallcenterIsTrueAndDatastatusIsFalseAndIdIn(users);
-    }
-
-    /**
-     * 通过租户ID，是否为坐席，是否有效和组织机构查询坐席数
-     *
-     * @param orgi
-     * @param agent
-     * @param datastatus
-     * @param organ
-     * @return
-     */
-    public long countByOrgiAndAgentAndDatastatusAndOrgan(
-            final String orgi,
-            final boolean agent,
-            final boolean datastatus,
-            final String organ) {
-
-        final List<String> users = findUserIdsInOrgan(organ);
-
-        if (users == null) return 0;
-
-        return userRes.countByAgentAndDatastatusAndIdIn(agent, datastatus, users);
-
     }
 
     /**
@@ -494,10 +377,8 @@ public class UserProxy {
         // 获取用户的角色权限，进行授权
         List<RoleAuth> roleAuthList = roleAuthRes.findAll(new Specification<RoleAuth>() {
             @Override
-            public Predicate toPredicate(
-                    Root<RoleAuth> root, CriteriaQuery<?> query,
-                    CriteriaBuilder cb) {
-                List<Predicate> criteria = new ArrayList<Predicate>();
+            public Predicate toPredicate(Root<RoleAuth> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> criteria = new ArrayList<>();
                 if (user.getRoleList() != null && user.getRoleList().size() > 0) {
                     for (Role role : user.getRoleList()) {
                         criteria.add(cb.equal(root.get("roleid").as(String.class), role.getId()));
@@ -519,11 +400,38 @@ public class UserProxy {
     }
 
     /**
+     * 获取用户部门以及下级部门
+     *
+     * @param user
+     */
+    public void attachOrgansPropertiesForUser(final User user) {
+        List<OrganUser> organUsers = organUserRes.findByUserid(user.getId());
+        user.setOrgans(new HashMap<>());
+        user.setAffiliates(new HashSet<>());
+
+        final Map<String, String> skills = new HashMap<>();
+
+        Set<String> organIds = organUsers.stream().map(OrganUser::getOrgan).collect(Collectors.toSet());
+        List<Organ> organs = organRes.findAllById(organIds);
+        for (final Organ organ : organs) {
+            // 添加直属部门到organs
+            user.getOrgans().put(organ.getId(), organ);
+            if (organ.isSkill()) {
+                skills.put(organ.getId(), organ.getName());
+            }
+            // 添加部门及附属部门
+            processAffiliates(user, organ);
+        }
+        user.setSkills(skills);
+    }
+
+
+    /**
      * 获得一个部门及其子部门并添加到User的myorgans中
      *
      * @param user
      */
-    public void processAffiliates(final User user, final Organ organ) {
+    private void processAffiliates(final User user, final Organ organ) {
         if (organ == null) {
             return;
         }
@@ -547,30 +455,4 @@ public class UserProxy {
         }
     }
 
-    /**
-     * 获取用户部门以及下级部门
-     *
-     * @param user
-     */
-    public void attachOrgansPropertiesForUser(final User user) {
-        List<OrganUser> organs = organUserRes.findByUserid(user.getId());
-        user.setOrgans(new HashMap<>());
-        user.setAffiliates(new HashSet<>());
-
-        final HashMap<String, String> skills = new HashMap<>();
-
-        for (final OrganUser organ : organs) {
-            // 添加直属部门到organs
-            final Organ o = organRes.findById(organ.getOrgan()).orElseThrow(EntityNotFoundEx::new);
-            user.getOrgans().put(organ.getOrgan(), o);
-            if (o.isSkill()) {
-                skills.put(o.getId(), o.getName());
-            }
-
-            // 添加部门及附属部门
-            processAffiliates(user, o);
-        }
-
-        user.setSkills(skills);
-    }
 }

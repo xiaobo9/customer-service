@@ -3,6 +3,8 @@
 ## 删除记录
 
 `uk_callcenter_siptrunk` SIP网关信息表
+`uk_xiaoe_scene_type` 这个没地方用到了
+`uk_xiaoe_scene` 这个没地方用到了
 
 ## 补充的记录
 

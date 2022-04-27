@@ -26,6 +26,8 @@
  import com.chatopera.cc.basic.ThumbnailUtils;
  import com.chatopera.cc.cache.CacheService;
  import com.chatopera.cc.controller.Handler;
+ import com.chatopera.cc.service.*;
+ import com.chatopera.cc.service.AgentProxyService;
  import com.github.xiaobo9.model.UploadStatus;
  import com.github.xiaobo9.commons.exception.ServerException;
  import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
@@ -40,7 +42,6 @@
  import com.github.xiaobo9.entity.*;
  import com.github.xiaobo9.repository.AgentStatusRepository;
  import com.chatopera.cc.persistence.repository.ChatMessageRepository;
- import com.chatopera.cc.proxy.*;
  import com.chatopera.cc.socketio.message.Message;
  import com.chatopera.cc.util.Menu;
  import com.chatopera.cc.util.PinYinTools;
@@ -123,7 +124,7 @@
      private ChatMessageEsRepository chatMessageEsRes;
 
      @Autowired
-     private AgentProxy agentProxy;
+     private AgentProxyService agentServiceService;
 
      @Autowired
      private TagRepository tagRes;
@@ -147,7 +148,7 @@
      private StatusEventRepository statusEventRes;
 
      @Autowired
-     private AgentUserProxy agentUserProxy;
+     private AgentUserService agentUserService;
 
      @Autowired
      private PbxHostRepository pbxHostRes;
@@ -183,13 +184,15 @@
      private AgentStatusProxy agentStatusProxy;
 
      @Autowired
-     private UserProxy userProxy;
+     private UserService userService;
 
      @Autowired
-     private OrganProxy organProxy;
+     private OrganService organService;
 
      @Autowired
      private OrganRepository organRes;
+     @Autowired
+     private OnlineUserService onlineUserService;
 
      /**
       * 坐席从联系人列表进入坐席工作台和该联系人聊天
@@ -226,7 +229,7 @@
          final User logined = super.getUser(request);
          final String orgi = logined.getOrgi();
 
-         AgentUser agentUser = agentUserProxy.figureAgentUserBeforeChatWithContactInfo(channels, contactid, logined);
+         AgentUser agentUser = agentUserService.figureAgentUserBeforeChatWithContactInfo(channels, contactid, logined);
 
          if (agentUser != null) {
              logger.info(
@@ -240,7 +243,7 @@
 
          // 处理原聊天数据
          ModelAndView view = request(super.createAppsTempletResponse("/apps/agent/index"));
-         agentUserProxy.buildIndexViewWithModels(view, map, request, response, sort, logined, orgi, agentUser);
+         agentUserService.buildIndexViewWithModels(view, map, request, response, sort, logined, orgi, agentUser);
          return view;
      }
 
@@ -266,7 +269,7 @@
          final User logined = super.getUser(request);
          final String orgi = logined.getOrgi();
          ModelAndView view = request(super.createAppsTempletResponse("/apps/agent/index"));
-         agentUserProxy.buildIndexViewWithModels(view, map, request, response, sort, logined, orgi, null);
+         agentUserService.buildIndexViewWithModels(view, map, request, response, sort, logined, orgi, null);
          return view;
      }
 
@@ -398,11 +401,11 @@
          if (agentUser != null) {
              view.addObject("curagentuser", agentUser);
 
-             CousultInvite invite = OnlineUserProxy.consult(agentUser.getAppid(), agentUser.getOrgi());
+             CousultInvite invite = onlineUserService.consult(agentUser.getAppid(), agentUser.getOrgi());
              if (invite != null) {
                  view.addObject("aisuggest", invite.isAisuggest());
              }
-             view.addObject("inviteData", OnlineUserProxy.consult(agentUser.getAppid(), agentUser.getOrgi()));
+             view.addObject("inviteData", onlineUserService.consult(agentUser.getAppid(), agentUser.getOrgi()));
              List<AgentUserTask> agentUserTaskList = agentUserTaskRes.findByIdAndOrgi(id, orgi);
              if (agentUserTaskList.size() > 0) {
                  AgentUserTask agentUserTask = agentUserTaskList.get(0);
@@ -421,7 +424,7 @@
              PageRequest pageRequest = super.page(request, Direction.DESC, "updatetime");
              Page<com.chatopera.cc.model.ChatMessage> messages = this.chatMessageRes.findByUsessionAndOrgi(agentUser.getUserid(), orgi, pageRequest);
              view.addObject("agentUserMessageList", messages);
-             AgentService agentService = null;
+             com.github.xiaobo9.entity.AgentService agentService = null;
              if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
                  agentService = this.agentServiceRes.findById(agentUser.getAgentserviceid()).orElse(null);
                  view.addObject("curAgentService", agentService);
@@ -476,10 +479,10 @@
 //
 //         view.addObject("sessionConfig", sessionConfig);
 //         if (sessionConfig.isOtherquickplay()) {
-//             view.addObject("topicList", OnlineUserProxy.search(null, orgi, super.getUser(request)));
+//             view.addObject("topicList", onlineUserProxy.search(null, orgi, super.getUser(request)));
 //         }
 
-         AgentService service = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
+         com.github.xiaobo9.entity.AgentService service = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
          if (service != null) {
              view.addObject("tags", tagRes.findByOrgiAndTagtypeAndSkill(orgi, Enums.ModelType.USER.toString(), service.getSkill()));
          }
@@ -503,7 +506,7 @@
 //
 //         map.put("sessionConfig", sessionConfig);
 //         if (sessionConfig.isOtherquickplay()) {
-//             map.put("topicList", OnlineUserProxy.search(q, super.getOrgi(request), super.getUser(request)));
+//             map.put("topicList", onlineUserProxy.search(q, super.getOrgi(request), super.getUser(request)));
 //         }
 //
 //         return request(super.createRequestPageTempletResponse("/apps/agent/othertopic"));
@@ -516,7 +519,7 @@
 //
 //         map.put("sessionConfig", sessionConfig);
 //         if (sessionConfig.isOtherquickplay()) {
-//             map.put("topic", OnlineUserProxy.detail(id, super.getOrgi(request), super.getUser(request)));
+//             map.put("topic", onlineUserProxy.detail(id, super.getOrgi(request), super.getUser(request)));
 //         }
 //
 //         return request(super.createRequestPageTempletResponse("/apps/agent/topicdetail"));
@@ -551,11 +554,11 @@
      public ModelAndView ready(HttpServletRequest request) {
          final User logined = super.getUser(request);
          final String orgi = super.getOrgi(request);
-         final AgentStatus agentStatus = agentProxy.resolveAgentStatusByAgentnoAndOrgi(
+         final AgentStatus agentStatus = agentServiceService.resolveAgentStatusByAgentnoAndOrgi(
                  logined.getId(), orgi, logined.getSkills());
 
          // 缓存就绪状态
-         agentProxy.ready(logined, agentStatus, false);
+         agentServiceService.ready(logined, agentStatus, false);
 
          // 为该坐席分配访客
          acdAgentService.assignVisitors(agentStatus.getAgentno(), orgi);
@@ -586,7 +589,7 @@
          logger.info("[notready] set user {} as not ready", logined.getId());
          String orgi = super.getOrgi(request);
 
-         AgentStatus agentStatus = agentProxy.resolveAgentStatusByAgentnoAndOrgi(
+         AgentStatus agentStatus = agentServiceService.resolveAgentStatusByAgentnoAndOrgi(
                  logined.getId(), logined.getOrgi(), logined.getSkills());
 
          agentStatus.setBusy(false);
@@ -621,7 +624,7 @@
      public ModelAndView busy(HttpServletRequest request) {
          final User logined = super.getUser(request);
          logger.info("[busy] set user {} as busy", logined.getId());
-         AgentStatus agentStatus = agentProxy.resolveAgentStatusByAgentnoAndOrgi(
+         AgentStatus agentStatus = agentServiceService.resolveAgentStatusByAgentnoAndOrgi(
                  logined.getId(), logined.getOrgi(), logined.getSkills());
 
          agentStatus.setBusy(true);
@@ -658,7 +661,7 @@
          // 组织结构和权限数据
          logger.info("[notbusy] set user {} as not busy", logined.getId());
 
-         AgentStatus agentStatus = agentProxy.resolveAgentStatusByAgentnoAndOrgi(
+         AgentStatus agentStatus = agentServiceService.resolveAgentStatusByAgentnoAndOrgi(
                  logined.getId(), logined.getOrgi(), logined.getSkills());
 
          // 设置为就绪，置闲
@@ -696,11 +699,11 @@
          List<AgentUser> agentUserList = agentUserRes.findByAgentnoAndStatusAndOrgi(
                  super.getUser(request).getId(), AgentUserStatusEnum.END.toString(),
                  super.getOrgi(request));
-         List<AgentService> agentServiceList = new ArrayList<AgentService>();
+         List<com.github.xiaobo9.entity.AgentService> agentServiceList = new ArrayList<com.github.xiaobo9.entity.AgentService>();
          for (AgentUser agentUser : agentUserList) {
              if (agentUser != null && super.getUser(request).getId().equals(agentUser.getAgentno())) {
                  acdAgentService.finishAgentUser(agentUser, orgi);
-                 AgentService agentService = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
+                 com.github.xiaobo9.entity.AgentService agentService = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
                  if (agentService != null) {
                      agentService.setStatus(AgentUserStatusEnum.END.toString());
                      agentServiceList.add(agentService);
@@ -854,10 +857,10 @@
 
          if (multipart != null && multipart.getOriginalFilename().lastIndexOf(".") > 0) {
              try {
-                 StreamingFile sf = agentProxy.saveFileIntoMySQLBlob(logined, multipart);
+                 StreamingFile sf = agentServiceService.saveFileIntoMySQLBlob(logined, multipart);
                  // 发送通知
                  if (!paste) {
-                     agentProxy.sendFileMessageByAgent(logined, agentUser, multipart, sf);
+                     agentServiceService.sendFileMessageByAgent(logined, agentUser, multipart, sf);
                  }
                  notify = new UploadStatus("0", sf.getFileUrl());
              } catch (ServerException e) {
@@ -1001,7 +1004,7 @@
                  onlineUserRes.save(onlineUser);
              }
 
-             AgentService agentService = agentServiceRes.findById(agentserviceid).orElse(null);
+             com.github.xiaobo9.entity.AgentService agentService = agentServiceRes.findById(agentserviceid).orElse(null);
              if (agentService != null) {
                  agentService.setContactsid(contactsid);
                  agentService.setUsername(contacts.getName());
@@ -1085,7 +1088,7 @@
                      map.addAttribute("summary", summaries.get(0));
                  }
              }
-             AgentService service = agentServiceRes.findByIdAndOrgi(agentserviceid, orgi);
+             com.github.xiaobo9.entity.AgentService service = agentServiceRes.findByIdAndOrgi(agentserviceid, orgi);
              if (service != null) {
                  map.addAttribute(
                          "tags", tagRes.findByOrgiAndTagtypeAndSkill(
@@ -1116,7 +1119,7 @@
              summary.setOrgi(orgi);
              summary.setCreater(super.getUser(request).getId());
              summary.setCreatetime(new Date());
-             AgentService service = agentServiceRes.findByIdAndOrgi(agentserviceid, orgi);
+             com.github.xiaobo9.entity.AgentService service = agentServiceRes.findByIdAndOrgi(agentserviceid, orgi);
              summary.setAgent(service.getAgentno());
              summary.setAgentno(service.getAgentno());
              summary.setSkill(service.getSkill());
@@ -1158,14 +1161,14 @@
          final User logined = super.getUser(request);
 
          Organ targetOrgan = super.getOrgan(request);
-         Map<String, Organ> ownOrgans = organProxy.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
+         Map<String, Organ> ownOrgans = organService.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
 
          if (StringUtils.isNotBlank(userid) && StringUtils.isNotBlank(agentuserid)) {
              // 列出所有技能组
              List<Organ> skillGroups = organRes.findByOrgiAndIdInAndSkill(super.getOrgi(request), ownOrgans.keySet(), true);
 
              // 选择当前用户的默认技能组
-             AgentService agentService = agentServiceRes.findByIdAndOrgi(agentserviceid, super.getOrgi(request));
+             com.github.xiaobo9.entity.AgentService agentService = agentServiceRes.findByIdAndOrgi(agentserviceid, super.getOrgi(request));
 
              String currentOrgan = agentService.getSkill();
 
@@ -1191,7 +1194,7 @@
              for (final User o : userList) {
                  o.setAgentStatus(agentStatusMap.get(o.getId()));
                  // find user's skills
-                 userProxy.attachOrgansPropertiesForUser(o);
+                 userService.attachOrgansPropertiesForUser(o);
              }
 
              map.addAttribute("userList", userList);
@@ -1239,7 +1242,7 @@
              for (final User o : userList) {
                  o.setAgentStatus(agentStatusMap.get(o.getId()));
                  // find user's skills
-                 userProxy.attachOrgansPropertiesForUser(o);
+                 userService.attachOrgansPropertiesForUser(o);
              }
              map.addAttribute("userList", userList);
              map.addAttribute("currentorgan", organ);

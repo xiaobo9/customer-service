@@ -16,7 +16,7 @@
 package com.chatopera.cc.acd;
 
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.OrganService;
 import com.github.xiaobo9.commons.enums.AgentStatusEnum;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.commons.enums.DateFormatEnum;
@@ -48,7 +48,7 @@ public class ACDWorkMonitor {
     private CacheService cacheService;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
     private AgentServiceRepository agentServiceRes;
@@ -114,7 +114,7 @@ public class ACDWorkMonitor {
         if (organ != null) {
             Organ currentOrgan = new Organ();
             currentOrgan.setId(organ);
-            Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, orgi);
+            Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, orgi);
 
             report.setUsers(agentServiceRes.countByOrgiAndStatusAndAgentskillIn(orgi, AgentUserStatusEnum.INSERVICE.toString(), organs.keySet()));
             report.setInquene(agentUserRes.countByOrgiAndStatusAndSkillIn(orgi, AgentUserStatusEnum.INQUENE.toString(), organs.keySet()));

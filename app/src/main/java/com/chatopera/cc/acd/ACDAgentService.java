@@ -28,8 +28,8 @@ import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
 import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.proxy.AgentStatusProxy;
-import com.chatopera.cc.proxy.AgentUserProxy;
+import com.chatopera.cc.service.AgentStatusProxy;
+import com.chatopera.cc.service.AgentUserService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.SerializeUtil;
@@ -88,7 +88,7 @@ public class ACDAgentService {
     private UserRepository userRes;
 
     @Autowired
-    private AgentUserProxy agentUserProxy;
+    private AgentUserService agentUserService;
 
 
     /**
@@ -628,7 +628,7 @@ public class ACDAgentService {
 
         // 更新坐席服务人数，坐席更新时间到缓存
         if (agentStatus != null) {
-            agentUserProxy.updateAgentStatus(agentStatus, orgi);
+            agentUserService.updateAgentStatus(agentStatus, orgi);
         }
         return agentService;
     }

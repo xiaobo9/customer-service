@@ -24,10 +24,10 @@ import com.chatopera.cc.activemq.MqMessage;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.service.*;
 import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.proxy.*;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
@@ -61,7 +61,7 @@ public class AgentAuditController extends Handler {
     private final static Logger logger = LoggerFactory.getLogger(AgentAuditController.class);
 
     @Autowired
-    private AgentUserProxy agentUserProxy;
+    private AgentUserService agentUserService;
 
     @Autowired
     private ACDMessageHelper acdMessageHelper;
@@ -91,7 +91,7 @@ public class AgentAuditController extends Handler {
     private ServiceSummaryRepository serviceSummaryRes;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
     @Autowired
     private OnlineUserRepository onlineUserRes;
@@ -121,7 +121,10 @@ public class AgentAuditController extends Handler {
     private ACDAgentService acdAgentService;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
+
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @RequestMapping(value = "/index.html")
     @Menu(type = "cca", subtype = "cca", access = true)
@@ -136,7 +139,7 @@ public class AgentAuditController extends Handler {
         final User logined = super.getUser(request);
         logger.info("[index] skill {}, agentno {}, logined {}", skill, agentno, logined.getId());
 
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
 
         ModelAndView view = request(super.createAppsTempletResponse("/apps/cca/index"));
         Sort defaultSort = null;
@@ -276,11 +279,11 @@ public class AgentAuditController extends Handler {
         if (agentUser != null) {
             view.addObject("curagentuser", agentUser);
 
-            CousultInvite invite = OnlineUserProxy.consult(agentUser.getAppid(), agentUser.getOrgi());
+            CousultInvite invite = onlineUserService.consult(agentUser.getAppid(), agentUser.getOrgi());
             if (invite != null) {
                 view.addObject("ccaAisuggest", invite.isAisuggest());
             }
-            view.addObject("inviteData", OnlineUserProxy.consult(agentUser.getAppid(), agentUser.getOrgi()));
+            view.addObject("inviteData", onlineUserService.consult(agentUser.getAppid(), agentUser.getOrgi()));
             List<AgentUserTask> agentUserTaskList = agentUserTaskRes.findByIdAndOrgi(id, orgi);
             if (agentUserTaskList.size() > 0) {
                 AgentUserTask agentUserTask = agentUserTaskList.get(0);
@@ -336,7 +339,7 @@ public class AgentAuditController extends Handler {
 //
 //        view.addObject("sessionConfig", sessionConfig);
 //        if (sessionConfig.isOtherquickplay()) {
-//            view.addObject("topicList", OnlineUserProxy.search(null, orgi, super.getUser(request)));
+//            view.addObject("topicList", onlineUserProxy.search(null, orgi, super.getUser(request)));
 //        }
             AgentService service = agentServiceRes.findByIdAndOrgi(agentUser.getAgentserviceid(), orgi);
             if (service != null) {
@@ -372,7 +375,7 @@ public class AgentAuditController extends Handler {
         final User logined = super.getUser(request);
 
         Organ targetOrgan = super.getOrgan(request);
-        Map<String, Organ> ownOrgans = organProxy.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
+        Map<String, Organ> ownOrgans = organService.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
         if (StringUtils.isNotBlank(userid) && StringUtils.isNotBlank(agentuserid)) {
             // 列出所有技能组
             List<Organ> skillGroups = organRes.findByOrgiAndIdInAndSkill(super.getOrgi(request), ownOrgans.keySet(), true);
@@ -402,7 +405,7 @@ public class AgentAuditController extends Handler {
             for (final User o : userList) {
                 o.setAgentStatus(agentStatusMap.get(o.getId()));
                 // find user's skills
-                userProxy.attachOrgansPropertiesForUser(o);
+                userService.attachOrgansPropertiesForUser(o);
             }
 
             map.addAttribute("userList", userList);
@@ -452,7 +455,7 @@ public class AgentAuditController extends Handler {
             for (final User o : userList) {
                 o.setAgentStatus(agentStatusMap.get(o.getId()));
                 // find user's skills
-                userProxy.attachOrgansPropertiesForUser(o);
+                userService.attachOrgansPropertiesForUser(o);
             }
             map.addAttribute("userList", userList);
             map.addAttribute("currentorgan", organ);
@@ -495,7 +498,7 @@ public class AgentAuditController extends Handler {
             /**
              * 更新AgentUser
              */
-            final AgentUser agentUser = agentUserProxy.resolveAgentUser(userid, agentuserid, orgi);
+            final AgentUser agentUser = agentUserService.resolveAgentUser(userid, agentuserid, orgi);
             agentUser.setAgentno(agentno);
             agentUser.setAgentname(targetAgent.getUname());
             agentUserRes.save(agentUser);
@@ -515,7 +518,7 @@ public class AgentAuditController extends Handler {
                 // 更新当前坐席的服务访客列表
                 if (currentAgentStatus != null) {
                     cacheService.deleteOnlineUserIdFromAgentStatusByUseridAndAgentnoAndOrgi(userid, currentAgentno, orgi);
-                    agentUserProxy.updateAgentStatus(currentAgentStatus, super.getOrgi(request));
+                    agentUserService.updateAgentStatus(currentAgentStatus, super.getOrgi(request));
                 }
 
                 if (transAgentStatus != null) {

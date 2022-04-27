@@ -16,7 +16,7 @@
  */
 package com.chatopera.cc.util;
 
-import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.OnlineUserService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +30,11 @@ import java.util.concurrent.ConcurrentMap;
 public class WebSseEmitterClient {
     private final static Logger logger = LoggerFactory.getLogger(WebSseEmitterClient.class);
     private ConcurrentMap<String, WebIMClient> imClientsMap = new ConcurrentHashMap<>();
+    private OnlineUserService onlineUserService;
+
+    public WebSseEmitterClient(OnlineUserService onlineUserService) {
+        this.onlineUserService = onlineUserService;
+    }
 
     public List<WebIMClient> getClients(String userid) {
 
@@ -40,7 +45,6 @@ public class WebSseEmitterClient {
                 clients.add(client);
             }
         }
-//        logger.info("[getClients] get clients for userId {}, size {}", userid, clients.size());
         return clients;
     }
 
@@ -49,12 +53,10 @@ public class WebSseEmitterClient {
     }
 
     public void putClient(String userid, WebIMClient client) {
-//        logger.info("[putClient] userid {} client {}", userid, client.getClient());
         imClientsMap.put(client.getClient(), client);
     }
 
     public void removeClient(String userid, String client, boolean timeout) throws Exception {
-//        logger.info("[removeClient] remove client {} for userid {}", client, userid);
         List<WebIMClient> keyClients = this.getClients(userid);
         for (int i = 0; i < keyClients.size(); i++) {
             WebIMClient webIMClient = keyClients.get(i);
@@ -65,9 +67,8 @@ public class WebSseEmitterClient {
                 break;
             }
         }
-        if (keyClients.size() == 0 && timeout == true) {
-            OnlineUserProxy.offline(userid, userid);
-//            logger.info("[removeClient] set onlineUser {} as offline.", userid);
+        if (keyClients.size() == 0 && timeout) {
+            onlineUserService.offline(userid, userid);
         }
     }
 }

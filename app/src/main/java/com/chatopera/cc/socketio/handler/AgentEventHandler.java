@@ -6,12 +6,12 @@ import com.chatopera.cc.activemq.MqMessage;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.ChatMessage;
-import com.chatopera.cc.proxy.AgentProxy;
-import com.chatopera.cc.proxy.AgentSessionProxy;
-import com.chatopera.cc.proxy.AgentUserProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.AgentSessionProxy;
+import com.chatopera.cc.service.AgentProxyService;
+import com.chatopera.cc.service.AgentUserService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.AgentStatusMessage;
 import com.chatopera.cc.socketio.message.InterventMessage;
@@ -31,40 +31,48 @@ import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.github.xiaobo9.entity.AgentStatus;
 import com.github.xiaobo9.entity.AgentUser;
 import com.github.xiaobo9.entity.User;
+import com.github.xiaobo9.entity.WorkSession;
 import com.github.xiaobo9.repository.AgentStatusRepository;
 import com.github.xiaobo9.repository.WorkSessionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Date;
 
 @Slf4j
+@Component
 public class AgentEventHandler {
     protected SocketIOServer server;
-    private BrokerPublisher brokerPublisher;
-    private AgentStatusRepository agentStatusRes;
-    private AgentUserProxy agentUserProxy;
-    private AgentProxy agentProxy;
-    private AgentSessionProxy agentSessionProxy;
-    private UserProxy userProxy;
+    private final BrokerPublisher brokerPublisher;
+    private final AgentStatusRepository agentStatusRes;
+    private final AgentUserService agentUserService;
+    private final AgentProxyService agentServiceService;
+    private final AgentSessionProxy agentSessionProxy;
+    private final UserService userService;
+
+    private final WorkSessionRepository workSessionRepository;
+
+    private final CacheService cacheService;
 
     public AgentEventHandler(
             SocketIOServer server,
             BrokerPublisher brokerPublisher,
             AgentStatusRepository agentStatusRes,
-            AgentUserProxy agentUserProxy,
-            AgentProxy agentProxy,
+            AgentUserService agentUserService,
+            AgentProxyService agentServiceService,
             AgentSessionProxy agentSessionProxy,
-            UserProxy userProxy) {
+            UserService userService, WorkSessionRepository workSessionRepository, CacheService cacheService) {
         this.server = server;
         this.brokerPublisher = brokerPublisher;
         this.agentStatusRes = agentStatusRes;
-        this.agentUserProxy = agentUserProxy;
-        this.agentProxy = agentProxy;
+        this.agentUserService = agentUserService;
+        this.agentServiceService = agentServiceService;
         this.agentSessionProxy = agentSessionProxy;
-        this.userProxy = userProxy;
+        this.userService = userService;
+        this.workSessionRepository = workSessionRepository;
+        this.cacheService = cacheService;
     }
 
     @OnConnect
@@ -97,21 +105,19 @@ public class AgentEventHandler {
             p.setUpdatetime(new Date());
             p.setConnected(true);
             // 设置agentSkills
-            p.setSkills(userProxy.getSkillsMapByAgentno(userid));
+            p.setSkills(userService.getSkillsMapByAgentno(userid));
             agentStatusRes.save(p);
         });
 
         // 工作工作效率
         InetSocketAddress address = (InetSocketAddress) client.getRemoteAddress();
-        String ip = IPUtils.getIpAddress(handshakeData.getHttpHeaders(), address.getHostString());
 
-        WorkSessionRepository workSessionRepository = MainContext.getContext().getBean(WorkSessionRepository.class);
         int count = workSessionRepository.countByAgentAndDatestrAndOrgi(
                 userid, DateFormatEnum.DAY.format(new Date()), orgi);
 
-        workSessionRepository.save(
-                MainUtils.createWorkSession(userid, MainUtils.getContextID(client.getSessionId().toString()),
-                        session, orgi, ip, address.getHostName(), admin, count == 0));
+        String id = UUIDUtils.removeHyphen(client.getSessionId().toString());
+        WorkSession workSession = createWorkSession(handshakeData, userid, orgi, session, admin, address, count, id);
+        workSessionRepository.save(workSession);
 
         NettyClients.getInstance().putAgentEventClient(userid, client);
     }
@@ -125,15 +131,14 @@ public class AgentEventHandler {
         String admin = handshakeData.getSingleUrlParam("admin");
         String session = handshakeData.getSingleUrlParam("session");
         String connectid = client.get("connectid");
-        log.info(
-                "[onDisconnect] userId {}, orgi {}, admin {}, session {}, connectid {}", userid, orgi, admin, session,
-                connectid);
+        log.info("[onDisconnect] userId {}, orgi {}, admin {}, session {}, connectid {}",
+                userid, orgi, admin, session, connectid);
 
         /**
          * 连接断开
          */
         if (NettyClients.getInstance().removeAgentEventClient(
-                userid, MainUtils.getContextID(client.getSessionId().toString()), connectid) == 0) {
+                userid, UUIDUtils.removeHyphen(client.getSessionId().toString()), connectid) == 0) {
             // 该坐席和服务器没有连接了，但是也不能保证该坐席是停止办公了，可能稍后TA又打开网页
             // 所以，此处做一个30秒的延迟，如果该坐席30秒内没重新建立连接，则撤退该坐席
             // 更新该坐席状态，设置为"无连接"，不会分配新访客
@@ -171,87 +176,78 @@ public class AgentEventHandler {
 
     /**
      * 会话监控干预消息
-     *
-     * @param client
-     * @param request
-     * @param received
      */
     @OnEvent(value = "intervention")
-    public void onIntervetionEvent(
-            final SocketIOClient client,
-            final AckRequest request,
-            final InterventMessage received) throws JsonProcessingException {
+    public void onIntervetionEvent(final SocketIOClient client, final InterventMessage received) throws JsonProcessingException {
         final String agentno = client.get("agentno");
         final String session = client.get("session");
         final String connectid = client.get("connectid");
-        log.info(
-                "[onIntervetionEvent] intervention: agentno {}, session {}, connectid {}, payload {}", agentno, session,
-                connectid,
-                received.toJsonObject());
+        log.info("[onIntervetionEvent] intervention: agentno {}, session {}, connectid {}, payload {}",
+                agentno, session, connectid, received.toJsonObject());
 
-        if (received.valid()) {
-
-            // 获得AgentUser
-            final AgentUser agentUser = agentUserProxy.findById(received.getAgentuserid()).get();
-
-            // 验证当前的SSO中的session是否和传入的session匹配
-            if (agentSessionProxy.isInvalidSessionId(
-                    agentno, session, agentUser.getOrgi())) {
-                // 该session信息不合法
-                log.info("[onIntervetionEvent] invalid sessionId {}", session);
-                // 强制退出
-                client.sendEvent(Enums.MessageType.LEAVE.toString());
-                return;
-            }
-
-            final User supervisor = userProxy.findById(received.getSupervisorid());
-            final Date now = new Date();
-
-            // 创建消息
-            /**
-             * 消息体
-             */
-            ChatMessage chatMessage = new ChatMessage();
-            chatMessage.setId(UUIDUtils.getUUID());
-            chatMessage.setMessage(received.getContent());
-            chatMessage.setCreatetime(now);
-            chatMessage.setUpdatetime(now.getTime());
-
-            // 访客接收消息，touser设置为agentUser userid
-            chatMessage.setTouser(agentUser.getUserid());
-
-            // 坐席发送消息，username设置为坐席
-            chatMessage.setUsername(agentUser.getAgentname());
-            chatMessage.setContextid(agentUser.getContextid());
-            chatMessage.setUsession(agentUser.getUserid());
-            chatMessage.setAgentserviceid(agentUser.getAgentserviceid());
-            chatMessage.setAgentuser(agentUser.getId());
-
-            /**
-             * note 消息为会话监控干预消息的区分
-             * 消息 setCalltype 是呼出，并且 intervented = true
-             */
-            // 消息中继续使用该会话的坐席发出，所以，访客看到的消息，依然是以同一坐席的名义
-            chatMessage.setUserid(agentUser.getAgentno());
-            // 坐席会话监控消息，设置为监控人员
-            chatMessage.setCreater(supervisor.getId());
-            // 监控人员名字
-            chatMessage.setSupervisorname(supervisor.getUname());
-            chatMessage.setChannel(agentUser.getChannel());
-            chatMessage.setAppid(agentUser.getAppid());
-            chatMessage.setOrgi(agentUser.getOrgi());
-            chatMessage.setIntervented(true);
-
-
-            // 消息类型
-            chatMessage.setType(Enums.MessageType.MESSAGE.toString());
-            chatMessage.setMsgtype(received.toMediaType().toString());
-            chatMessage.setCalltype(Enums.CallType.OUT.toString());
-
-            agentProxy.sendChatMessageByAgent(chatMessage, agentUser);
-        } else {
-            log.warn("[onEvent] intervention invalid message", received.toString());
+        if (!received.valid()) {
+            log.warn("[onEvent] intervention invalid message {}", received);
+            return;
         }
+
+        // 获得AgentUser
+        final AgentUser agentUser = agentUserService.findById(received.getAgentuserid()).orElse(null);
+        if (agentUser == null) {
+            log.warn("未获取到 agent user: {}", received.getAgentuserid());
+            return;
+        }
+
+        // 验证当前的SSO中的session是否和传入的session匹配
+        if (agentSessionProxy.isInvalidSessionId(agentno, session, agentUser.getOrgi())) {
+            // 该session信息不合法
+            log.info("[onIntervetionEvent] invalid sessionId {}", session);
+            // 强制退出
+            client.sendEvent(Enums.MessageType.LEAVE.toString());
+            return;
+        }
+
+        final User supervisor = userService.findById(received.getSupervisorid());
+        final Date now = new Date();
+
+        // 创建消息
+        // 消息体
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setId(UUIDUtils.getUUID());
+        chatMessage.setMessage(received.getContent());
+        chatMessage.setCreatetime(now);
+        chatMessage.setUpdatetime(now.getTime());
+
+        // 访客接收消息，touser设置为agentUser userid
+        chatMessage.setTouser(agentUser.getUserid());
+
+        // 坐席发送消息，username设置为坐席
+        chatMessage.setUsername(agentUser.getAgentname());
+        chatMessage.setContextid(agentUser.getContextid());
+        chatMessage.setUsession(agentUser.getUserid());
+        chatMessage.setAgentserviceid(agentUser.getAgentserviceid());
+        chatMessage.setAgentuser(agentUser.getId());
+
+        /**
+         * note 消息为会话监控干预消息的区分
+         * 消息 setCalltype 是呼出，并且 intervented = true
+         */
+        // 消息中继续使用该会话的坐席发出，所以，访客看到的消息，依然是以同一坐席的名义
+        chatMessage.setUserid(agentUser.getAgentno());
+        // 坐席会话监控消息，设置为监控人员
+        chatMessage.setCreater(supervisor.getId());
+        // 监控人员名字
+        chatMessage.setSupervisorname(supervisor.getUname());
+        chatMessage.setChannel(agentUser.getChannel());
+        chatMessage.setAppid(agentUser.getAppid());
+        chatMessage.setOrgi(agentUser.getOrgi());
+        chatMessage.setIntervented(true);
+
+        // 消息类型
+        chatMessage.setType(Enums.MessageType.MESSAGE.toString());
+        chatMessage.setMsgtype(received.toMediaType().toString());
+        chatMessage.setCalltype(Enums.CallType.OUT.toString());
+
+        agentServiceService.sendChatMessageByAgent(chatMessage, agentUser);
     }
 
     /**
@@ -260,32 +256,23 @@ public class AgentEventHandler {
      * @param client
      * @param request
      * @param received
-     * @throws IOException
      */
     // 消息接收入口，当接收到消息后，查找发送目标客户端，并且向该客户端发送消息，且给自己发送消息
     @OnEvent(value = "message")
-    public void onMessageEvent(
-            final SocketIOClient client,
-            final AckRequest request,
-            final ChatMessage received) throws IOException {
+    public void onMessageEvent(final SocketIOClient client, final AckRequest request, final ChatMessage received) {
         final String agentno = client.get("agentno");
         final String session = client.get("session");
         final String connectid = client.get("connectid");
         received.setSessionid(session);
 
-        // 此处user代表坐席的ID
-//        String agentno = client.getHandshakeData().getSingleUrlParam("userid");
-
-        log.info(
-                "[onMessageEvent] message: agentUserId {}, agentno {}, toUser {}, channel {}, orgi {}, appId {}, userId {}, sessionId {}, connectid {}",
+        log.info("[onMessageEvent] message: agentUserId {}, agentno {}, toUser {}, channel {}, orgi {}, appId {}, userId {}, sessionId {}, connectid {}",
                 received.getAgentuser(), agentno, received.getTouser(),
                 received.getChannel(), received.getOrgi(), received.getAppid(), received.getUserid(),
                 session, connectid);
 
 
         // 验证当前的SSO中的session是否和传入的session匹配
-        if (agentSessionProxy.isInvalidSessionId(
-                agentno, session, received.getOrgi())) {
+        if (agentSessionProxy.isInvalidSessionId(agentno, session, received.getOrgi())) {
             // 该session信息不合法
             log.info("[onMessageEvent] invalid sessionId {}", session);
             // 强制退出
@@ -293,47 +280,65 @@ public class AgentEventHandler {
             return;
         }
 
-        AgentUser agentUser = MainContext.getCache().findOneAgentUserByUserIdAndOrgi(
-                received.getTouser(), received.getOrgi()).orElseGet(null);
-
-
-        /**
-         * 判断用户在线状态，如果用户在线则通过webim发送
-         * 检查收发双方的信息匹配
-         */
-        if (agentUser != null &&
-                agentno != null &&
-                StringUtils.equals(agentno, agentUser.getAgentno()) &&
-                !StringUtils.equals(agentUser.getStatus(), AgentUserStatusEnum.END.toString())) {
-            log.info("[onEvent] condition：visitor online.");
-
-            /**
-             * 消息体
-             */
-            received.setCalltype(Enums.CallType.OUT.toString());
-            if (StringUtils.isNotBlank(agentUser.getAgentno())) {
-                received.setTouser(agentUser.getUserid());
-            }
-
-            received.setId(UUIDUtils.getUUID());
-            received.setChannel(agentUser.getChannel());
-            received.setUsession(agentUser.getUserid());
-            received.setUsername(agentUser.getAgentname());
-            received.setContextid(agentUser.getContextid());
-
-            received.setAgentserviceid(agentUser.getAgentserviceid());
-            received.setCreater(agentUser.getAgentno());
-
-            if (StringUtils.equals(Enums.MediaType.COOPERATION.toString(), received.getMsgtype())) {
-                received.setMsgtype(Enums.MediaType.COOPERATION.toString());
-            } else {
-                received.setMsgtype(Enums.MediaType.TEXT.toString());
-            }
-
-            agentProxy.sendChatMessageByAgent(received, agentUser);
-        } else {
-            log.warn("[onEvent] message: unknown condition.");
+        AgentUser agentUser = cacheService.findOneAgentUserByUserIdAndOrgi(received.getTouser(), received.getOrgi()).orElse(null);
+        if (agentUser == null) {
+            log.warn("为获取到 agent user {} {}", received.getTouser(), received.getOrgi());
+            return;
         }
+
+        // 判断用户在线状态，如果用户在线则通过webim发送 检查收发双方的信息匹配
+        if (agentno == null || !StringUtils.equals(agentno, agentUser.getAgentno()) || AgentUserStatusEnum.END.check(agentUser.getStatus())) {
+            log.warn("[onEvent] message: unknown condition.");
+            return;
+        }
+        log.info("[onEvent] condition：visitor online.");
+
+        // 消息体
+        received.setCalltype(Enums.CallType.OUT.toString());
+        if (StringUtils.isNotBlank(agentUser.getAgentno())) {
+            received.setTouser(agentUser.getUserid());
+        }
+
+        received.setId(UUIDUtils.getUUID());
+        received.setChannel(agentUser.getChannel());
+        received.setUsession(agentUser.getUserid());
+        received.setUsername(agentUser.getAgentname());
+        received.setContextid(agentUser.getContextid());
+
+        received.setAgentserviceid(agentUser.getAgentserviceid());
+        received.setCreater(agentUser.getAgentno());
+
+        if (StringUtils.equals(Enums.MediaType.COOPERATION.toString(), received.getMsgtype())) {
+            received.setMsgtype(Enums.MediaType.COOPERATION.toString());
+        } else {
+            received.setMsgtype(Enums.MediaType.TEXT.toString());
+        }
+
+        agentServiceService.sendChatMessageByAgent(received, agentUser);
+
     }
 
+    private WorkSession createWorkSession(HandshakeData handshakeData, String userid, String orgi, String session, String admin, InetSocketAddress address, int count, String id) {
+        WorkSession workSession = new WorkSession();
+        Date date = new Date();
+        workSession.setCreatetime(date);
+        workSession.setBegintime(date);
+        workSession.setAgent(userid);
+        workSession.setAgentno(userid);
+        workSession.setAgentno(userid);
+        workSession.setAdmin("true".equalsIgnoreCase(admin));
+
+        workSession.setFirsttime(count == 0);
+
+        workSession.setIpaddr(IPUtils.getIpAddress(handshakeData.getHttpHeaders(), address.getHostString()));
+        workSession.setHostname(address.getHostName());
+        workSession.setUserid(userid);
+        workSession.setClientid(id);
+        workSession.setSessionid(session);
+        workSession.setOrgi(orgi);
+
+        workSession.setDatestr(DateFormatEnum.DAY.format(date));
+
+        return workSession;
+    }
 }

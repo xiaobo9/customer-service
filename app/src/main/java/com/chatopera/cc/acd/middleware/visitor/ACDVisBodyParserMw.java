@@ -21,8 +21,8 @@ import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.proxy.AgentStatusProxy;
-import com.chatopera.cc.proxy.AgentUserProxy;
+import com.chatopera.cc.service.AgentStatusProxy;
+import com.chatopera.cc.service.AgentUserService;
 import com.chatopera.compose4j.Functional;
 import com.chatopera.compose4j.Middleware;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
@@ -53,7 +53,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
     private CacheService cacheService;
 
     @Autowired
-    private AgentUserProxy agentUserProxy;
+    private AgentUserService agentUserService;
 
     @Autowired
     private AgentStatusProxy agentStatusProxy;
@@ -149,7 +149,7 @@ public class ACDVisBodyParserMw implements Middleware<ACDComposeContext> {
                             ctx.getAgentService().getQueneindex());
 
                     if (StringUtils.isNotBlank(ctx.getAgentService().getAgentuserid())) {
-                        agentUserProxy.findById(ctx.getAgentService().getAgentuserid()).ifPresent(ctx::setAgentUser);
+                        agentUserService.findById(ctx.getAgentService().getAgentuserid()).ifPresent(ctx::setAgentUser);
                     }
 
                     agentStatusProxy.broadcastAgentsStatus(

@@ -23,7 +23,7 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.socketio.message.Message;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.commons.enums.Enums;
@@ -77,6 +77,8 @@ public class WebIMTask {
     @Autowired
     private CacheService cache;
 
+    @Autowired
+    private OnlineUserService onlineUserService;
     /**
      * 处理超时消息，每5秒执行一次
      */
@@ -225,7 +227,7 @@ public class WebIMTask {
                 try {
                     logger.info("[save] put onlineUser id {}, status {}, invite status {}",
                             onlineUser.getId(), onlineUser.getStatus(), onlineUser.getInvitestatus());
-                    OnlineUserProxy.offline(onlineUser);
+                    onlineUserService.offline(onlineUser);
                 } catch (Exception e) {
                     logger.warn("[onlineuser] error", e);
                 }
@@ -295,7 +297,7 @@ public class WebIMTask {
     /**
      * 每三秒 , 加载 标记为执行中的任务何 即将执行的 计划任务
      * TODO 需要重构，将这个作业执行引擎拆解，比如引入
-     * https://airflow.apache.org/
+     * <a href="https://airflow.apache.org/">https://airflow.apache.org/</a>
      * 暂时设计为10分钟执行一次，测试有什么影响，需要重新看代码
      */
     @Scheduled(fixedDelay = 600000) //

@@ -22,7 +22,7 @@ import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.AgentStatusProxy;
+import com.chatopera.cc.service.AgentStatusProxy;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;

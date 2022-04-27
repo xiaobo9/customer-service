@@ -24,8 +24,8 @@ import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.model.ChatMessage;
-import com.chatopera.cc.proxy.AgentUserProxy;
-import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.AgentUserService;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.AgentStatusMessage;
 import com.chatopera.cc.socketio.util.HumanUtils;
@@ -39,6 +39,7 @@ import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
 import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.github.xiaobo9.entity.Contacts;
 import com.github.xiaobo9.entity.CousultInvite;
 import com.github.xiaobo9.repository.AgentServiceRepository;
@@ -56,9 +57,10 @@ public class IMEventHandler {
         this.server = server;
     }
 
-    static private AgentUserProxy agentUserProxy;
+    static private AgentUserService agentUserService;
     static private AgentServiceRepository agentServiceRepository;
     static private ACDVisitorDispatcher acdVisitorDispatcher;
+    static private OnlineUserService onlineUserService;
 
     /**
      * 接入访客并未访客寻找坐席服务人员
@@ -70,7 +72,7 @@ public class IMEventHandler {
         try {
             final String user = client.getHandshakeData().getSingleUrlParam("userid");
             final String orgi = client.getHandshakeData().getSingleUrlParam("orgi");
-            final String session = MainUtils.getContextID(client.getHandshakeData().getSingleUrlParam("session"));
+            final String session = UUIDUtils.removeHyphen(client.getHandshakeData().getSingleUrlParam("session"));
             // 渠道标识
             final String appid = client.getHandshakeData().getSingleUrlParam("appid");
             // 要求目标坐席服务
@@ -182,7 +184,7 @@ public class IMEventHandler {
                 logger.warn("[onDisconnect] error", e);
             }
             NettyClients.getInstance().removeIMEventClient(
-                    user, MainUtils.getContextID(client.getSessionId().toString()));
+                    user, UUIDUtils.removeHyphen(client.getSessionId().toString()));
         }
     }
 
@@ -227,7 +229,7 @@ public class IMEventHandler {
         /**
          * 以下代码主要用于检查 访客端的字数限制
          */
-        CousultInvite invite = OnlineUserProxy.consult(data.getAppid(), data.getOrgi());
+        CousultInvite invite = getOnlineUserProxy().consult(data.getAppid(), data.getOrgi());
 
         int dataLength = data.getMessage().length();
         if (invite != null && invite.getMaxwordsnum() > 0) {
@@ -245,11 +247,18 @@ public class IMEventHandler {
         HumanUtils.processMessage(data, data.getUserid());
     }
 
-    private static AgentUserProxy getAgentUserProxy() {
-        if (agentUserProxy == null) {
-            agentUserProxy = MainContext.getContext().getBean(AgentUserProxy.class);
+    private OnlineUserService getOnlineUserProxy() {
+        if (onlineUserService == null) {
+            onlineUserService = MainContext.getContext().getBean(OnlineUserService.class);
         }
-        return agentUserProxy;
+        return onlineUserService;
+    }
+
+    private static AgentUserService getAgentUserProxy() {
+        if (agentUserService == null) {
+            agentUserService = MainContext.getContext().getBean(AgentUserService.class);
+        }
+        return agentUserService;
     }
 
     private static AgentServiceRepository getAgentServiceRepository() {

@@ -1,11 +1,8 @@
 package com.chatopera.cc.service;
 
 import com.chatopera.cc.acd.ACDWorkMonitor;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.auth.AuthToken;
-import com.chatopera.cc.proxy.AgentProxy;
-import com.chatopera.cc.proxy.AgentSessionProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.github.xiaobo9.entity.User;
 import com.github.xiaobo9.entity.UserRole;
 import com.github.xiaobo9.repository.UserRepository;
@@ -32,13 +29,13 @@ public class LoginService {
     private AuthToken authToken;
 
     @Autowired
-    private AgentProxy agentProxy;
+    private AgentProxyService agentServiceService;
 
     @Autowired
     private AgentSessionProxy agentSessionProxy;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
     @Autowired
     private ACDWorkMonitor acdWorkMonitor;
@@ -53,8 +50,8 @@ public class LoginService {
         // 设置登录用户的状态
         loginUser.setLogin(true);
         // 更新redis session信息，用以支持sso
-        agentSessionProxy.updateUserSession(loginUser.getId(), MainUtils.getContextID(sessionId), loginUser.getOrgi());
-        loginUser.setSessionid(MainUtils.getContextID(sessionId));
+        agentSessionProxy.updateUserSession(loginUser.getId(), UUIDUtils.removeHyphen(sessionId), loginUser.getOrgi());
+        loginUser.setSessionid(UUIDUtils.removeHyphen(sessionId));
 
         List<UserRole> userRoleList = userRoleRes.findByOrgiAndUser(loginUser.getOrgi(), loginUser);
         if (userRoleList != null && userRoleList.size() > 0) {
@@ -64,10 +61,10 @@ public class LoginService {
         }
 
         // 获取用户部门以及下级部门
-        userProxy.attachOrgansPropertiesForUser(loginUser);
+        userService.attachOrgansPropertiesForUser(loginUser);
 
         // 添加角色信息
-        userProxy.attachRolesMap(loginUser);
+        userService.attachRolesMap(loginUser);
 
         loginUser.setLastlogintime(new Date());
         if (StringUtils.isNotBlank(loginUser.getId())) {

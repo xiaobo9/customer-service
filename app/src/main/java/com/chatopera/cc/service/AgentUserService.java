@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.acd.ACDPolicyService;
 import com.chatopera.cc.basic.MainUtils;
@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -44,9 +44,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
-@Component
-public class AgentUserProxy {
-    private final static Logger logger = LoggerFactory.getLogger(AgentUserProxy.class);
+@Service
+public class AgentUserService {
+    private final static Logger logger = LoggerFactory.getLogger(AgentUserService.class);
 
     // 权限符号
     private final static String AUDIT_PERMISSION_READ = "R";
@@ -105,6 +105,8 @@ public class AgentUserProxy {
     @Autowired
     private PeerSyncIM peerSyncIM;
 
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     /**
      * 与联系人主动聊天前查找获取AgentUser
@@ -131,7 +133,7 @@ public class AgentUserProxy {
             // 查找 OnlineUser
             onlineUser = onlineUserRes.findOneByContactidAndOrigAndChannel(
                     contactid, logined.getOrgi(), channel).orElseGet(() -> {
-                return OnlineUserProxy.createNewOnlineUserWithContactAndChannel(contact, logined, channel);
+                return onlineUserService.createNewOnlineUserWithContactAndChannel(contact, logined, channel);
             });
 
             // 查找满足条件的 AgentUser
@@ -183,7 +185,7 @@ public class AgentUserProxy {
      * @param request
      * @param response
      * @param sort
-     * @param logined
+     * @param user
      * @param orgi
      * @throws IOException
      * @throws TemplateException
@@ -194,7 +196,7 @@ public class AgentUserProxy {
             final HttpServletRequest request,
             final HttpServletResponse response,
             String sort,
-            final User logined,
+            final User user,
             final String orgi,
             final AgentUser agentUser) throws IOException, TemplateException {
         Sort defaultSort = null;
@@ -210,7 +212,7 @@ public class AgentUserProxy {
             }
         }
         if (StringUtils.isNotBlank(sort)) {
-            List<Sort.Order> list = new ArrayList<Sort.Order>();
+            List<Sort.Order> list = new ArrayList<>();
             if (sort.equals("lastmessage")) {
                 list.add(new Sort.Order(Sort.Direction.DESC, "status"));
                 list.add(new Sort.Order(Sort.Direction.DESC, "lastmessage"));
@@ -224,7 +226,7 @@ public class AgentUserProxy {
                 response.addCookie(name);
             }
             if (list.size() > 0) {
-                defaultSort = new Sort(list);
+                defaultSort = Sort.by(list);
                 Cookie name = new Cookie("sort", sort);
                 name.setMaxAge(60 * 60 * 24 * 365);
                 response.addCookie(name);
@@ -234,8 +236,7 @@ public class AgentUserProxy {
             defaultSort = new Sort(Sort.Direction.DESC, "status");
         }
 
-        List<AgentUser> agentUserList = agentUserRes.findByAgentnoAndOrgi(
-                logined.getId(), logined.getOrgi(), defaultSort);
+        List<AgentUser> agentUserList = agentUserRes.findByAgentnoAndOrgi(user.getId(), user.getOrgi(), defaultSort);
 
         if (agentUserList.size() > 0) {
             if (agentUser != null) {
@@ -255,16 +256,15 @@ public class AgentUserProxy {
             agentUserList.add(agentUser);
         }
 
-//        SessionConfig sessionConfig = acdPolicyService.initSessionConfig(agentUser.getSkill(), logined.getOrgi());
+//        SessionConfig sessionConfig = acdPolicyService.initSessionConfig(agentUser.getSkill(), user.getOrgi());
 //        view.addObject("sessionConfig", sessionConfig);
 //       if (sessionConfig.isOtherquickplay()) {
-//           view.addObject("topicList", OnlineUserProxy.search(null, logined.getOrgi(), logined));
+//           view.addObject("topicList", onlineUserProxy.search(null, user.getOrgi(), user));
 //       }
 
         if (agentUserList.size() > 0) {
             view.addObject("agentUserList", agentUserList);
-            agentServiceProxy.bundleDialogRequiredDataInView(view,
-                    map, agentUserList.get(0), orgi, logined);
+            agentServiceProxy.bundleDialogRequiredDataInView(view, map, agentUserList.get(0), orgi, user);
         }
     }
 
@@ -275,9 +275,9 @@ public class AgentUserProxy {
      * @param agentUser
      * @return
      */
-    public HashMap<String, String> getAgentUserSubscribers(final String orgi, final AgentUser agentUser) {
-        HashMap<String, String> result = new HashMap<>();
-        HashSet<String> bypass = new HashSet<>();
+    public Map<String, String> getAgentUserSubscribers(final String orgi, final AgentUser agentUser) {
+        Map<String, String> result = new HashMap<>();
+        Set<String> bypass = new HashSet<>();
 
         // 跳过自己
         if (StringUtils.isNotBlank(agentUser.getAgentno())) {
@@ -304,9 +304,8 @@ public class AgentUserProxy {
 
         // DEBUG
         for (final String userId : result.keySet()) {
-            logger.info(
-                    "[getAgentUserSubscribers] agentUserId {} user {} permissions {}", agentUser.getId(), userId,
-                    result.get(userId));
+            logger.info("[getAgentUserSubscribers] agentUserId {} user {} permissions {}",
+                    agentUser.getId(), userId, result.get(userId));
         }
 
         return result;
@@ -320,7 +319,7 @@ public class AgentUserProxy {
      * @param bypass
      * @param result
      */
-    private void loadPermissionsFromDB(final String orgi, final String key, final HashSet<String> bypass, final HashMap<String, String> result) {
+    private void loadPermissionsFromDB(final String orgi, final String key, final Set<String> bypass, final Map<String, String> result) {
         List<RoleAuth> roleAuths = roleAuthRes.findByDicvalueAndOrgi(key, orgi);
         for (final RoleAuth roleAuth : roleAuths) {
             List<String> users = userRoleRes.findByOrgiAndRoleId(orgi, roleAuth.getRoleid());
@@ -339,7 +338,7 @@ public class AgentUserProxy {
      * @param permissions
      * @param result
      */
-    private void addPermissions(final String user, final String permissions, final HashMap<String, String> result) {
+    private void addPermissions(final String user, final String permissions, final Map<String, String> result) {
         result.put(user, permissions);
     }
 
@@ -350,25 +349,26 @@ public class AgentUserProxy {
      * @param authKey
      * @param result
      */
-    private void addPermission(final String userId, final String authKey, final HashMap<String, String> result) {
+    private void addPermission(final String userId, final String authKey, final Map<String, String> result) {
         if (!result.containsKey(userId)) {
             result.put(userId, "");
         }
 
+        String value = result.get(userId);
         switch (authKey) {
             case AUTH_KEY_AUDIT_READ:
-                if (!result.get(userId).contains(AUDIT_PERMISSION_READ)) {
-                    result.put(userId, result.get(userId) + AUDIT_PERMISSION_READ);
+                if (!value.contains(AUDIT_PERMISSION_READ)) {
+                    result.put(userId, value + AUDIT_PERMISSION_READ);
                 }
                 break;
             case AUTH_KEY_AUDIT_WRITE:
-                if (!result.get(userId).contains(AUDIT_PERMISSION_WRITE)) {
-                    result.put(userId, result.get(userId) + AUDIT_PERMISSION_WRITE);
+                if (!value.contains(AUDIT_PERMISSION_WRITE)) {
+                    result.put(userId, value + AUDIT_PERMISSION_WRITE);
                 }
                 break;
             case AUTH_KEY_AUDIT_TRANS:
-                if (!result.get(userId).contains(AUDIT_PERMISSION_TRANS)) {
-                    result.put(userId, result.get(userId) + AUDIT_PERMISSION_TRANS);
+                if (!value.contains(AUDIT_PERMISSION_TRANS)) {
+                    result.put(userId, value + AUDIT_PERMISSION_TRANS);
                 }
                 break;
             default:
@@ -462,8 +462,7 @@ public class AgentUserProxy {
     public AgentUser resolveAgentUser(final String userid, final String agentuserid, final String orgi) throws ServerException {
         Optional<AgentUser> opt = cacheService.findOneAgentUserByUserIdAndOrgi(userid, orgi);
         if (!opt.isPresent()) {
-            return agentUserRes.findById(agentuserid).orElseThrow(()->new EntityNotFoundEx("Invalid transfer request, agent user not exist."));
-
+            return agentUserRes.findById(agentuserid).orElseThrow(() -> new EntityNotFoundEx("Invalid transfer request, agent user not exist."));
         }
         return opt.get();
     }

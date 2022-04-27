@@ -2,7 +2,7 @@ package com.chatopera.cc.socketio.util;
 
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.proxy.AgentUserProxy;
+import com.chatopera.cc.service.AgentUserService;
 import com.github.xiaobo9.commons.enums.Enums;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ public class IMServiceUtils {
     private final static Logger logger = LoggerFactory.getLogger(IMServiceUtils.class);
 
     private static CacheService cacheService;
-    private static AgentUserProxy agentUserProxy;
+    private static AgentUserService agentUserService;
 
     public static void shiftOpsType(final String userId, final String orgi, final Enums.OptType opsType) {
         getCache().findOneAgentUserByUserIdAndOrgi(userId, orgi).ifPresent(p -> {
@@ -44,12 +44,12 @@ public class IMServiceUtils {
         return cacheService;
     }
 
-    private static AgentUserProxy getAgentUserProxy() {
-        if (agentUserProxy == null) {
-            agentUserProxy = MainContext.getContext().getBean(
-                    AgentUserProxy.class);
+    private static AgentUserService getAgentUserProxy() {
+        if (agentUserService == null) {
+            agentUserService = MainContext.getContext().getBean(
+                    AgentUserService.class);
         }
-        return agentUserProxy;
+        return agentUserService;
     }
 
 

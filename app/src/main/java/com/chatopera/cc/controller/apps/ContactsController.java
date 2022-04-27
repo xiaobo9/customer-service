@@ -20,8 +20,8 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.es.ContactsRepositoryImpl;
-import com.chatopera.cc.proxy.ContactsProxy;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.ContactsService;
+import com.chatopera.cc.service.OrganService;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.PinYinTools;
 import com.chatopera.cc.util.PropertiesEventUtil;
@@ -86,13 +86,13 @@ public class ContactsController extends Handler {
     private MetadataRepository metadataRes;
 
     @Autowired
-    private ContactsProxy contactsProxy;
+    private ContactsService contactsService;
 
     @Autowired
     private OrganRepository organRes;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
     private AgentServiceRepository agentServiceRes;
@@ -120,7 +120,7 @@ public class ContactsController extends Handler {
         }
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         if (StringUtils.isNotBlank(ckind)) {
@@ -139,7 +139,7 @@ public class ContactsController extends Handler {
         map.addAttribute("contactsList", contacts);
         map.addAttribute("page", page);
 
-        contactsProxy.bindContactsApproachableData(contacts, map, user);
+        contactsService.bindContactsApproachableData(contacts, map, user);
 
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
@@ -158,7 +158,7 @@ public class ContactsController extends Handler {
 
         map.addAttribute("contactsList", contacts);
 
-        contactsProxy.bindContactsApproachableData(contacts, map, user);
+        contactsService.bindContactsApproachableData(contacts, map, user);
 
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
@@ -174,7 +174,7 @@ public class ContactsController extends Handler {
                 MainUtils.getWeekStartTime(), null, false,
                 boolQueryBuilder, q, super.page(request));
         map.addAttribute("contactsList", contacts);
-        contactsProxy.bindContactsApproachableData(contacts, map, user);
+        contactsService.bindContactsApproachableData(contacts, map, user);
 
 
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
@@ -184,7 +184,7 @@ public class ContactsController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         esOrganFilter(user, boolQueryBuilder);
@@ -213,7 +213,7 @@ public class ContactsController extends Handler {
                 boolQueryBuilder, q, super.page(request));
 
         map.addAttribute("contactsList", contacts);
-        contactsProxy.bindContactsApproachableData(contacts, map, user);
+        contactsService.bindContactsApproachableData(contacts, map, user);
         return request(super.createAppsTempletResponse("/apps/business/contacts/index"));
     }
 
@@ -244,7 +244,7 @@ public class ContactsController extends Handler {
         final User logined = super.getUser(request);
         final String orgi = logined.getOrgi();
         Organ currentOrgan = super.getOrgan(request);
-        String skypeIDReplace = contactsProxy.sanitizeSkypeId(contacts.getSkypeid());
+        String skypeIDReplace = contactsService.sanitizeSkypeId(contacts.getSkypeid());
         List<Contacts> contact = contactsRes.findByskypeidAndDatastatus(skypeIDReplace, false);
 
         // 添加数据
@@ -330,11 +330,11 @@ public class ContactsController extends Handler {
         final User user = super.getUser(request);
         Contacts data = contactsRes.findById(contacts.getId()).orElseThrow(EntityNotFoundEx::new);
 
-        String skypeIDReplace = contactsProxy.sanitizeSkypeId(contacts.getSkypeid());
+        String skypeIDReplace = contactsService.sanitizeSkypeId(contacts.getSkypeid());
         Contacts theOnlyContact = contactsRes.findByskypeidAndOrgiAndDatastatus(skypeIDReplace, user.getOrgi(), false);
         Contacts oldContact = contactsRes.findByidAndOrgiAndDatastatus(contacts.getId(), user.getOrgi(), false);
 
-        boolean determineChange = contactsProxy.determineChange(contacts, oldContact);
+        boolean determineChange = contactsService.determineChange(contacts, oldContact);
         // 验证skype唯一性验证
         if (theOnlyContact != null && !theOnlyContact.getId().equals(oldContact.getId())) {
             logger.info("[contacts edit] errer :The same skypeid exists");
@@ -445,7 +445,7 @@ public class ContactsController extends Handler {
         }
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         if (StringUtils.isNotBlank(ckind)) {
@@ -469,7 +469,7 @@ public class ContactsController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         if (StringUtils.isNotBlank(q)) {
@@ -539,7 +539,7 @@ public class ContactsController extends Handler {
     @Menu(type = "contacts", subtype = "embedsave")
     public ModelAndView embedsave(HttpServletRequest request, @Valid Contacts contacts, @Valid String agentserviceid) {
         final User logined = super.getUser(request);
-        String skypeIDReplace = contactsProxy.sanitizeSkypeId(contacts.getSkypeid());
+        String skypeIDReplace = contactsService.sanitizeSkypeId(contacts.getSkypeid());
         List<Contacts> contact = contactsRes.findByskypeidAndDatastatus(skypeIDReplace, false);
 
         //添加数据
@@ -580,11 +580,11 @@ public class ContactsController extends Handler {
         final User user = super.getUser(request);
         Contacts data = contactsRes.findById(contacts.getId()).orElseThrow(EntityNotFoundEx::new);
 
-        String skypeIDReplace = contactsProxy.sanitizeSkypeId(contacts.getSkypeid());
+        String skypeIDReplace = contactsService.sanitizeSkypeId(contacts.getSkypeid());
         Contacts theOnlyContact = contactsRes.findByskypeidAndOrgiAndDatastatus(skypeIDReplace, user.getOrgi(), false);
         Contacts oldContact = contactsRes.findByidAndOrgiAndDatastatus(contacts.getId(), user.getOrgi(), false);
 
-        boolean determineChange = contactsProxy.determineChange(contacts, oldContact);
+        boolean determineChange = contactsService.determineChange(contacts, oldContact);
 
         // 验证skype唯一性验证
         if (theOnlyContact != null && !theOnlyContact.getId().equals(oldContact.getId())) {

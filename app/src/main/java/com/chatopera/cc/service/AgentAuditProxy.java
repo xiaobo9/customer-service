@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.activemq.MqMessage;
@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 会话监控常用方法
@@ -49,7 +50,7 @@ public class AgentAuditProxy {
     private CacheService cacheService;
 
     @Autowired
-    private AgentUserProxy agentUserProxy;
+    private AgentUserService agentUserService;
 
     /**
      * 更新agentuser 监控人员列表
@@ -59,8 +60,7 @@ public class AgentAuditProxy {
     public AgentUserAudit updateAgentUserAudits(final AgentUser agentUser) {
         try {
             // get interests
-            HashMap<String, String> subscribers = agentUserProxy.getAgentUserSubscribers(
-                    agentUser.getOrgi(), agentUser);
+            Map<String, String> subscribers = agentUserService.getAgentUserSubscribers(agentUser.getOrgi(), agentUser);
             AgentUserAudit audit = new AgentUserAudit(agentUser.getOrgi(), agentUser.getId(), subscribers);
             cacheService.putAgentUserAuditByOrgi(agentUser.getOrgi(), audit);
             return audit;

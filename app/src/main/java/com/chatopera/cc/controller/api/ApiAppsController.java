@@ -13,7 +13,7 @@ package com.chatopera.cc.controller.api;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.entity.InviteRecord;
@@ -50,6 +50,9 @@ public class ApiAppsController extends Handler {
 
     @Autowired
     private CacheService cacheService;
+
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @RequestMapping(method = RequestMethod.POST)
     @Menu(type = "apps", subtype = "apps", access = true)
@@ -94,7 +97,7 @@ public class ApiAppsController extends Handler {
         final String userid = j.get("userid").getAsString();
 
         logger.info("[invite] agentno {} invite onlineUser {}", agentno, userid);
-        OnlineUser onlineUser = OnlineUserProxy.onlineuser(userid, orgi);
+        OnlineUser onlineUser = onlineUserService.onlineuser(userid, orgi);
 
         if (onlineUser != null) {
             logger.info("[invite] userid {}, agentno {}, orgi {}", userid, agentno, orgi);
@@ -112,7 +115,7 @@ public class ApiAppsController extends Handler {
             logger.info("[invite] new invite record {} of onlineUser id {} saved.", record.getId(), onlineUser.getId());
 
             try {
-                OnlineUserProxy.sendWebIMClients(onlineUser.getUserid(), "invite:" + agentno);
+                onlineUserService.sendWebIMClients(onlineUser.getUserid(), "invite:" + agentno);
                 resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_SUCC);
             } catch (Exception e) {
                 logger.error("[invite] error", e);

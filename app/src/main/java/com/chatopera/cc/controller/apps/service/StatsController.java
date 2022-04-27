@@ -18,8 +18,8 @@ package com.chatopera.cc.controller.apps.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OrganProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.OrganService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.service.cube.CubeService;
 import com.chatopera.cc.service.cube.DataSourceService;
 import com.chatopera.cc.util.Dict;
@@ -60,10 +60,10 @@ public class StatsController extends Handler {
     private DataSourceService dataSource;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
 
     @RequestMapping("/stats/coment.html")
@@ -75,7 +75,7 @@ public class StatsController extends Handler {
                                    @Valid String end) throws Exception {
         logger.info("[statcoment] agent {}, skill {}, begin {}, end {}", agent, skill, begin, end);
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Map<String, Object> mapR = new HashMap<>();
         mapR.put("orgi", super.getOrgi(request));
         mapR.put("begin", begin);
@@ -83,10 +83,10 @@ public class StatsController extends Handler {
         mapR.put("end", end);
         if (StringUtils.isNotBlank(skill)) {
             map.addAttribute("skill", skill);
-            map.addAttribute("agentList", userProxy.findUserInOrgans(Collections.singletonList(skill)));
+            map.addAttribute("agentList", userService.findUserInOrgans(Collections.singletonList(skill)));
             mapR.put("skill", "'" + skill + "'");
         } else {
-            map.addAttribute("agentList", userProxy.findUserInOrgans(organs.keySet()));
+            map.addAttribute("agentList", userService.findUserInOrgans(organs.keySet()));
             mapR.put("skill", organs.keySet().stream().map(p -> "'" + p + "'").collect(Collectors.joining(",")));
         }
 
@@ -126,7 +126,7 @@ public class StatsController extends Handler {
     @Menu(type = "service", subtype = "statcoment", admin = true)
     public void statcomentexp(HttpServletRequest request, HttpServletResponse response, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Map<String, Object> mapR = new HashMap<>();
         mapR.put("begin", begin);
         mapR.put("agent", agent);
@@ -157,17 +157,17 @@ public class StatsController extends Handler {
     @Menu(type = "service", subtype = "statagent", admin = true)
     public ModelAndView statagent(ModelMap map, HttpServletRequest request, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Map<String, Object> mapR = new HashMap<>();
         mapR.put("begin", begin);
         mapR.put("agent", agent);
         mapR.put("end", end);
         if (StringUtils.isNotBlank(skill)) {
             map.addAttribute("skill", skill);
-            map.addAttribute("agentList", userProxy.findUserInOrgans(Collections.singletonList(skill)));
+            map.addAttribute("agentList", userService.findUserInOrgans(Collections.singletonList(skill)));
             mapR.put("skill", "'" + skill + "'");
         } else {
-            map.addAttribute("agentList", userProxy.findUserInOrgans(organs.keySet()));
+            map.addAttribute("agentList", userService.findUserInOrgans(organs.keySet()));
             mapR.put("skill", organs.keySet().stream().map(p -> "'" + p + "'").collect(Collectors.joining(",")));
         }
         mapR.put("orgi", super.getOrgi(request));
@@ -192,7 +192,7 @@ public class StatsController extends Handler {
     @Menu(type = "service", subtype = "statagent", admin = true)
     public void statagentexp(HttpServletRequest request, HttpServletResponse response, @Valid String agent, @Valid String skill, @Valid String begin, @Valid String end) throws Exception {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Map<String, Object> mapR = new HashMap<>();
         mapR.put("begin", begin);
         mapR.put("agent", agent);

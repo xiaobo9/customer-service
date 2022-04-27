@@ -17,7 +17,6 @@
 package com.chatopera.cc.controller;
 
 import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.Viewport;
 import com.chatopera.cc.basic.auth.AuthToken;
 import com.chatopera.cc.cache.CacheService;
@@ -44,9 +43,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
@@ -79,7 +80,7 @@ public class Handler {
     public User getUser(HttpServletRequest request) {
         User user = (User) request.getSession(true).getAttribute(Constants.USER_SESSION_NAME);
         if (user != null) {
-            user.setSessionid(MainUtils.getContextID(request.getSession().getId()));
+            user.setSessionid(UUIDUtils.removeHyphen(request.getSession().getId()));
             return user;
         }
         String authorization = request.getHeader("authorization");
@@ -103,7 +104,7 @@ public class Handler {
     protected User newGuestUser(HttpServletRequest request) {
         User user;
         user = new User();
-        user.setId(MainUtils.getContextID(request.getSession().getId()));
+        user.setId(UUIDUtils.removeHyphen(request.getSession().getId()));
         user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
         user.setOrgi(Constants.SYSTEM_ORGI);
         user.setSessionid(user.getId());
@@ -112,30 +113,24 @@ public class Handler {
 
     /**
      * 获得登录账号的当前导航的组织机构
-     *
-     * @param request
-     * @return
      */
     public Organ getOrgan(HttpServletRequest request) {
-        User user = getUser(request);
-        if (user.getOrgans() != null) {
-            ArrayList<Organ> organs = new ArrayList<>(user.getOrgans().values());
-
-            if (organs.size() == 0) {
-                return null;
-            }
-
-            Organ organ = (Organ) request.getSession(true).getAttribute(Constants.ORGAN_SESSION_NAME);
-            if (organ == null) {
-                if (organs.size() > 0) {
-                    organ = organs.get(0);
-                    request.getSession(true).setAttribute(Constants.ORGAN_SESSION_NAME, organ);
-                }
-            }
+        HttpSession session = request.getSession(true);
+        Organ organ = (Organ) session.getAttribute(Constants.ORGAN_SESSION_NAME);
+        if (organ != null) {
             return organ;
-        } else {
+        }
+        User user = getUser(request);
+        if (user.getOrgans() == null) {
             return null;
         }
+        List<Organ> organs = new ArrayList<>(user.getOrgans().values());
+        if (organs.size() == 0) {
+            return null;
+        }
+        organ = organs.get(0);
+        session.setAttribute(Constants.ORGAN_SESSION_NAME, organ);
+        return organ;
     }
 
     /**
@@ -323,7 +318,7 @@ public class Handler {
             if (StringUtils.isNotBlank(userid)) {
                 user.setId(userid);
             } else {
-                user.setId(MainUtils.getContextID(request.getSession().getId()));
+                user.setId(UUIDUtils.removeHyphen(request.getSession().getId()));
             }
             if (StringUtils.isNotBlank(nickname)) {
                 user.setUsername(nickname);
@@ -341,7 +336,7 @@ public class Handler {
             }
             user.setSessionid(user.getId());
         } else {
-            user.setSessionid(MainUtils.getContextID(request.getSession().getId()));
+            user.setSessionid(UUIDUtils.removeHyphen(request.getSession().getId()));
         }
         return user;
     }
@@ -353,7 +348,7 @@ public class Handler {
             if (StringUtils.isNotBlank(userid)) {
                 user.setId(userid);
             } else {
-                user.setId(MainUtils.getContextID(request.getSession().getId()));
+                user.setId(UUIDUtils.removeHyphen(request.getSession().getId()));
             }
             if (StringUtils.isNotBlank(nickname)) {
                 user.setUsername(nickname);
@@ -371,7 +366,7 @@ public class Handler {
             }
             user.setSessionid(user.getId());
         } else {
-            user.setSessionid(MainUtils.getContextID(request.getSession().getId()));
+            user.setSessionid(UUIDUtils.removeHyphen(request.getSession().getId()));
         }
         return user;
     }

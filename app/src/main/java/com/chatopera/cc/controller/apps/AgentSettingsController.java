@@ -22,7 +22,7 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.OrganService;
 import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.*;
@@ -68,7 +68,7 @@ public class AgentSettingsController extends Handler {
     private TemplateRepository templateRes;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
     private CacheService cacheService;
@@ -142,7 +142,7 @@ public class AgentSettingsController extends Handler {
     @Menu(type = "setting", subtype = "blacklist")
     public ModelAndView blacklist(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
 
         Page<BlackEntity> blackList = blackListRes.findByOrgiAndSkillIn(super.getOrgi(request), organs.keySet(), super.page(request, Sort.Direction.DESC, "endtime"));
 

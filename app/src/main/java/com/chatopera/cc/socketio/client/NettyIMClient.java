@@ -16,8 +16,8 @@
  */
 package com.chatopera.cc.socketio.client;
 
-import com.chatopera.cc.basic.MainUtils;
 import com.corundumstudio.socketio.SocketIOClient;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.google.common.collect.ArrayListMultimap;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +44,7 @@ public class NettyIMClient implements NettyClient {
     public int removeClient(String key, String id) {
         List<SocketIOClient> keyClients = this.getClients(key);
         for (SocketIOClient client : keyClients) {
-            if (MainUtils.getContextID(client.getSessionId().toString()).equals(id)) {
+            if (UUIDUtils.removeHyphen(client.getSessionId().toString()).equals(id)) {
                 keyClients.remove(client);
                 break;
             }

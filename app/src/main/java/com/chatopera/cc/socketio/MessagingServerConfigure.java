@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2017 优客服-多渠道客服系统
- * Modifications copyright (C) 2018-2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.config;
+package com.chatopera.cc.socketio;
 
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.socketio.MsgExceptionListener;
@@ -31,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
@@ -60,7 +60,18 @@ public class MessagingServerConfigure {
         Configuration config = new Configuration();
         config.setPort(port);
         config.setExceptionListener(new MsgExceptionListener());
+        ssl(config);
+        config.setWorkerThreads(threads <= MAX_WORK_THREADS ? threads : MAX_WORK_THREADS);
+        SocketConfig socketConfig = config.getSocketConfig();
+        socketConfig.setReuseAddress(true);
+        socketConfig.setSoLinger(0);
+        socketConfig.setTcpNoDelay(true);
+        socketConfig.setTcpKeepAlive(true);
 
+        return server = new SocketIOServer(config);
+    }
+
+    private void ssl(Configuration config) throws IOException, NoSuchAlgorithmException {
         File sslFile = new File(path, "ssl/https.properties");
         if (sslFile.exists()) {
             Properties sslProperties = new Properties();
@@ -71,21 +82,11 @@ public class MessagingServerConfigure {
             String storePassword = sslProperties.getProperty("key-store-password");
             if (StringUtils.isNotBlank(keyStore) && StringUtils.isNotBlank(storePassword)) {
                 config.setKeyStorePassword(MainUtils.decryption(storePassword));
-                try (InputStream stream = new FileInputStream(new File(path, "ssl/" + keyStore))) {
+                try (InputStream stream = Files.newInputStream(new File(path, "ssl/" + keyStore).toPath())) {
                     config.setKeyStore(stream);
                 }
             }
         }
-
-        config.setWorkerThreads(threads <= MAX_WORK_THREADS ? threads : MAX_WORK_THREADS);
-        config.setAuthorizationListener(data -> true);
-        SocketConfig socketConfig = config.getSocketConfig();
-        socketConfig.setReuseAddress(true);
-        socketConfig.setSoLinger(0);
-        socketConfig.setTcpNoDelay(true);
-        socketConfig.setTcpKeepAlive(true);
-
-        return server = new SocketIOServer(config);
     }
 
     @Bean

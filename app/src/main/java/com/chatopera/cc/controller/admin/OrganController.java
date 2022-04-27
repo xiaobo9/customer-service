@@ -19,8 +19,8 @@ package com.chatopera.cc.controller.admin;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OrganProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.OrganService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.*;
@@ -71,17 +71,17 @@ public class OrganController extends Handler {
     private OrganRoleRepository organRoleRes;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
     private CacheService cacheService;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
     private Collection<Organ> getOwnOragans(HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        return organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi()).values();
+        return organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi()).values();
     }
 
     @RequestMapping("/index.html")
@@ -103,7 +103,7 @@ public class OrganController extends Handler {
             }
             if (organData != null) {
                 map.addAttribute(
-                        "userList", userProxy.findByOrganAndOrgiAndDatastatus(
+                        "userList", userService.findByOrganAndOrgiAndDatastatus(
                                 organData.getId(),
                                 super.getOrgi(),
                                 false));
@@ -160,10 +160,10 @@ public class OrganController extends Handler {
     @RequestMapping("/seluser.html")
     @Menu(type = "admin", subtype = "seluser", admin = true)
     public ModelAndView seluser(ModelMap map, HttpServletRequest request, @Valid String organ) {
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
-        map.addAttribute("userList", userProxy.findUserInOrgans(organs.keySet()));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
+        map.addAttribute("userList", userService.findUserInOrgans(organs.keySet()));
         Organ organData = organRepository.findByIdAndOrgi(organ, super.getOrgi());
-        map.addAttribute("userOrganList", userProxy
+        map.addAttribute("userOrganList", userService
                 .findByOrganAndOrgiAndDatastatus(organ, super.getOrgi(), false));
         map.addAttribute("organ", organData);
         return request(super.pageTplResponse("/admin/organ/seluser"));
@@ -229,7 +229,7 @@ public class OrganController extends Handler {
                     // TODO 因为一个用户可以包含在多个技能组中，所以，skill应该对应
                     // 一个List列表，此处需要重构Skill为列表
                     if (agentStatus != null) {
-                        userProxy.attachOrgansPropertiesForUser(user);
+                        userService.attachOrgansPropertiesForUser(user);
                         agentStatus.setSkills(user.getSkills());
                         cacheService.putAgentStatusByOrgi(agentStatus, super.getOrgi());
                     }
@@ -275,7 +275,7 @@ public class OrganController extends Handler {
     @RequestMapping("/update.html")
     @Menu(type = "admin", subtype = "organ")
     public ModelAndView update(HttpServletRequest request, @Valid Organ organ) {
-        String msg = organProxy.updateOrgan(organ, super.getOrgi(request), super.getUser(request));
+        String msg = organService.updateOrgan(organ, super.getOrgi(request), super.getUser(request));
         return request(super.pageTplResponse(
                 "redirect:/admin/organ/index.html?msg=" + msg + "&organ=" + organ.getId()));
     }

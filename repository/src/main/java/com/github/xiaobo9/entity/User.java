@@ -93,21 +93,21 @@ public class User implements java.io.Serializable {
      * 权限相关
      */
     // 直接隶属的组织机构列表，存储机构ID
-    private HashMap<String, Organ> organs;
+    private Map<String, Organ> organs;
 
     // 用户所属的技能组们
-    private HashMap<String, String> skills;
+    private Map<String, String> skills;
 
     // 我的组织机构标识及附属机构们，存储机构ID
-    private HashSet<String> affiliates = new HashSet<>();
+    private Set<String> affiliates = new HashSet<>();
 
     // Note: 此处并没有给附属部门于直属部门间的关系建立一个对象缓存，如果需要这个信息，通过API接口进行查询
 
     // 角色列表
-    private List<Role> roleList = new ArrayList<Role>();
+    private List<Role> roleList = new ArrayList<>();
 
     // 角色的权限
-    private Map<String, Object> roleAuthMap = new HashMap<String, Object>();
+    private Map<String, Object> roleAuthMap = new HashMap<>();
 
     public User() {
     }
@@ -349,11 +349,11 @@ public class User implements java.io.Serializable {
     }
 
     @Transient
-    public HashMap<String, String> getSkills() {
+    public Map<String, String> getSkills() {
         return skills;
     }
 
-    public void setSkills(HashMap<String, String> skills) {
+    public void setSkills(Map<String, String> skills) {
         this.skills = skills;
     }
 
@@ -503,11 +503,11 @@ public class User implements java.io.Serializable {
     }
 
     @Transient
-    public HashSet<String> getAffiliates() {
+    public Set<String> getAffiliates() {
         return affiliates;
     }
 
-    public void setAffiliates(HashSet<String> affiliates) {
+    public void setAffiliates(Set<String> affiliates) {
         this.affiliates = affiliates;
     }
 

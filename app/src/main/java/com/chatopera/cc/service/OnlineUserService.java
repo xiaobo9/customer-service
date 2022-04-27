@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2017 优客服-多渠道客服系统
- * Modifications copyright (C) 2018-2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.IPUtils;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
 import com.chatopera.cc.util.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.commons.kit.ParameterKit;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.*;
 import com.github.xiaobo9.commons.utils.BrowserClient;
 import com.github.xiaobo9.commons.utils.UUIDUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -47,59 +46,60 @@ import java.nio.charset.CharacterCodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@Slf4j
+@Service
+public class OnlineUserService {
+    public WebSseEmitterClient webIMClients;
+    @Autowired
+    private OnlineUserRepository onlineUserRes;
+    @Autowired
+    private UserRepository userRes;
+    @Autowired
+    private CacheService cacheService;
+    @Autowired
+    private ConsultInviteRepository consultInviteRes;
+    @Autowired
+    private OnlineUserHisRepository onlineUserHisRes;
+    @Autowired
+    private UserTraceRepository userTraceRes;
+    @Autowired
+    private AgentUserContactsRepository agentUserContactsRes;
+    @Autowired
+    private ContactsRepository contactsRes;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private OrganRepository organRepository;
 
-public class OnlineUserProxy {
-    private final static Logger logger = LoggerFactory.getLogger(OnlineUserProxy.class);
-    public static WebSseEmitterClient webIMClients = new WebSseEmitterClient();
-    public static ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private OrgiSkillRelRepository skillRelRepository;
 
-    private static OnlineUserRepository onlineUserRes;
-    private static UserRepository userRes;
-    private static CacheService cacheService;
-    private static ConsultInviteRepository consultInviteRes;
-    private static OnlineUserHisRepository onlineUserHisRes;
-    private static UserTraceRepository userTraceRes;
-    private static AgentUserContactsRepository agentUserContactsRes;
-    private static ContactsRepository contactsRes;
-    private static UserProxy userProxy;
-    private static OrganRepository organRes;
+    @Autowired
+    private SystemConfigService configService;
 
-    /**
-     * @param id
-     * @return
-     * @throws Exception
-     */
-    public static OnlineUser user(final String id) {
-        return getOnlineUserRes().findById(id).orElse(null);
+    public OnlineUser user(final String id) {
+
+        return onlineUserRes.findById(id).orElse(null);
     }
 
     /**
      * 更新cache
-     *
-     * @param consultInvite
      */
-    public static void cacheConsult(final CousultInvite consultInvite) {
-        logger.info("[cacheConsult] snsid {}, orgi {}", consultInvite.getSnsaccountid(), consultInvite.getOrgi());
-        getCache().putConsultInviteByOrgi(consultInvite.getOrgi(), consultInvite);
+    public void cacheConsult(final CousultInvite consultInvite) {
+        log.info("[cacheConsult] snsid {}, orgi {}", consultInvite.getSnsaccountid(), consultInvite.getOrgi());
+        cacheService.putConsultInviteByOrgi(consultInvite.getOrgi(), consultInvite);
     }
 
-    /**
-     * @param snsid
-     * @param orgi
-     * @return
-     */
-    public static CousultInvite consult(final String snsid, final String orgi) {
-//        logger.info("[consult] snsid {}, orgi {}", snsid, orgi);
-        CousultInvite consultInvite = MainContext.getCache().findOneConsultInviteBySnsidAndOrgi(snsid, orgi);
+    public CousultInvite consult(final String snsid, final String orgi) {
+        CousultInvite consultInvite = cacheService.findOneConsultInviteBySnsidAndOrgi(snsid, orgi);
         if (consultInvite == null) {
-            consultInvite = getConsultInviteRes().findBySnsaccountidAndOrgi(snsid, orgi);
+            consultInvite = consultInviteRes.findBySnsaccountidAndOrgi(snsid, orgi);
             if (consultInvite != null) {
-                getCache().putConsultInviteByOrgi(orgi, consultInvite);
+                cacheService.putConsultInviteByOrgi(orgi, consultInvite);
             }
         }
         return consultInvite;
     }
-
 
     /**
      * 在Cache中查询OnlineUser，或者从数据库中根据UserId，Orgi和Invite查询
@@ -108,15 +108,9 @@ public class OnlineUserProxy {
      * @param orgi
      * @return
      */
-    public static OnlineUser onlineuser(String userid, String orgi) {
+    public OnlineUser onlineuser(String userid, String orgi) {
         // 从Cache中查找
-        OnlineUser onlineUser = getCache().findOneOnlineUserByUserIdAndOrgi(userid, orgi);
-
-        if (onlineUser == null) {
-            logger.info("[onlineuser] !!! fail to resolve user {} with both cache and database, maybe this user is first presents.", userid);
-        }
-
-        return onlineUser;
+        return cacheService.findOneOnlineUserByUserIdAndOrgi(userid, orgi);
     }
 
 
@@ -128,29 +122,23 @@ public class OnlineUserProxy {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static List<Organ> organ(
-            String orgi, final IP ipdata,
-            final CousultInvite invite, boolean isJudgeShare) {
+    public List<Organ> organ(String orgi, final IP ipdata, final CousultInvite invite, boolean isJudgeShare) {
         String origOrig = orgi;
         boolean isShare = false;
         if (isJudgeShare) {
-            SystemConfig systemConfig = MainUtils.getSystemConfig();
-            if (systemConfig != null && systemConfig.isEnabletneant() && systemConfig.isTenantshare()) {
+            SystemConfig systemConfig = configService.getSystemConfig();
+            if (systemConfig.isEnabletneant() && systemConfig.isTenantshare()) {
                 orgi = Constants.SYSTEM_ORGI;
                 isShare = true;
             }
         }
-        List<Organ> skillGroups = getCache().findOneSystemByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig);
+        List<Organ> skillGroups = cacheService.findOneSystemByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig);
         if (skillGroups == null) {
-            OrganRepository service = MainContext.getContext().getBean(OrganRepository.class);
-            skillGroups = service.findByOrgiAndSkill(orgi, true);
+            skillGroups = organRepository.findByOrgiAndSkill(orgi, true);
             // 租户共享时 查出该租住要显的绑定的技能组
-            if (isShare && !(StringUtils.equals(
-                    Constants.SYSTEM_ORGI, (invite == null ? origOrig : invite.getOrgi())))) {
-                OrgiSkillRelRepository orgiSkillRelService = MainContext.getContext().getBean(
-                        OrgiSkillRelRepository.class);
+            if (isShare && !(Constants.SYSTEM_ORGI.equals((invite == null ? origOrig : invite.getOrgi())))) {
                 List<OrgiSkillRel> orgiSkillRelList = null;
-                orgiSkillRelList = orgiSkillRelService.findByOrgi((invite == null ? origOrig : invite.getOrgi()));
+                orgiSkillRelList = skillRelRepository.findByOrgi((invite == null ? origOrig : invite.getOrgi()));
                 List<Organ> skillTempList = new ArrayList<>();
                 if (!orgiSkillRelList.isEmpty()) {
                     for (Organ organ : skillGroups) {
@@ -165,7 +153,7 @@ public class OnlineUserProxy {
             }
 
             if (skillGroups.size() > 0) {
-                getCache().putSystemListByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig, skillGroups);
+                cacheService.putSystemListByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig, skillGroups);
             }
         }
 
@@ -194,11 +182,11 @@ public class OnlineUserProxy {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static List<Organ> organ(String orgi, boolean isJudgeShare) {
+    public List<Organ> organ(String orgi, boolean isJudgeShare) {
         return organ(orgi, null, null, isJudgeShare);
     }
 
-    private static List<AreaType> getAreaTypeList(String area, List<AreaType> areaTypeList) {
+    private List<AreaType> getAreaTypeList(String area, List<AreaType> areaTypeList) {
         List<AreaType> atList = new ArrayList<AreaType>();
         if (areaTypeList != null && areaTypeList.size() > 0) {
             for (AreaType areaType : areaTypeList) {
@@ -218,7 +206,7 @@ public class OnlineUserProxy {
      * @param topicTypeList
      * @return
      */
-    public static List<KnowledgeType> topicType(String orgi, IP ipdata, List<KnowledgeType> topicTypeList) {
+    public List<KnowledgeType> topicType(String orgi, IP ipdata, List<KnowledgeType> topicTypeList) {
         List<KnowledgeType> tempTopicTypeList = new ArrayList<KnowledgeType>();
         for (KnowledgeType topicType : topicTypeList) {
             if (getParentArea(ipdata, topicType, topicTypeList) != null) {
@@ -233,7 +221,7 @@ public class OnlineUserProxy {
      * @param topicTypeList
      * @return
      */
-    private static KnowledgeType getParentArea(IP ipdata, KnowledgeType topicType, List<KnowledgeType> topicTypeList) {
+    private KnowledgeType getParentArea(IP ipdata, KnowledgeType topicType, List<KnowledgeType> topicTypeList) {
         KnowledgeType area = null;
         if (StringUtils.isNotBlank(topicType.getArea())) {
             if ((topicType.getArea().indexOf(ipdata.getProvince()) >= 0 || topicType.getArea().indexOf(
@@ -264,7 +252,7 @@ public class OnlineUserProxy {
         return area;
     }
 
-    public static List<Topic> topic(String orgi, List<KnowledgeType> topicTypeList, List<Topic> topicList) {
+    public List<Topic> topic(String orgi, List<KnowledgeType> topicTypeList, List<Topic> topicList) {
         List<Topic> tempTopicList = new ArrayList<Topic>();
         if (topicList != null) {
             for (Topic topic : topicList) {
@@ -284,7 +272,7 @@ public class OnlineUserProxy {
      * @param topicList
      * @return
      */
-    public static List<KnowledgeType> filterTopicType(List<KnowledgeType> topicTypeList, List<Topic> topicList) {
+    public List<KnowledgeType> filterTopicType(List<KnowledgeType> topicTypeList, List<Topic> topicList) {
         List<KnowledgeType> tempTopicTypeList = new ArrayList<KnowledgeType>();
         if (topicTypeList != null) {
             for (KnowledgeType knowledgeType : topicTypeList) {
@@ -310,7 +298,7 @@ public class OnlineUserProxy {
      * @param topicTypeList
      * @return
      */
-    private static KnowledgeType getTopicType(String cate, List<KnowledgeType> topicTypeList) {
+    private KnowledgeType getTopicType(String cate, List<KnowledgeType> topicTypeList) {
         KnowledgeType kt = null;
         for (KnowledgeType knowledgeType : topicTypeList) {
             if (knowledgeType.getId().equals(cate)) {
@@ -326,12 +314,12 @@ public class OnlineUserProxy {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static List<User> agents(String orgi) {
+    public List<User> agents(String orgi) {
         String origOrig = orgi;
 
-        List<User> agentList = getUserRes().findByOrgiAndAgentAndDatastatus(orgi, true, false);
+        List<User> agentList = userRes.findByOrgiAndAgentAndDatastatus(orgi, true, false);
         List<User> agentTempList = new ArrayList<User>();
-        List<Organ> skillOrgansByOrgi = getOrganRes().findByOrgiAndSkill(origOrig, true);
+        List<Organ> skillOrgansByOrgi = organRepository.findByOrgiAndSkill(origOrig, true);
 
         if (!skillOrgansByOrgi.isEmpty()) {
             for (User user : agentList) {
@@ -339,10 +327,10 @@ public class OnlineUserProxy {
                 if (user.isAdmin() || user.isSuperadmin()) continue;
 
                 // 只显示在线的客服，跳过离线的客服
-                if (getCache().findOneAgentStatusByAgentnoAndOrig(user.getId(), origOrig) == null) continue;
+                if (cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), origOrig) == null) continue;
 
                 // 一个用户可隶属于多个组织
-                getUserProxy().attachOrgansPropertiesForUser(user);
+                userService.attachOrgansPropertiesForUser(user);
                 for (Organ organ : skillOrgansByOrgi) {
                     if (user.getOrgans().size() > 0 && user.inAffiliates(organ.getId())) {
                         agentTempList.add(user);
@@ -355,7 +343,7 @@ public class OnlineUserProxy {
         return agentList;
     }
 
-    public static Contacts processContacts(
+    public Contacts processContacts(
             final String orgi,
             Contacts contacts,
             final String appid,
@@ -386,7 +374,7 @@ public class OnlineUserProxy {
             }
 
             if (contacts != null && StringUtils.isNotBlank(contacts.getId())) {
-                if (!getAgentUserContactsRes().findOneByUseridAndOrgi(userid, orgi).isPresent()) {
+                if (!agentUserContactsRes.findOneByUseridAndOrgi(userid, orgi).isPresent()) {
                     AgentUserContacts agentUserContacts = new AgentUserContacts();
                     agentUserContacts.setAppid(appid);
                     agentUserContacts.setChannel(Enums.ChannelType.WEBIM.toString());
@@ -400,7 +388,7 @@ public class OnlineUserProxy {
                 Optional<AgentUserContacts> agentUserContactOpt = agentUserContactsRes.findOneByUseridAndOrgi(
                         userid, orgi);
                 if (agentUserContactOpt.isPresent()) {
-                    contacts = getContactsRes().findById(agentUserContactOpt.get().getContactsid()).orElse(null);
+                    contacts = contactsRes.findById(agentUserContactOpt.get().getContactsid()).orElse(null);
                 }
             }
         }
@@ -423,7 +411,7 @@ public class OnlineUserProxy {
      * @return
      * @throws CharacterCodingException
      */
-    public static OnlineUser online(
+    public OnlineUser online(
             final User user,
             final String orgi,
             final String sessionid,
@@ -481,7 +469,7 @@ public class OnlineUserProxy {
                         URL referer = new URL(url);
                         onlineUser.setSource(referer.getHost());
                     } catch (MalformedURLException e) {
-                        logger.info("[online] error when parsing URL", e);
+                        log.info("[online] error when parsing URL", e);
                     }
                 }
                 onlineUser.setAppid(appid);
@@ -524,7 +512,7 @@ public class OnlineUserProxy {
                 onlineUser.setBrowser(client.getBrowser());
                 onlineUser.setUseragent(client.getUseragent());
 
-                logger.info("[online] new online user is created but not persisted.");
+                log.info("[online] new online user is created but not persisted.");
             } else {
                 // 从DB或缓存找到OnlineUser
                 onlineUser.setCreatetime(now); // 刷新创建时间
@@ -578,7 +566,7 @@ public class OnlineUserProxy {
                 trace.setOrgi(invite.getOrgi());
                 trace.setUpdatetime(new Date());
                 trace.setUsername(onlineUser.getUsername());
-                getUserTraceRes().save(trace);
+                userTraceRes.save(trace);
             }
 
             // 完成获取及更新OnlineUser, 将信息加入缓存
@@ -587,7 +575,8 @@ public class OnlineUserProxy {
 //                        "[online] onlineUser id {}, status {}, invite status {}", onlineUser.getId(),
 //                        onlineUser.getStatus(), onlineUser.getInvitestatus());
                 // 存储到缓存及数据库
-                getOnlineUserRes().save(onlineUser);
+
+                onlineUserRes.save(onlineUser);
             }
         }
         return onlineUser;
@@ -598,7 +587,7 @@ public class OnlineUserProxy {
      * @param key
      * @return
      */
-    public static String getCookie(HttpServletRequest request, String key) {
+    public String getCookie(HttpServletRequest request, String key) {
         Cookie data = null;
         if (request != null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
@@ -616,24 +605,23 @@ public class OnlineUserProxy {
      * @param orgi
      * @throws Exception
      */
-    public static void offline(String user, String orgi) {
-        if (MainContext.getContext() != null) {
-            OnlineUser onlineUser = getCache().findOneOnlineUserByUserIdAndOrgi(user, orgi);
-            if (onlineUser != null) {
-                onlineUser.setStatus(Enums.OnlineUserStatusEnum.OFFLINE.toString());
-                onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
-                onlineUser.setBetweentime((int) (new Date().getTime() - onlineUser.getLogintime().getTime()));
-                onlineUser.setUpdatetime(new Date());
-                getOnlineUserRes().save(onlineUser);
+    public void offline(String user, String orgi) {
+        OnlineUser onlineUser = cacheService.findOneOnlineUserByUserIdAndOrgi(user, orgi);
+        if (onlineUser != null) {
+            onlineUser.setStatus(Enums.OnlineUserStatusEnum.OFFLINE.toString());
+            onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
+            onlineUser.setBetweentime((int) (new Date().getTime() - onlineUser.getLogintime().getTime()));
+            onlineUser.setUpdatetime(new Date());
 
-                final OnlineUserHis his = getOnlineUserHisRes().findOneBySessionidAndOrgi(
-                        onlineUser.getSessionid(), onlineUser.getOrgi()).orElseGet(OnlineUserHis::new);
-                MainUtils.copyProperties(onlineUser, his);
-                his.setDataid(onlineUser.getId());
-                getOnlineUserHisRes().save(his);
-            }
-            getCache().deleteOnlineUserByIdAndOrgi(user, orgi);
+            onlineUserRes.save(onlineUser);
+
+            final OnlineUserHis his = onlineUserHisRes.findOneBySessionidAndOrgi(
+                    onlineUser.getSessionid(), onlineUser.getOrgi()).orElseGet(OnlineUserHis::new);
+            MainUtils.copyProperties(onlineUser, his);
+            his.setDataid(onlineUser.getId());
+            onlineUserHisRes.save(his);
         }
+        cacheService.deleteOnlineUserByIdAndOrgi(user, orgi);
     }
 
     /**
@@ -642,7 +630,7 @@ public class OnlineUserProxy {
      * @param onlineUser
      * @throws Exception
      */
-    public static void offline(OnlineUser onlineUser) {
+    public void offline(OnlineUser onlineUser) {
         if (onlineUser != null) {
             offline(onlineUser.getId(), onlineUser.getOrgi());
         }
@@ -652,16 +640,18 @@ public class OnlineUserProxy {
      * @param user
      * @throws Exception
      */
-    public static void refuseInvite(final String user) {
-        getOnlineUserRes().findById(user)
+    public void refuseInvite(final String user) {
+
+        onlineUserRes.findById(user)
                 .ifPresent(onlineUser -> {
                     onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.REFUSE.toString());
                     onlineUser.setRefusetimes(onlineUser.getRefusetimes() + 1);
-                    getOnlineUserRes().save(onlineUser);
+
+                    onlineUserRes.save(onlineUser);
                 });
     }
 
-    public static String unescape(String src) {
+    public String unescape(String src) {
         StringBuilder tmp = new StringBuilder();
         try {
             tmp.append(java.net.URLDecoder.decode(src, "UTF-8"));
@@ -672,7 +662,7 @@ public class OnlineUserProxy {
         return tmp.toString();
     }
 
-    public static String getKeyword(String url) {
+    public String getKeyword(String url) {
         Map<String, String[]> values = new HashMap<>();
         try {
             ParameterKit.parseParameters(values, url, "UTF-8");
@@ -689,7 +679,7 @@ public class OnlineUserProxy {
         return strb.toString();
     }
 
-    public static String getSource(String url) {
+    public String getSource(String url) {
         String source = "0";
         try {
             URL addr = new URL(url);
@@ -706,9 +696,9 @@ public class OnlineUserProxy {
      * @param userid
      * @throws Exception
      */
-    public static void sendWebIMClients(String userid, String msg) throws Exception {
+    public void sendWebIMClients(String userid, String msg) throws Exception {
 //        logger.info("[sendWebIMClients] userId {}, msg {}", userid, msg);
-        List<WebIMClient> clients = OnlineUserProxy.webIMClients.getClients(userid);
+        List<WebIMClient> clients = webIMClients.getClients(userid);
 
         if (clients != null && clients.size() > 0) {
             for (WebIMClient client : clients) {
@@ -719,7 +709,7 @@ public class OnlineUserProxy {
                     // 一些连接断开在服务器端没有清除
 //                    logger.info("[sendWebIMClients] lost connection", ex);
                     // cleanup connections hold in server side
-                    OnlineUserProxy.webIMClients.removeClient(userid, client.getClient(), false);
+                    webIMClients.removeClient(userid, client.getClient(), false);
                 } finally {
                     client.getSse().complete();
                 }
@@ -727,91 +717,41 @@ public class OnlineUserProxy {
         }
     }
 
-    public static void resetHotTopic(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
-        getCache().deleteSystembyIdAndOrgi("xiaoeTopic", orgi);
+    public void resetHotTopic(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
+        cacheService.deleteSystembyIdAndOrgi("xiaoeTopic", orgi);
         cacheHotTopic(dataExchange, user, orgi, aiid);
     }
 
-    public static List<Topic> cacheHotTopic(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
+    public List<Topic> cacheHotTopic(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
         List<Topic> topicList = null;
-        if ((topicList = getCache().findOneSystemListByIdAndOrgi("xiaoeTopic", orgi)) == null) {
+        if ((topicList = cacheService.findOneSystemListByIdAndOrgi("xiaoeTopic", orgi)) == null) {
             topicList = (List<Topic>) dataExchange.getListDataByIdAndOrgi(aiid, null, orgi);
-            getCache().putSystemListByIdAndOrgi("xiaoeTopic", orgi, topicList);
+            cacheService.putSystemListByIdAndOrgi("xiaoeTopic", orgi, topicList);
         }
         return topicList;
     }
 
-    public static void resetHotTopicType(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
-        if (getCache().existSystemByIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi)) {
-            getCache().deleteSystembyIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi);
+    public void resetHotTopicType(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
+        if (cacheService.existSystemByIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi)) {
+            cacheService.deleteSystembyIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi);
         }
         cacheHotTopicType(dataExchange, user, orgi, aiid);
     }
 
     @SuppressWarnings("unchecked")
-    public static List<KnowledgeType> cacheHotTopicType(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
+    public List<KnowledgeType> cacheHotTopicType(DataExchangeInterface dataExchange, User user, String orgi, String aiid) {
         List<KnowledgeType> topicTypeList = null;
-        if ((topicTypeList = getCache().findOneSystemListByIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi)) == null) {
+        if ((topicTypeList = cacheService.findOneSystemListByIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi)) == null) {
             topicTypeList = (List<KnowledgeType>) dataExchange.getListDataByIdAndOrgi(aiid, null, orgi);
-            getCache().putSystemListByIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi, topicTypeList);
+            cacheService.putSystemListByIdAndOrgi("xiaoeTopicType" + "." + orgi, orgi, topicTypeList);
         }
         return topicTypeList;
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<SceneType> cacheSceneType(DataExchangeInterface dataExchange, User user, String orgi) {
-        List<SceneType> sceneTypeList = null;
-        if ((sceneTypeList = getCache().findOneSystemListByIdAndOrgi("xiaoeSceneType", orgi)) == null) {
-            sceneTypeList = (List<SceneType>) dataExchange.getListDataByIdAndOrgi(null, null, orgi);
-            getCache().putSystemListByIdAndOrgi("xiaoeSceneType", orgi, sceneTypeList);
-        }
-        return sceneTypeList;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static boolean filterSceneType(String cate, String orgi, IP ipdata) {
-        boolean result = false;
-        List<SceneType> sceneTypeList = cacheSceneType(
-                (DataExchangeInterface) MainContext.getContext().getBean("scenetype"), null, orgi);
-        List<AreaType> areaTypeList = getCache().findOneSystemListByIdAndOrgi(
-                Constants.CSKEFU_SYSTEM_AREA, Constants.SYSTEM_ORGI);
-        if (sceneTypeList != null && cate != null && !Constants.DEFAULT_TYPE.equals(cate)) {
-            for (SceneType sceneType : sceneTypeList) {
-                if (cate.equals(sceneType.getId())) {
-                    if (StringUtils.isNotBlank(sceneType.getArea())) {
-                        if (ipdata != null) {
-                            List<AreaType> atList = getAreaTypeList(
-                                    sceneType.getArea(), areaTypeList);    //找到技能组配置的地区信息
-                            for (AreaType areaType : atList) {
-                                if (areaType.getArea().indexOf(ipdata.getProvince()) >= 0 || areaType.getArea().indexOf(
-                                        ipdata.getCity()) >= 0) {
-                                    result = true;
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        result = true;
-                    }
-                }
-                if (result) {
-                    break;
-                }
-            }
-        } else {
-            result = true;
-        }
-        return result;
-    }
-
     /**
      * 创建Skype联系人的onlineUser记录
-     *
-     * @param contact
-     * @param logined
-     * @return
      */
-    public static OnlineUser createNewOnlineUserWithContactAndChannel(final Contacts contact, final User logined, final String channel) {
+    public OnlineUser createNewOnlineUserWithContactAndChannel(final Contacts contact, final User logined, final String channel) {
         final Date now = new Date();
         OnlineUser onlineUser = new OnlineUser();
         onlineUser.setId(UUIDUtils.getUUID());
@@ -825,86 +765,22 @@ public class OnlineUserProxy {
         onlineUser.setOrgi(logined.getOrgi());
         onlineUser.setCreater(logined.getId());
 
-        logger.info(
+        log.info(
                 "[createNewOnlineUserWithContactAndChannel] onlineUser id {}, userId {}", onlineUser.getId(),
                 onlineUser.getUserid());
         // TODO 此处没有创建 onlineUser 的 appid
-        getOnlineUserRes().save(onlineUser);
+
+        onlineUserRes.save(onlineUser);
         return onlineUser;
 
     }
 
-    private static AgentUserContactsRepository getAgentUserContactsRes() {
-        if (agentUserContactsRes == null) {
-            agentUserContactsRes = MainContext.getContext().getBean(AgentUserContactsRepository.class);
-        }
-        return agentUserContactsRes;
+    public void removeClient(String userid, String client, boolean timeout) throws Exception {
+        webIMClients.removeClient(userid, client, timeout);
     }
 
-
-    private static ContactsRepository getContactsRes() {
-        if (contactsRes == null) {
-            contactsRes = MainContext.getContext().getBean(ContactsRepository.class);
-        }
-        return contactsRes;
-    }
-
-
-    private static OnlineUserRepository getOnlineUserRes() {
-        if (onlineUserRes == null) {
-            onlineUserRes = MainContext.getContext().getBean(OnlineUserRepository.class);
-        }
-        return onlineUserRes;
-
-    }
-
-    private static CacheService getCache() {
-        if (cacheService == null) {
-            cacheService = MainContext.getCache();
-        }
-
-        return cacheService;
-    }
-
-    private static ConsultInviteRepository getConsultInviteRes() {
-        if (consultInviteRes == null) {
-            consultInviteRes = MainContext.getContext().getBean(ConsultInviteRepository.class);
-        }
-        return consultInviteRes;
-    }
-
-    private static OnlineUserHisRepository getOnlineUserHisRes() {
-        if (onlineUserHisRes == null) {
-            onlineUserHisRes = MainContext.getContext().getBean(OnlineUserHisRepository.class);
-        }
-        return onlineUserHisRes;
-    }
-
-    private static UserTraceRepository getUserTraceRes() {
-        if (userTraceRes == null) {
-            userTraceRes = MainContext.getContext().getBean(UserTraceRepository.class);
-        }
-        return userTraceRes;
-    }
-
-    private static UserRepository getUserRes() {
-        if (userRes == null) {
-            userRes = MainContext.getContext().getBean(UserRepository.class);
-        }
-        return userRes;
-    }
-
-    private static OrganRepository getOrganRes() {
-        if (organRes == null) {
-            organRes = MainContext.getContext().getBean(OrganRepository.class);
-        }
-        return organRes;
-    }
-
-    public static UserProxy getUserProxy() {
-        if (userProxy == null) {
-            userProxy = MainContext.getContext().getBean(UserProxy.class);
-        }
-        return userProxy;
+    @PostConstruct
+    public void postConstruct() {
+        webIMClients = new WebSseEmitterClient(this);
     }
 }

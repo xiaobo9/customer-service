@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.activemq.MqMessage;
@@ -95,11 +95,9 @@ public class AgentSessionProxy {
      * @return
      */
     public boolean isInvalidSessionId(final String userid, final String session, final String orgi) {
-//        logger.info("[isInvalidSessionId] userid {}, sesssion {}", userid, session);
         boolean result = true;
         if (cacheService.existUserSessionByAgentnoAndOrgi(userid, orgi)) {
             final String curr = cacheService.findOneSessionIdByAgentnoAndOrgi(userid, orgi);
-//            logger.info("[isInvalidSessionId] current session {}", curr);
             result = !StringUtils.equals(curr, session);
         } else {
             // 不存在该用户的Session

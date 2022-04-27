@@ -82,9 +82,9 @@ public interface UserRepository extends JpaRepository<User, String> {
             final List<String> users,
             Pageable pageRequest);
 
-    List<User> findByAgentAndDatastatusAndIdIn(boolean agent, boolean datastatus, final List<String> users);
+    List<User> findByAgentAndDatastatusAndIdIn(boolean agent, boolean datastatus, final Iterable<String> users);
 
-    List<User> findByDatastatusAndIdIn(boolean datastatus, List<String> users);
+    List<User> findByDatastatusAndIdIn(boolean datastatus, Iterable<String> users);
 
     Page<User> findByDatastatusAndUsernameLikeAndIdIn(
             boolean datastatus,

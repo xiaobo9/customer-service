@@ -19,8 +19,8 @@ package com.chatopera.cc.controller.admin;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OrganProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.OrganService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.Organ;
 import com.github.xiaobo9.entity.OrganUser;
@@ -52,10 +52,10 @@ public class UsersController extends Handler {
     private UserRoleRepository userRoleRes;
 
     @Autowired
-    OrganProxy organProxy;
+    OrganService organService;
 
     @Autowired
-    UserProxy userProxy;
+    UserService userService;
 
     @Autowired
     private OrganUserRepository organUserRes;
@@ -69,8 +69,8 @@ public class UsersController extends Handler {
     @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "user")
     public ModelAndView index(ModelMap map, HttpServletRequest request) throws IOException {
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
-        Page<User> users = userProxy.findUserInOrgans(organs.keySet(), super.page(request, Sort.Direction.ASC, "createtime"));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
+        Page<User> users = userService.findUserInOrgans(organs.keySet(), super.page(request, Sort.Direction.ASC, "createtime"));
         map.addAttribute("userList", users);
 
         return request(super.createAdminTemplateResponse("/admin/user/index"));
@@ -81,7 +81,7 @@ public class UsersController extends Handler {
     public ModelAndView add(ModelMap map, HttpServletRequest request) {
         ModelAndView view = request(super.pageTplResponse("/admin/user/add"));
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         map.addAttribute("currentOrgan", currentOrgan);
         map.addAttribute("organList", organs.values());
 

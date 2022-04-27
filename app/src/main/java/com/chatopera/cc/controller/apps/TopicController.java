@@ -23,7 +23,7 @@ import com.chatopera.cc.controller.Handler;
 import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.persistence.es.TopicRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
-import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.dsdata.DSData;
@@ -88,6 +88,8 @@ public class TopicController extends Handler {
     @Autowired
     private ReporterRepository reporterRes;
 
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @RequestMapping("/topic")
     @Menu(type = "xiaoe", subtype = "knowledge")
@@ -152,7 +154,7 @@ public class TopicController extends Handler {
              * 重新缓存
              *
              */
-            OnlineUserProxy.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
+            onlineUserService.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
         }
         return request(super.pageTplResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
     }
@@ -203,7 +205,7 @@ public class TopicController extends Handler {
              * 重新缓存
              *
              */
-            OnlineUserProxy.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
+            onlineUserService.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
         }
         return request(super.pageTplResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
     }
@@ -216,7 +218,7 @@ public class TopicController extends Handler {
             // 重新缓存
             topicItemRes.deleteAll(topicItemRes.findByTopicid(id));
 
-            OnlineUserProxy.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
+            onlineUserService.resetHotTopic((DataExchangeInterface) MainContext.getContext().getBean("topic"), super.getUser(request), super.getOrgi(request), aiid);
         }
         return request(super.pageTplResponse("redirect:/apps/topic.html" + (!StringUtils.isBlank(type) ? "?type=" + type : "")));
     }
@@ -254,7 +256,7 @@ public class TopicController extends Handler {
             }
             type.setCreater(super.getUser(request).getId());
             knowledgeTypeRes.save(type);
-            OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
+            onlineUserService.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
         } else {
             return request(super.pageTplResponse("redirect:/apps/topic.html?aiid=" + aiid + "&msg=k_type_exist"));
         }
@@ -291,7 +293,7 @@ public class TopicController extends Handler {
                 temp.setTypeid(type.getParentid());
             }
             knowledgeTypeRes.save(temp);
-            OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
+            onlineUserService.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
         } else {
             return request(super.pageTplResponse("redirect:/apps/topic.html?aiid=" + aiid + "&msg=k_type_exist&type=" + type.getId()));
         }
@@ -306,7 +308,7 @@ public class TopicController extends Handler {
         if (page.getTotalElements() == 0) {
             if (!StringUtils.isBlank(id)) {
                 knowledgeTypeRes.deleteById(id);
-                OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
+                onlineUserService.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
             }
         } else {
             msg = "notempty";
@@ -337,7 +339,7 @@ public class TopicController extends Handler {
         if (temp != null) {
             temp.setArea(type.getArea());
             knowledgeTypeRes.save(temp);
-            OnlineUserProxy.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
+            onlineUserService.resetHotTopicType((DataExchangeInterface) MainContext.getContext().getBean("topictype"), super.getUser(request), super.getOrgi(request), aiid);
         }
         return request(super.pageTplResponse("redirect:/apps/topic.html?type=" + type.getId()));
     }

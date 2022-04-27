@@ -18,8 +18,8 @@ package com.chatopera.cc.controller.admin;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OrganProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.OrganService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.*;
@@ -61,10 +61,10 @@ public class RoleController extends Handler {
     private SysDicRepository sysDicRes;
 
     @Autowired
-    OrganProxy organProxy;
+    OrganService organService;
 
     @Autowired
-    UserProxy userProxy;
+    UserService userService;
 
     @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "role")
@@ -121,8 +121,8 @@ public class RoleController extends Handler {
     @RequestMapping("/seluser.html")
     @Menu(type = "admin", subtype = "seluser", admin = true)
     public ModelAndView seluser(ModelMap map, HttpServletRequest request, @Valid String role) {
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
-        map.addAttribute("userList", userProxy.findUserInOrgans(organs.keySet()));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
+        map.addAttribute("userList", userService.findUserInOrgans(organs.keySet()));
         Role roleData = roleRepository.findByIdAndOrgi(role, super.getOrgi());
         map.addAttribute("userRoleList", userRoleRes.findByOrgiAndRole(super.getOrgi(), roleData));
         map.addAttribute("role", roleData);

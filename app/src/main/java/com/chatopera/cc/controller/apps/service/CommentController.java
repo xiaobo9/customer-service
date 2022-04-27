@@ -17,7 +17,7 @@
 package com.chatopera.cc.controller.apps.service;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.OrganService;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.AgentService;
 import com.github.xiaobo9.entity.Organ;
@@ -40,13 +40,13 @@ public class CommentController extends Handler{
 	private AgentServiceRepository agentServiceRes ;
 
 	@Autowired
-	private OrganProxy organProxy;
+	private OrganService organService;
 
 	@RequestMapping("/comment/index")
     @Menu(type = "service" , subtype = "comment" , admin= true)
     public ModelAndView index(ModelMap map , HttpServletRequest request , String userid , String agentservice , @Valid String channel) {
 		Organ currentOrgan = super.getOrgan(request);
-		Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+		Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
 		Page<AgentService> agentServiceList = agentServiceRes.findByOrgiAndSatisfactionAndSkillIn(super.getOrgi(request) , true ,organs.keySet(),super.page(request)) ;
 		map.addAttribute("serviceList", agentServiceList) ;
 		return request(super.createAppsTempletResponse("/apps/service/comment/index"));

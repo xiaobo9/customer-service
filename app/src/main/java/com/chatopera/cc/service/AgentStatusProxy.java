@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.acd.ACDWorkMonitor;
-import com.chatopera.cc.basic.MainContext;
 import com.corundumstudio.socketio.SocketIONamespace;
 import com.github.xiaobo9.entity.AgentReport;
 import com.github.xiaobo9.repository.AgentReportRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,6 +36,8 @@ public class AgentStatusProxy {
     @Autowired
     private ACDWorkMonitor acdWorkMonitor;
 
+    @Autowired
+    @Qualifier("agentNamespace")
     private SocketIONamespace agentNamespace;
 
     /**
@@ -47,25 +49,14 @@ public class AgentStatusProxy {
      * @param dataid
      */
     public void broadcastAgentsStatus(final String orgi, final String worktype, final String workresult, final String dataid) {
-        /**
-         * 坐席状态改变，通知监测服务
-         */
+        // 坐席状态改变，通知监测服务
         AgentReport agentReport = acdWorkMonitor.getAgentReport(orgi);
         agentReport.setOrgi(orgi);
         agentReport.setWorktype(worktype);
         agentReport.setWorkresult(workresult);
         agentReport.setDataid(dataid);
         agentReportRes.save(agentReport);
-        getAgentNamespace().getBroadcastOperations().sendEvent(
-                "status", agentReport);
+        agentNamespace.getBroadcastOperations().sendEvent("status", agentReport);
     }
-
-    private SocketIONamespace getAgentNamespace() {
-        if (agentNamespace == null) {
-            agentNamespace = MainContext.getContext().getBean("agentNamespace", SocketIONamespace.class);
-        }
-        return agentNamespace;
-    }
-
 
 }

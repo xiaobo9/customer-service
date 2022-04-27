@@ -21,7 +21,7 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.es.EntCustomerRepository;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.OrganService;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.PinYinTools;
 import com.chatopera.cc.util.PropertiesEventUtil;
@@ -87,7 +87,7 @@ public class CustomerController extends Handler {
     private PropertiesEventRepository propertiesEventRes;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Value("${web.upload-path}")
     private String path;
@@ -104,7 +104,7 @@ public class CustomerController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         map.put("msg", msg);
@@ -141,7 +141,7 @@ public class CustomerController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         User user = super.getUser(request);
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         if (!esOrganFilter(user, boolQueryBuilder)) {
@@ -168,7 +168,7 @@ public class CustomerController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
         User user = super.getUser(request);
         if (!esOrganFilter(user, boolQueryBuilder)) {
@@ -193,7 +193,7 @@ public class CustomerController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         User user = super.getUser(request);
@@ -219,7 +219,7 @@ public class CustomerController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         User user = super.getUser(request);
@@ -247,7 +247,7 @@ public class CustomerController extends Handler {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         User user = super.getUser(request);
@@ -428,7 +428,7 @@ public class CustomerController extends Handler {
         }
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         if (StringUtils.isNotBlank(ekind)) {
@@ -462,7 +462,7 @@ public class CustomerController extends Handler {
         }
 
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         boolQueryBuilder.must(termsQuery("organ", organs.keySet()));
 
         if (StringUtils.isNotBlank(q)) {

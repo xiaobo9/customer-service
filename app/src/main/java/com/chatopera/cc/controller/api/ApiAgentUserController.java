@@ -27,7 +27,7 @@ import com.github.xiaobo9.bean.AgentUserAudit;
 import com.github.xiaobo9.commons.exception.ServerException;
 import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.proxy.AgentUserProxy;
+import com.chatopera.cc.service.AgentUserService;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
@@ -73,7 +73,7 @@ public class ApiAgentUserController extends Handler {
     private ACDMessageHelper acdMessageHelper;
 
     @Autowired
-    private AgentUserProxy agentUserProxy;
+    private AgentUserService agentUserService;
 
     @Autowired
     private ACDAgentService acdAgentService;
@@ -171,7 +171,7 @@ public class ApiAgentUserController extends Handler {
             /**
              * 更新AgentUser
              */
-            AgentUser agentUser = agentUserProxy.findById(agentUserId).orElse(null);
+            AgentUser agentUser = agentUserService.findById(agentUserId).orElse(null);
             if (agentUser != null) {
                 AgentUserAudit agentAudits = cacheService.findOneAgentUserAuditByOrgiAndId(orgi, agentUserId).orElse(null);
 
@@ -214,7 +214,7 @@ public class ApiAgentUserController extends Handler {
                     // 更新当前坐席的服务访客列表
                     if (currentAgentStatus != null) {
                         cacheService.deleteOnlineUserIdFromAgentStatusByUseridAndAgentnoAndOrgi(userId, currentAgentno, orgi);
-                        agentUserProxy.updateAgentStatus(currentAgentStatus, orgi);
+                        agentUserService.updateAgentStatus(currentAgentStatus, orgi);
                     }
 
                     if (transAgentStatus != null) {

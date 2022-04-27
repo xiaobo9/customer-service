@@ -1,4 +1,20 @@
-package com.chatopera.cc.proxy;
+/*
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.ThumbnailUtils;
@@ -10,7 +26,6 @@ import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.AgentStatusRepository;
-import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.message.Message;
 import com.github.xiaobo9.commons.enums.AgentStatusEnum;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
@@ -21,18 +36,18 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 
-@Component
-public class AgentProxy {
-    private final static Logger logger = LoggerFactory.getLogger(AgentProxy.class);
+@Service
+public class AgentProxyService {
+    private final static Logger logger = LoggerFactory.getLogger(AgentProxyService.class);
 
     @Autowired
     private AttachmentRepository attachementRes;
@@ -182,8 +197,7 @@ public class AgentProxy {
             chatMessage.setTouser(agentUser.getUserid());
         }
 
-        if (multipart.getContentType() != null && multipart.getContentType().indexOf(
-                Constants.ATTACHMENT_TYPE_IMAGE) >= 0) {
+        if (multipart.getContentType() != null && multipart.getContentType().contains(Constants.ATTACHMENT_TYPE_IMAGE)) {
             chatMessage.setMsgtype(Enums.MediaType.IMAGE.toString());
         } else {
             chatMessage.setMsgtype(Enums.MediaType.FILE.toString());
@@ -193,8 +207,7 @@ public class AgentProxy {
         outMessage.setCalltype(chatMessage.getCalltype());
         outMessage.setMessage(sf.getFileUrl());
 
-        if (agentUser != null && !StringUtils.equals(
-                agentUser.getStatus(), AgentUserStatusEnum.END.toString())) {
+        if (!AgentUserStatusEnum.END.toString().equals(agentUser.getStatus())) {
             // 发送消息
             outMessage.setFilename(multipart.getOriginalFilename());
             outMessage.setFilesize((int) multipart.getSize());
@@ -323,7 +336,7 @@ public class AgentProxy {
      * @param orgi
      * @return
      */
-    public AgentStatus resolveAgentStatusByAgentnoAndOrgi(final String agentno, final String orgi, final HashMap<String, String> skills) {
+    public AgentStatus resolveAgentStatusByAgentnoAndOrgi(final String agentno, final String orgi, final Map<String, String> skills) {
         logger.info("[resolveAgentStatusByAgentnoAndOrgi] agentno {}, skills {}", agentno,
                 String.join("|", skills.keySet()));
         AgentStatus agentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(agentno, orgi);

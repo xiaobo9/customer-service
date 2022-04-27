@@ -21,7 +21,7 @@ import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
@@ -63,7 +63,7 @@ public class ApiUserController extends Handler {
     private CacheService cacheService;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
     @Autowired
     private UserRepository userRes;
@@ -162,8 +162,8 @@ public class ApiUserController extends Handler {
         // 创建新用户时，阻止传入ID
         payload.remove("id");
         // 从payload中创建User
-        User user = userProxy.parseUserFromJson(payload);
-        JsonObject resp = userProxy.createNewUser(user, parentOrgan);
+        User user = userService.parseUserFromJson(payload);
+        JsonObject resp = userService.createNewUser(user, parentOrgan);
         logger.info("[create] response {}", resp.toString());
         return resp;
     }
@@ -178,7 +178,7 @@ public class ApiUserController extends Handler {
     private JsonObject update(final HttpServletRequest request, final JsonObject payload) {
         logger.info("[update] payload {}", payload.toString());
         JsonObject resp = new JsonObject();
-        final User updated = userProxy.parseUserFromJson(payload);
+        final User updated = userService.parseUserFromJson(payload);
         if (StringUtils.isBlank(updated.getId())) {
             resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_FAIL_3);
             resp.addProperty(RestUtils.RESP_KEY_ERROR, "不合法的参数。");
@@ -187,7 +187,7 @@ public class ApiUserController extends Handler {
 
         final User previous = userRes.findById(updated.getId()).orElse(null);
         if (previous != null) {
-            String msg = userProxy.validUserUpdate(updated, previous);
+            String msg = userService.validUserUpdate(updated, previous);
             if (StringUtils.equals(msg, "edit_user_success")) {
 
                 // 由坐席切换成非坐席 判断是否坐席 以及 是否有对话

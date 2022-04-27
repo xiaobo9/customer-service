@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
@@ -85,6 +85,8 @@ public class AgentServiceProxy {
 
     @Autowired
     private ContactsRepository contactsRes;
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     /**
      * 关联关系
@@ -203,7 +205,7 @@ public class AgentServiceProxy {
             final User logined) {
         view.addObject("curagentuser", agentUser);
 
-        CousultInvite invite = OnlineUserProxy.consult(agentUser.getAppid(), agentUser.getOrgi());
+        CousultInvite invite = onlineUserService.consult(agentUser.getAppid(), agentUser.getOrgi());
         if (invite != null) {
             view.addObject("aisuggest", invite.isAisuggest());
             view.addObject("ccaAisuggest", invite.isAisuggest());
@@ -211,7 +213,7 @@ public class AgentServiceProxy {
 
         // 客服设置
         if (StringUtils.isNotBlank(agentUser.getAppid())) {
-            view.addObject("inviteData", OnlineUserProxy.consult(agentUser.getAppid(), orgi));
+            view.addObject("inviteData", onlineUserService.consult(agentUser.getAppid(), orgi));
             // 服务小结
             if (StringUtils.isNotBlank(agentUser.getAgentserviceid())) {
                 List<AgentServiceSummary> summarizes = serviceSummaryRes.findByAgentserviceidAndOrgi(

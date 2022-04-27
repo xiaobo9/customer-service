@@ -18,7 +18,7 @@ package com.chatopera.cc.controller.apps.service;
 
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.OrganService;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.dsdata.export.ExcelExporterProcess;
 import com.github.xiaobo9.commons.enums.DateFormatEnum;
@@ -68,7 +68,7 @@ public class ProcessedSummaryController extends Handler {
     private ContactsRepository contactsRes;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     /**
      * 按条件查询
@@ -87,7 +87,7 @@ public class ProcessedSummaryController extends Handler {
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid final String ani, @Valid final String called, @Valid final String begin, @Valid final String end, @Valid final String direction) {
         final String orgi = super.getOrgi(request);
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Page<AgentServiceSummary> page = serviceSummaryRes.findAll(new Specification<AgentServiceSummary>() {
             @Override
             public Predicate toPredicate(Root<AgentServiceSummary> root, CriteriaQuery<?> query,
@@ -186,7 +186,7 @@ public class ProcessedSummaryController extends Handler {
     @Menu(type = "agent", subtype = "processed")
     public void expall(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Iterable<AgentServiceSummary> statusEventList = serviceSummaryRes.findByChannelNotAndOrgiAndProcessTrueAndSkillIn(
                 Enums.ChannelType.PHONE.toString(), super.getOrgi(request), organs.keySet(), PageRequest.of(0, 10000));
 

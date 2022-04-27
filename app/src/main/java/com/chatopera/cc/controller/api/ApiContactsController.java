@@ -20,8 +20,8 @@ import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.controller.api.request.RestUtils;
 import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.proxy.AgentUserProxy;
-import com.chatopera.cc.proxy.ContactsProxy;
+import com.chatopera.cc.service.AgentUserService;
+import com.chatopera.cc.service.ContactsService;
 import com.chatopera.cc.util.Menu;
 import com.chatopera.cc.util.RestResult;
 import com.chatopera.cc.util.RestResultType;
@@ -67,10 +67,10 @@ public class ApiContactsController extends Handler {
     private ContactsRepository contactsRes;
 
     @Autowired
-    private ContactsProxy contactsProxy;
+    private ContactsService contactsService;
 
     @Autowired
-    private AgentUserProxy agentUserProxy;
+    private AgentUserService agentUserService;
 
     /**
      * 返回用户列表，支持分页，分页参数为 p=1&ps=50，默认分页尺寸为 20条每页
@@ -198,7 +198,7 @@ public class ApiContactsController extends Handler {
         }
 
         try {
-            AgentUser agentUser = agentUserProxy.figureAgentUserBeforeChatWithContactInfo(channels, contactid, logined);
+            AgentUser agentUser = agentUserService.figureAgentUserBeforeChatWithContactInfo(channels, contactid, logined);
             resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_SUCC);
             JsonObject data = new JsonObject();
             data.addProperty("agentuserid", agentUser.getId());
@@ -235,8 +235,8 @@ public class ApiContactsController extends Handler {
         if (contactOpt.isPresent()) {
             List<Enums.ChannelType> channles;
             try {
-                channles = contactsProxy.liveApproachChannelsByContactid(
-                        logined, contactsid, contactsProxy.isSkypeSetup(logined.getOrgi()));
+                channles = contactsService.liveApproachChannelsByContactid(
+                        logined, contactsid, contactsService.isSkypeSetup(logined.getOrgi()));
                 if (channles.size() > 0) {
                     resp.addProperty(RestUtils.RESP_KEY_RC, RestUtils.RESP_RC_SUCC);
                     JsonArray data = new JsonArray();

@@ -18,6 +18,7 @@ package com.github.xiaobo9.bean;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 对话监控 关系记录
@@ -25,11 +26,11 @@ import java.util.HashMap;
 public class AgentUserAudit implements Serializable {
 
     private String agentUserId;                  // AgentUserId
-    private HashMap<String, String> subscribers; // 订阅者 userId:权限
+    private Map<String, String> subscribers; // 订阅者 userId:权限
     private String orgi;                         // 租户ID
 
 
-    public AgentUserAudit(final String orgi, final String agentUserId, final HashMap<String, String> subscribers) {
+    public AgentUserAudit(final String orgi, final String agentUserId, final Map<String, String> subscribers) {
         this.orgi = orgi;
         this.subscribers = subscribers;
         this.agentUserId = agentUserId;
@@ -78,7 +79,7 @@ public class AgentUserAudit implements Serializable {
         this.agentUserId = agentUserId;
     }
 
-    public HashMap<String, String> getSubscribers() {
+    public Map<String, String> getSubscribers() {
         return subscribers;
     }
 

@@ -21,8 +21,8 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.persistence.es.ContactsRepository;
-import com.chatopera.cc.proxy.OrganProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.OrganService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.commons.enums.Enums;
@@ -73,10 +73,10 @@ public class AppsController extends Handler {
     private CacheService cacheService;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
     private ConsultInviteRepository invite;
@@ -87,7 +87,7 @@ public class AppsController extends Handler {
         final User user = super.getUser(request);
         final String orgi = super.getOrgi(request);
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, orgi);
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, orgi);
         List<String> appids = new ArrayList<String>();
         if (organs.size() > 0) {
             appids = invite.findSNSIdByOrgiAndSkill(orgi, organs.keySet());
@@ -149,7 +149,7 @@ public class AppsController extends Handler {
 
     private void aggValues(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
 
         List<Object> onlineUsers = new ArrayList<>();
         List<Object> userEvents = new ArrayList<>();
@@ -258,7 +258,7 @@ public class AppsController extends Handler {
         user.setUsername(logined.getUsername());
 
         if (tempUser != null) {
-            String msg = userProxy.validUserUpdate(user, tempUser);
+            String msg = userService.validUserUpdate(user, tempUser);
             if (StringUtils.isNotBlank(msg) && (!StringUtils.equals(msg, "edit_user_success"))) {
                 // 处理异常返回
                 if (StringUtils.isBlank(index)) {
@@ -322,13 +322,8 @@ public class AppsController extends Handler {
      * @return
      */
     private List<User> getUsers(HttpServletRequest request) {
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
-        List<User> userList = userProxy.findByOrganInAndAgentAndDatastatus(organs.keySet(), true, false);
-        if (userList == null) {
-            userList = new ArrayList<>();
-        }
-
-        return userList;
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
+        return userService.findByOrganInAndAgentAndDatastatus(organs.keySet(), true, false);
     }
 
 }

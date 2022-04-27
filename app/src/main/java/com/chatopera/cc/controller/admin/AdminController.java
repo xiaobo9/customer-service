@@ -22,7 +22,7 @@ import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
@@ -65,6 +65,8 @@ public class AdminController extends Handler {
 
     @Autowired
     private CacheService cacheService;
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @RequestMapping("/admin.html")
     public ModelAndView index(ModelMap map, HttpServletRequest request) {
@@ -78,7 +80,7 @@ public class AdminController extends Handler {
     private void aggValues(ModelMap map, HttpServletRequest request) {
         String orgi = super.getOrgi(request);
         map.put("onlineUserCache", cacheService.getOnlineUserSizeByOrgi(orgi));
-        map.put("onlineUserClients", OnlineUserProxy.webIMClients.size());
+        map.put("onlineUserClients", onlineUserService.webIMClients.size());
         map.put("chatClients", NettyClients.getInstance().size());
         map.put("systemCaches", cacheService.getSystemSizeByOrgi(Constants.SYSTEM_ORGI));
 

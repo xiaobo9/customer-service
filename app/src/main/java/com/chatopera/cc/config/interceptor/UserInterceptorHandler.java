@@ -18,11 +18,12 @@ package com.chatopera.cc.config.interceptor;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
-import com.chatopera.cc.config.MessagingServerConfigure;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.socketio.MessagingServerConfigure;
+import com.chatopera.cc.service.SystemConfigService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.github.xiaobo9.entity.SystemConfig;
 import com.github.xiaobo9.entity.User;
 import lombok.extern.slf4j.Slf4j;
@@ -41,11 +42,14 @@ import java.io.Serializable;
 @Slf4j
 @Component
 public class UserInterceptorHandler extends HandlerInterceptorAdapter {
-    private final UserProxy userProxy;
+    private final UserService userService;
     private final MessagingServerConfigure messagingServerConfigure;
 
-    public UserInterceptorHandler(UserProxy userProxy, MessagingServerConfigure messagingServerConfigure) {
-        this.userProxy = userProxy;
+    private SystemConfigService configService;
+
+    public UserInterceptorHandler(UserService userService, SystemConfigService configService, MessagingServerConfigure messagingServerConfigure) {
+        this.userService = userService;
+        this.configService = configService;
         this.messagingServerConfigure = messagingServerConfigure;
     }
 
@@ -64,9 +68,8 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
                 // 每次刷新用户的组织机构、角色和权限
                 // TODO 此处代码执行频率高，但是并不是每次都要执行，存在很多冗余
                 // 待用更好的方法实现
-                UserProxy userProxy = this.userProxy;
-                userProxy.attachOrgansPropertiesForUser(user);
-                userProxy.attachRolesMap(user);
+                userService.attachOrgansPropertiesForUser(user);
+                userService.attachRolesMap(user);
 
                 session.setAttribute(Constants.USER_SESSION_NAME, user);
             }
@@ -88,7 +91,7 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
         }
         HttpSession session = request.getSession();
         final User user = (User) session.getAttribute(Constants.USER_SESSION_NAME);
-        final SystemConfig systemConfig = MainUtils.getSystemConfig();
+        final SystemConfig systemConfig = configService.getSystemConfig();
         if (user != null) {
             view.addObject("user", user);
 
@@ -119,7 +122,7 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
             view.addObject("infoace", infoace);        //进入信息采集模式
         }
         view.addObject("webimport", messagingServerConfigure.getWebIMPort());
-        view.addObject("sessionid", MainUtils.getContextID(session.getId()));
+        view.addObject("sessionid", UUIDUtils.removeHyphen(session.getId()));
 
         view.addObject("models", MainContext.getModules());
 
@@ -128,7 +131,7 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
         if (imUser == null) {
             imUser = new User();
             imUser.setUsername(Constants.GUEST_USER);
-            imUser.setId(MainUtils.getContextID(request.getSession(true).getId()));
+            imUser.setId(UUIDUtils.removeHyphen(request.getSession(true).getId()));
             imUser.setSessionid(imUser.getId());
             view.addObject("imuser", imUser);
         }

@@ -1,7 +1,5 @@
 package com.github.xiaobo9.commons.enums;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * 坐席访客对话状态
  */
@@ -17,10 +15,14 @@ public enum AgentUserStatusEnum {
 
     public static AgentUserStatusEnum toValue(final String str) {
         for (final AgentUserStatusEnum item : values()) {
-            if (StringUtils.equalsIgnoreCase(item.toString(), str)) {
+            if (item.name().equalsIgnoreCase(str)) {
                 return item;
             }
         }
         throw new IllegalArgumentException();
+    }
+
+    public boolean check(String toCheck) {
+        return name().toLowerCase().equals(toCheck);
     }
 }

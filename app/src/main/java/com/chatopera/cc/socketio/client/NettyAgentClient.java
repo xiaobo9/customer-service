@@ -34,7 +34,6 @@ public class NettyAgentClient implements NettyClient {
     }
 
     public void putClient(String key, SocketIOClient client) {
-//        logger.info("[putClient] userId {}", key);
         agentClientsMap.put(key, client);
 //        // 更新缓存
 //        MainContext.getCache().putWebIMAgentSocketioSessionId(key, Constants.SYSTEM_ORGI,

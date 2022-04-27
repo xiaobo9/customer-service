@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.github.xiaobo9.entity.LeaveMsg;
 import com.github.xiaobo9.entity.SNSAccount;

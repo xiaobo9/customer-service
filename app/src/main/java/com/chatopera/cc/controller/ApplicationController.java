@@ -21,7 +21,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.OrganService;
 import com.github.xiaobo9.entity.Organ;
 import com.github.xiaobo9.entity.User;
 import com.github.xiaobo9.repository.ExtensionRepository;
@@ -76,7 +76,7 @@ public class ApplicationController extends Handler {
     private String tongjiBaiduSiteKey;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
     private OrganRepository organRepository;
@@ -95,9 +95,9 @@ public class ApplicationController extends Handler {
 
         TimeZone timezone = TimeZone.getDefault();
 
-        List<Organ> organs = organProxy.findOrganInIds(logined.getAffiliates());
+        List<Organ> organs = organService.findOrganInIds(logined.getAffiliates());
 
-        Map<String, Organ> map = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> map = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         view.addObject("skills", String.join(",", map.keySet()));
 
         view.addObject("agentStatusReport", acdWorkMonitor.getAgentReport(currentOrgan != null ? currentOrgan.getId() : null, logined.getOrgi()));

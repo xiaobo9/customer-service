@@ -18,8 +18,8 @@ package com.chatopera.cc.controller.admin.channel;
 
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OnlineUserProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.OnlineUserService;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.CousultInvite;
 import com.github.xiaobo9.entity.Organ;
@@ -73,12 +73,14 @@ public class WebIMController extends Handler {
     private CacheService cacheService;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @RequestMapping("/index.html")
     @Menu(type = "app", subtype = "app", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String snsid) {
-        CousultInvite coultInvite = OnlineUserProxy.consult(snsid, super.getOrgi(request));
+        CousultInvite coultInvite = onlineUserService.consult(snsid, super.getOrgi(request));
         logger.info("[index] snsaccount Id {}, Ai {}, Aifirst {}, Ainame {}, Aisuccess {}, Aiid {}", coultInvite.getSnsaccountid(), coultInvite.isAi(), coultInvite.isAifirst(), coultInvite.getAiname(), coultInvite.getAisuccesstip(), coultInvite.getAiid());
 
         map.addAttribute("inviteData", coultInvite);
@@ -137,7 +139,7 @@ public class WebIMController extends Handler {
     @RequestMapping("/profile.html")
     @Menu(type = "app", subtype = "profile", admin = true)
     public ModelAndView profile(ModelMap map, HttpServletRequest request, @Valid String snsid) {
-        CousultInvite coultInvite = OnlineUserProxy.consult(snsid, super.getOrgi(request));
+        CousultInvite coultInvite = onlineUserService.consult(snsid, super.getOrgi(request));
         logger.info("[profile] snsaccount Id {}, Ai {}, Aifirst {}, Ainame {}, Aisuccess {}, Aiid {}", coultInvite.getSnsaccountid(), coultInvite.isAi(), coultInvite.isAifirst(), coultInvite.getAiname(), coultInvite.getAisuccesstip(), coultInvite.getAiid());
 
         if (coultInvite != null) {
@@ -168,7 +170,7 @@ public class WebIMController extends Handler {
 
         if (inviteData != null && StringUtils.isNotBlank(inviteData.getId())) {
             // 从Cache及DB加载consult
-            tempInviteData = OnlineUserProxy.consult(inviteData.getSnsaccountid(), orgi);
+            tempInviteData = onlineUserService.consult(inviteData.getSnsaccountid(), orgi);
 
             if (tempInviteData != null) {
                 tempInviteData.setDialog_name(inviteData.getDialog_name());
@@ -239,7 +241,7 @@ public class WebIMController extends Handler {
     @RequestMapping("/invote.html")
     @Menu(type = "app", subtype = "invote", admin = true)
     public ModelAndView invote(ModelMap map, HttpServletRequest request, @Valid String snsid) {
-        CousultInvite coultInvite = OnlineUserProxy.consult(snsid, super.getOrgi(request));
+        CousultInvite coultInvite = onlineUserService.consult(snsid, super.getOrgi(request));
         logger.info("[invote] snsaccount Id {}, Ai {}, Aifirst {}, Ainame {}, Aisuccess {}, Aiid {}", coultInvite.getSnsaccountid(), coultInvite.isAi(), coultInvite.isAifirst(), coultInvite.getAiname(), coultInvite.getAisuccesstip(), coultInvite.getAiid());
 
         if (coultInvite != null) {
@@ -257,7 +259,7 @@ public class WebIMController extends Handler {
         logger.info("[invote/save] snsaccount Id {}, Ai {}, Aifirst {}, Ainame {}, Aisuccess {}, Aiid {}", inviteData.getSnsaccountid(), inviteData.isAi(), inviteData.isAifirst(), inviteData.getAiname(), inviteData.getAisuccesstip(), inviteData.getAiid());
 
         if (inviteData != null && StringUtils.isNotBlank(inviteData.getId())) {
-            tempInviteData = OnlineUserProxy.consult(inviteData.getSnsaccountid(), super.getOrgi(request));
+            tempInviteData = onlineUserService.consult(inviteData.getSnsaccountid(), super.getOrgi(request));
             if (tempInviteData != null) {
                 tempInviteData.setConsult_invite_enable(inviteData.isConsult_invite_enable());
                 tempInviteData.setConsult_invite_content(inviteData.getConsult_invite_content());

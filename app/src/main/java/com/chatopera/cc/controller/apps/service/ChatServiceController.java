@@ -22,9 +22,9 @@ import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
+import com.chatopera.cc.service.*;
 import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.proxy.*;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.cc.util.IP;
 import com.chatopera.cc.util.IPTools;
@@ -60,7 +60,7 @@ public class ChatServiceController extends Handler {
     private final static Logger logger = LoggerFactory.getLogger(ChatServiceController.class);
 
     @Autowired
-    private AgentUserProxy agentUserProxy;
+    private AgentUserService agentUserService;
 
     @Autowired
     private AgentStatusProxy agentStatusProxy;
@@ -93,10 +93,10 @@ public class ChatServiceController extends Handler {
     private UserRepository userRes;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @Autowired
     private CacheService cacheService;
@@ -114,7 +114,7 @@ public class ChatServiceController extends Handler {
     @Menu(type = "service", subtype = "history", admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, final String username, final String channel, final String servicetype, final String allocation, final String servicetimetype, final String begin, final String end) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Page<AgentService> page = agentServiceRes.findAll((Specification<AgentService>) (root, query, cb) -> {
             List<Predicate> list = new ArrayList<>();
             Expression<String> exp = root.get("skill");
@@ -156,7 +156,7 @@ public class ChatServiceController extends Handler {
         map.put("begin", begin);
         map.put("end", end);
         map.put("deptlist", organs.values());
-        map.put("userlist", userProxy.findUserInOrgans(organs.keySet()));
+        map.put("userlist", userService.findUserInOrgans(organs.keySet()));
 
         return request(super.createAppsTempletResponse("/apps/service/history/index"));
     }
@@ -165,7 +165,7 @@ public class ChatServiceController extends Handler {
     @Menu(type = "service", subtype = "current", admin = true)
     public ModelAndView current(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         map.put("agentServiceList", agentServiceRes.findByOrgiAndStatusAndAgentskillIn(
                 super.getOrgi(request),
                 AgentUserStatusEnum.INSERVICE.toString(),
@@ -181,7 +181,7 @@ public class ChatServiceController extends Handler {
         Organ targetOrgan = super.getOrgan(request);
         final String orgi = super.getOrgi(request);
         final User logined = super.getUser(request);
-        Map<String, Organ> ownOrgans = organProxy.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
+        Map<String, Organ> ownOrgans = organService.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
 
         if (StringUtils.isNotBlank(id)) {
             AgentService agentService = agentServiceRes.findByIdAndOrgi(id, super.getOrgi(request));
@@ -204,7 +204,7 @@ public class ChatServiceController extends Handler {
             List<User> userList = userRes.findAllById(usersids);
             for (User user : userList) {
                 user.setAgentStatus(cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
-                userProxy.attachOrgansPropertiesForUser(user);
+                userService.attachOrgansPropertiesForUser(user);
             }
             map.addAttribute("userList", userList);
             map.addAttribute("userid", agentService.getUserid());
@@ -241,13 +241,13 @@ public class ChatServiceController extends Handler {
                             super.getUser(request).getId(), super.getOrgi(request));
 
                     if (agentStatus != null) {
-                        agentUserProxy.updateAgentStatus(agentStatus, super.getOrgi(request));
+                        agentUserService.updateAgentStatus(agentStatus, super.getOrgi(request));
                     }
 
                     AgentStatus transAgentStatus = cacheService.findOneAgentStatusByAgentnoAndOrig(
                             agentno, super.getOrgi(request));
                     if (transAgentStatus != null) {
-                        agentUserProxy.updateAgentStatus(transAgentStatus, super.getOrgi(request));
+                        agentUserService.updateAgentStatus(transAgentStatus, super.getOrgi(request));
                         agentService.setAgentno(agentno);
                         agentService.setAgentusername(transAgentStatus.getUsername());
                     }
@@ -393,7 +393,7 @@ public class ChatServiceController extends Handler {
     @Menu(type = "service", subtype = "filter", admin = true)
     public ModelAndView quene(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         Page<AgentUser> agentUserList = agentUserRes.findByOrgiAndStatusAndSkillIn(
                 super.getOrgi(request), AgentUserStatusEnum.INQUENE.toString(), organs.keySet(),
                 super.page(request, Direction.DESC, "createtime"));
@@ -427,7 +427,7 @@ public class ChatServiceController extends Handler {
     public ModelAndView transfer(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String skillid) {
 
         Organ targetOrgan = super.getOrgan(request);
-        Map<String, Organ> ownOrgans = organProxy.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
+        Map<String, Organ> ownOrgans = organService.findAllOrganByParentAndOrgi(targetOrgan, super.getOrgi(request));
 
         if (StringUtils.isNotBlank(id)) {
             List<Organ> skillGroups = organRes.findByOrgiAndIdInAndSkill(super.getOrgi(request), ownOrgans.keySet(), true);
@@ -451,7 +451,7 @@ public class ChatServiceController extends Handler {
             List<User> userList = userRes.findAllById(usersids);
             for (User user : userList) {
                 user.setAgentStatus(cacheService.findOneAgentStatusByAgentnoAndOrig(user.getId(), super.getOrgi(request)));
-                userProxy.attachOrgansPropertiesForUser(user);
+                userService.attachOrgansPropertiesForUser(user);
             }
             map.put("id", id);
             map.put("skillid", skillid);
@@ -500,15 +500,13 @@ public class ChatServiceController extends Handler {
     @Menu(type = "service", subtype = "onlineagent", admin = true)
     public ModelAndView agent(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
         final Map<String, AgentStatus> ass = cacheService.findAllAgentStatusByOrgi(super.getOrgi(request));
         List<AgentStatus> lis = new ArrayList<>();
-        List<User> users = userProxy.findUserInOrgans(organs.keySet());
-        if (users != null) {
-            for (User us : users) {
-                if (ass.containsKey(us.getId())) {
-                    lis.add(ass.get(us.getId()));
-                }
+        List<User> users = userService.findUserInOrgans(organs.keySet());
+        for (User us : users) {
+            if (ass.containsKey(us.getId())) {
+                lis.add(ass.get(us.getId()));
             }
         }
         map.put("agentStatusList", lis);
@@ -550,8 +548,8 @@ public class ChatServiceController extends Handler {
     @Menu(type = "service", subtype = "userlist", admin = true)
     public ModelAndView user(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
-        Page<User> userList = userProxy.findUserInOrgans(organs.keySet(), super.page(request,
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Page<User> userList = userService.findUserInOrgans(organs.keySet(), super.page(request,
                 Direction.DESC, "createtime"));
         Map<String, Boolean> onlines = new HashMap<>();
         if (userList != null) {
@@ -573,7 +571,7 @@ public class ChatServiceController extends Handler {
     @Menu(type = "service", subtype = "leavemsg", admin = true)
     public ModelAndView leavemsg(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
 
         Page<LeaveMsg> leaveMsgs = leaveMsgRes.findBySkillAndOrgi(organs.keySet(), super.getOrgi(request), super.page(request,
                 Direction.DESC, "createtime"));

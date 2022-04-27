@@ -19,7 +19,7 @@ package com.chatopera.cc.controller.admin.channel;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.proxy.OrganProxy;
+import com.chatopera.cc.service.OrganService;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.ConsultInviteRepository;
@@ -58,12 +58,12 @@ public class SNSAccountIMController extends Handler {
     private SecretRepository secRes;
 
     @Autowired
-    private OrganProxy organProxy;
+    private OrganService organService;
 
     @RequestMapping("/index.html")
     @Menu(type = "admin", subtype = "im", access = false, admin = true)
     public ModelAndView index(ModelMap map, HttpServletRequest request, @Valid String execute, @RequestParam(name = "status", required = false) String status) {
-        Map<String, Organ> organs = organProxy.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(super.getOrgan(request), super.getOrgi(request));
         map.addAttribute("snsAccountList", snsAccountRes.findBySnstypeAndOrgiAndOrgan(Enums.ChannelType.WEBIM.toString(), super.getOrgi(request), organs.keySet(), super.page(request)));
 
         map.addAttribute("status", status);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, <https://www.chatopera.com>
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.cache.CacheService;
 import com.github.xiaobo9.entity.AgentService;
 import com.github.xiaobo9.entity.BlackEntity;
 import com.github.xiaobo9.entity.User;
 import com.github.xiaobo9.repository.AgentServiceRepository;
-import com.github.xiaobo9.repository.AgentUserRepository;
 import com.github.xiaobo9.repository.BlackListRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +36,6 @@ public class BlackEntityProxy {
 
     @Autowired
     private CacheService cacheService;
-
-    @Autowired
-    private AgentUserRepository agentUserRepository;
 
     @Autowired
     private AgentServiceRepository agentServiceRes;
@@ -74,7 +70,7 @@ public class BlackEntityProxy {
 
         blackEntityUpdated.setAgentid(owner.getId());
         blackEntityUpdated.setAgentserviceid(agentserviceid);
-        if (agentserviceid != null){
+        if (agentserviceid != null) {
             AgentService service = agentServiceRes.findByIdAndOrgi(agentserviceid, orgi);
             blackEntityUpdated.setSkill(service.getSkill());
             blackEntityUpdated.setAgentusername(service.getAgentusername());

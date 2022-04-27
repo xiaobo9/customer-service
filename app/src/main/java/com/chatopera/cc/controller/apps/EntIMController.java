@@ -25,8 +25,8 @@ import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncEntIM;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.proxy.AttachmentProxy;
-import com.chatopera.cc.proxy.UserProxy;
+import com.chatopera.cc.service.AttachmentProxy;
+import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.util.Menu;
@@ -92,7 +92,7 @@ public class EntIMController extends Handler {
     PeerSyncEntIM peerSyncEntIM;
 
     @Autowired
-    private UserProxy userProxy;
+    private UserService userService;
 
     private Map<String, Organ> getChatOrgans(User user, String orgi) {
         Map<String, Organ> organs = new HashMap<>();
@@ -134,7 +134,7 @@ public class EntIMController extends Handler {
 
         // TODO: 优化性能
         for (User u : users) {
-            userProxy.attachOrgansPropertiesForUser(u);
+            userService.attachOrgansPropertiesForUser(u);
         }
 
         view.addObject("userList", users);
@@ -175,7 +175,7 @@ public class EntIMController extends Handler {
         User entImUser = userRes.findById(userid).orElse(null);
 
         if (entImUser != null) {
-            userProxy.attachOrgansPropertiesForUser(entImUser);
+            userService.attachOrgansPropertiesForUser(entImUser);
             view.addObject("organs", entImUser.getOrgans().values());
         }
 
@@ -259,10 +259,10 @@ public class EntIMController extends Handler {
     public ModelAndView user(HttpServletRequest request, @Valid String id) {
         ModelAndView view = request(super.createEntIMTempletResponse("/apps/entim/group/user"));
         User logined = super.getUser(request);
-        HashSet<String> affiliates = logined.getAffiliates();
+        Set<String> affiliates = logined.getAffiliates();
 
-        List<User> users = userProxy.findByOrganInAndDatastatus(new ArrayList<>(affiliates), false);
-        users.forEach(u -> userProxy.attachOrgansPropertiesForUser(u));
+        List<User> users = userService.findByOrganInAndDatastatus(affiliates, false);
+        users.forEach(u -> userService.attachOrgansPropertiesForUser(u));
         view.addObject("userList", users);
 
         IMGroup imGroup = imGroupRes.findById(id).orElse(null);

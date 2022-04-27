@@ -27,7 +27,7 @@ import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.proxy.OnlineUserProxy;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.service.SystemConfigService;
 import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.util.RichMediaUtils;
@@ -69,12 +69,11 @@ import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 /**
  * FIXME method tooooooo long
@@ -160,6 +159,9 @@ public class IMController extends Handler {
     @Autowired
     private CacheService cacheService;
 
+    @Autowired
+    private OnlineUserService onlineUserService;
+
     @PostConstruct
     private void init() {
     }
@@ -185,7 +187,7 @@ public class IMController extends Handler {
         ModelAndView view = request(super.pageTplResponse("/apps/im/point"));
         view.addObject("channelVisitorSeparate", channelWebIMVisitorSeparate);
 
-        final String sessionid = MainUtils.getContextID(request.getSession().getId());
+        final String sessionid = UUIDUtils.removeHyphen(request.getSession().getId());
         logger.info("[point] session snsid {}, session {}", id, sessionid);
 
         if (StringUtils.isNotBlank(id)) {
@@ -222,7 +224,7 @@ public class IMController extends Handler {
             view.addObject("ip", MD5Utils.md5(request.getRemoteAddr()));
             view.addObject("mobile", client.isMobile());
 
-            CousultInvite invite = OnlineUserProxy.consult(id, Constants.SYSTEM_ORGI);
+            CousultInvite invite = onlineUserService.consult(id, Constants.SYSTEM_ORGI);
             if (invite != null) {
                 logger.info("[point] find CousultInvite {}", invite.getId());
                 view.addObject("inviteData", invite);
@@ -289,9 +291,9 @@ public class IMController extends Handler {
 
                 if (invite.isSkill() && !invite.isConsult_skill_fixed()) { // 展示所有技能组
                     // 查询 技能组 ， 缓存？
-                    view.addObject("skillGroups", OnlineUserProxy.organ(Constants.SYSTEM_ORGI, ipdata, invite, true));
+                    view.addObject("skillGroups", onlineUserService.organ(Constants.SYSTEM_ORGI, ipdata, invite, true));
                     // 查询坐席 ， 缓存？
-                    view.addObject("agentList", OnlineUserProxy.agents(Constants.SYSTEM_ORGI));
+                    view.addObject("agentList", onlineUserService.agents(Constants.SYSTEM_ORGI));
                 }
 
                 view.addObject("traceid", userHistory.getId());
@@ -436,7 +438,7 @@ public class IMController extends Handler {
         if (StringUtils.isNotBlank(userid)) {
             emitter.onCompletion(() -> {
                 try {
-                    OnlineUserProxy.webIMClients.removeClient(userid, client, false); // 执行了 邀请/再次邀请后终端的
+                    onlineUserService.removeClient(userid, client, false); // 执行了 邀请/再次邀请后终端的
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -444,13 +446,13 @@ public class IMController extends Handler {
             emitter.onTimeout(() -> {
                 try {
                     emitter.complete();
-                    OnlineUserProxy.webIMClients.removeClient(userid, client, true); // 正常的超时断开
+                    onlineUserService.removeClient(userid, client, true); // 正常的超时断开
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
 
-            CousultInvite invite = OnlineUserProxy.consult(appid, orgi);
+            CousultInvite invite = onlineUserService.consult(appid, orgi);
 
             // TODO 该contacts的识别并不准确，因为不能关联
 //                if (invite != null && invite.isTraceuser()) {
@@ -471,7 +473,7 @@ public class IMController extends Handler {
             // END 取消关联contacts
 
             if (StringUtils.isNotBlank(sign)) {
-                OnlineUserProxy.online(
+                onlineUserService.online(
                         super.getIMUser(request, sign, null, sessionid),
                         orgi,
                         sessionid,
@@ -482,7 +484,7 @@ public class IMController extends Handler {
                         null,
                         invite);
             }
-            OnlineUserProxy.webIMClients.putClient(userid, new WebIMClient(userid, client, emitter, traceid));
+            onlineUserService.webIMClients.putClient(userid, new WebIMClient(userid, client, emitter, traceid));
             Thread.sleep(500);
         }
 
@@ -566,7 +568,7 @@ public class IMController extends Handler {
 
         ModelAndView view = request(super.pageTplResponse("/apps/im/index"));
         BlackEntity blackEntity = cacheService.findOneBlackEntityByUserIdAndOrgi(userid, Constants.SYSTEM_ORGI).orElse(null);
-        CousultInvite invite = OnlineUserProxy.consult(appid, orgi);
+        CousultInvite invite = onlineUserService.consult(appid, orgi);
         // appid 或者 用户在黑名单里直接返回
         if (StringUtils.isBlank(appid) || (blackEntity != null && blackEntity.inBlackStatus())) {
             view.addObject("inviteData", invite);
@@ -624,18 +626,10 @@ public class IMController extends Handler {
 
         map.addAttribute("ip", MD5Utils.md5(request.getRemoteAddr()));
 
-        if (StringUtils.isNotBlank(traceid)) {
-            map.addAttribute("traceid", traceid);
-        }
-        if (StringUtils.isNotBlank(exchange)) {
-            map.addAttribute("exchange", exchange);
-        }
-        if (StringUtils.isNotBlank(title)) {
-            map.addAttribute("title", title);
-        }
-        if (StringUtils.isNotBlank(traceid)) {
-            map.addAttribute("url", url);
-        }
+        addAttribute(map, "traceid", traceid);
+        addAttribute(map, "exchange", exchange);
+        addAttribute(map, "title", title);
+        addAttribute(map, "url", traceid);
 
         map.addAttribute("cskefuport", request.getServerPort());
 
@@ -648,11 +642,7 @@ public class IMController extends Handler {
         map.addAttribute("orgi", invite.getOrgi());
         map.addAttribute("inviteData", invite);
 
-        if (StringUtils.isNotBlank(aiid)) {
-            map.addAttribute("aiid", aiid);
-        } else if (StringUtils.isNotBlank(invite.getAiid())) {
-            map.addAttribute("aiid", invite.getAiid());
-        }
+        addAttribute(map, "aiid", StringUtils.isNotBlank(aiid) ? aiid : invite.getAiid());
 
         AgentReport report;
         if (invite.isSkill() && invite.isConsult_skill_fixed()) { // 绑定技能组
@@ -677,77 +667,17 @@ public class IMController extends Handler {
                 consult = true;
                 //存入 Cookies
                 if (invite.isConsult_info_cookies()) {
-                    Cookie name = new Cookie(
-                            "name", MainUtils.encryption(URLEncoder.encode(contacts.getName(), "UTF-8")));
-                    response.addCookie(name);
-                    name.setMaxAge(3600);
-                    if (StringUtils.isNotBlank(contacts.getPhone())) {
-                        Cookie phonecookie = new Cookie(
-                                "phone", MainUtils.encryption(URLEncoder.encode(contacts.getPhone(), "UTF-8")));
-                        phonecookie.setMaxAge(3600);
-                        response.addCookie(phonecookie);
-                    }
-                    if (StringUtils.isNotBlank(contacts.getEmail())) {
-                        Cookie email = new Cookie(
-                                "email", MainUtils.encryption(URLEncoder.encode(contacts.getEmail(), "UTF-8")));
-                        email.setMaxAge(3600);
-                        response.addCookie(email);
-                    }
-
-                    if (StringUtils.isNotBlank(contacts.getSkypeid())) {
-                        Cookie skypeid = new Cookie(
-                                "skypeid", MainUtils.encryption(
-                                URLEncoder.encode(contacts.getSkypeid(), "UTF-8")));
-                        skypeid.setMaxAge(3600);
-                        response.addCookie(skypeid);
-                    }
-
-
-                    if (StringUtils.isNotBlank(contacts.getMemo())) {
-                        Cookie memo = new Cookie(
-                                "memo", MainUtils.encryption(URLEncoder.encode(contacts.getName(), "UTF-8")));
-                        memo.setMaxAge(3600);
-                        response.addCookie(memo);
-                    }
+                    addCookie(response, "name", contacts.getName());
+                    addCookie(response, "phone", contacts.getPhone());
+                    addCookie(response, "email", contacts.getEmail());
+                    addCookie(response, "skypeid", contacts.getSkypeid());
+                    addCookie(response, "memo", contacts.getMemo());
                 }
             } else {
                 //从 Cookies里尝试读取
                 if (invite.isConsult_info_cookies()) {
                     Cookie[] cookies = request.getCookies();//这样便可以获取一个cookie数组
-                    contacts = new Contacts();
-                    if (cookies != null) {
-                        for (Cookie cookie : cookies) {
-                            if (cookie != null && StringUtils.isNotBlank(
-                                    cookie.getName()) && StringUtils.isNotBlank(cookie.getValue())) {
-                                if (cookie.getName().equals("name")) {
-                                    contacts.setName(URLDecoder.decode(
-                                            MainUtils.decryption(cookie.getValue()),
-                                            "UTF-8"));
-                                }
-                                if (cookie.getName().equals("phone")) {
-                                    contacts.setPhone(URLDecoder.decode(
-                                            MainUtils.decryption(cookie.getValue()),
-                                            "UTF-8"));
-                                }
-                                if (cookie.getName().equals("email")) {
-                                    contacts.setEmail(URLDecoder.decode(
-                                            MainUtils.decryption(cookie.getValue()),
-                                            "UTF-8"));
-                                }
-                                if (cookie.getName().equals("memo")) {
-                                    contacts.setMemo(URLDecoder.decode(
-                                            MainUtils.decryption(cookie.getValue()),
-                                            "UTF-8"));
-                                }
-                                if (cookie.getName().equals("skypeid")) {
-                                    contacts.setSkypeid(
-                                            URLDecoder.decode(
-                                                    MainUtils.decryption(cookie.getValue()),
-                                                    "UTF-8"));
-                                }
-                            }
-                        }
-                    }
+                    contacts = createContacts(cookies);
                 }
                 if (StringUtils.isBlank(contacts.getName())) {
                     consult = false;
@@ -772,47 +702,21 @@ public class IMController extends Handler {
                             agentService.setContactsid(contacts1.getId());
                         }
 
-                        // 关联AgentUserContact的联系人
-                        // NOTE: 如果该userid已经有了关联的Contact则忽略，继续使用之前的
-                        Optional<AgentUserContacts> agentUserContactsOpt = agentUserContactsRes.findOneByUseridAndOrgi(
-                                userid, orgi);
-                        if (!agentUserContactsOpt.isPresent()) {
-                            AgentUserContacts agentUserContacts = new AgentUserContacts();
-                            agentUserContacts.setOrgi(orgi);
-                            agentUserContacts.setAppid(appid);
-                            agentUserContacts.setChannel(p.getChannel());
-                            agentUserContacts.setContactsid(contacts1.getId());
-                            agentUserContacts.setUserid(userid);
-                            agentUserContacts.setUsername(
-                                    (String) session.getAttribute("Sessionusername"));
-                            agentUserContacts.setCreater(super.getUser(request).getId());
-                            agentUserContacts.setCreatetime(new Date());
-                            agentUserContactsRes.save(agentUserContacts);
-                        }
+                        saveAgentUserContacts(request, orgi, appid, userid, session, contacts1, p);
                     });
                 }
             }
         }
 
-        if (StringUtils.isNotBlank(client)) {
-            map.addAttribute("client", client);
-        }
-
-        if (StringUtils.isNotBlank(skill)) {
-            map.addAttribute("skill", skill);
-        }
-
-        if (StringUtils.isNotBlank(agent)) {
-            map.addAttribute("agent", agent);
-        }
+        addAttribute(map, "client", client);
+        addAttribute(map, "skill", skill);
+        addAttribute(map, "agent", agent);
+        addAttribute(map, "type", type);
 
         map.addAttribute("contacts", contacts);
 
-        if (StringUtils.isNotBlank(type)) {
-            map.addAttribute("type", type);
-        }
         IP ipdata = IPTools.findGeography(IPUtils.getIpAddress(request));
-        map.addAttribute("skillGroups", OnlineUserProxy.organ(invite.getOrgi(), ipdata, invite, true));
+        map.addAttribute("skillGroups", onlineUserService.organ(invite.getOrgi(), ipdata, invite, true));
 
         if (consult) {
             if (contacts != null && StringUtils.isNotBlank(contacts.getName())) {
@@ -849,13 +753,10 @@ public class IMController extends Handler {
                 chatbotConfig.put("botfirst", Boolean.toString(invite.isAifirst()));
                 chatbotConfig.put("isai", Boolean.toString(invite.isAi()));
 
-
                 map.addAttribute("chatbotConfig", chatbotConfig);
                 view = request(super.pageTplResponse("/apps/im/chatbot/index"));
-                if (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(
-                        mobile)) {
-                    view = request(super.pageTplResponse(
-                            "/apps/im/chatbot/mobile"));        // 智能机器人 移动端
+                if (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(mobile)) {
+                    view = request(super.pageTplResponse("/apps/im/chatbot/mobile"));        // 智能机器人 移动端
                 }
             } else {
                 // 维持人工坐席的设定，检查是否进入留言
@@ -873,12 +774,71 @@ public class IMController extends Handler {
         view.addObject("imageAd", MainUtils.getPointAdv(Enums.AdPosEnum.IMAGE.toString(), skill, orgi));
 
         // 确定"接受邀请"被处理后，通知浏览器关闭弹出窗口
-        OnlineUserProxy.sendWebIMClients(userid, "accept");
+        onlineUserService.sendWebIMClients(userid, "accept");
 
         // 更新InviteRecord
         updateInviteRecord(orgi, traceid, title, url, userid);
         logger.info("[index] return view");
         return view;
+    }
+
+    private void addAttribute(ModelMap map, String key, String value) {
+        if (StringUtils.isNotBlank(value)) {
+            map.addAttribute(key, value);
+        }
+    }
+
+    private void addCookie(HttpServletResponse response, String key, String value) throws UnsupportedEncodingException {
+        if (StringUtils.isNotBlank(value)) {
+            Cookie cookie = new Cookie(key, MainUtils.encryption(URLEncoder.encode(value, "UTF-8")));
+            cookie.setMaxAge(3600);
+            response.addCookie(cookie);
+        }
+    }
+
+    private Contacts createContacts(Cookie[] cookies) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+        if (cookies == null) {
+            return new Contacts();
+        }
+        Contacts contacts = new Contacts();
+        Map<String, String> map = new HashMap<>();
+
+        for (Cookie cookie : cookies) {
+            if (cookie == null) {
+                continue;
+            }
+            if (StringUtils.isNotBlank(cookie.getName()) && StringUtils.isNotBlank(cookie.getValue())) {
+                map.put(cookie.getName(), cookie.getValue());
+            }
+        }
+        contacts.setName(decode(map.get("name")));
+        contacts.setPhone(decode(map.get("phone")));
+        contacts.setEmail(decode(map.get("email")));
+        contacts.setMemo(decode(map.get("memo")));
+        contacts.setSkypeid(decode(map.get("skypeid")));
+        return contacts;
+    }
+
+    private String decode(String value) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+        return URLDecoder.decode(MainUtils.decryption(value), "UTF-8");
+    }
+
+    private void saveAgentUserContacts(HttpServletRequest request, String orgi, String appid, String userid, HttpSession session, Contacts contacts1, AgentUser p) {
+        // 关联AgentUserContact的联系人
+        // NOTE: 如果该userid已经有了关联的Contact则忽略，继续使用之前的
+        agentUserContactsRes.findOneByUseridAndOrgi(userid, orgi)
+                .ifPresent(a -> {
+                    AgentUserContacts agentUserContacts = new AgentUserContacts();
+                    agentUserContacts.setOrgi(orgi);
+                    agentUserContacts.setAppid(appid);
+                    agentUserContacts.setChannel(p.getChannel());
+                    agentUserContacts.setContactsid(contacts1.getId());
+                    agentUserContacts.setUserid(userid);
+                    agentUserContacts.setUsername((String) session.getAttribute("Sessionusername"));
+                    agentUserContacts.setCreater(super.getUser(request).getId());
+                    agentUserContacts.setCreatetime(new Date());
+                    agentUserContactsRes.save(agentUserContacts);
+                });
     }
 
     private void updateInviteRecord(String orgi, String traceid, String title, String url, String userid) {
@@ -925,7 +885,7 @@ public class IMController extends Handler {
             @Valid String pid,
             @Valid String purl) throws Exception {
         ModelAndView view = request(super.pageTplResponse("/apps/im/text"));
-        CousultInvite invite = OnlineUserProxy.consult(
+        CousultInvite invite = onlineUserService.consult(
                 appid, StringUtils.isBlank(orgi) ? Constants.SYSTEM_ORGI : orgi);
 
         view.addObject("hostname", request.getServerName());
@@ -1018,7 +978,7 @@ public class IMController extends Handler {
     @RequestMapping("/refuse")
     @Menu(type = "im", subtype = "refuse", access = true)
     public void refuse(@Valid String orgi, @Valid String userid) throws Exception {
-        OnlineUserProxy.refuseInvite(userid);
+        onlineUserService.refuseInvite(userid);
         final Date threshold = new Date(System.currentTimeMillis() - Constants.WEBIM_AGENT_INVITE_TIMEOUT);
         Page<InviteRecord> inviteRecords = inviteRecordRes.findByUseridAndOrgiAndResultAndCreatetimeGreaterThan(
                 userid,

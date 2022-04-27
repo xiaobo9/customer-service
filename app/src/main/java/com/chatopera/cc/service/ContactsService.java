@@ -1,14 +1,19 @@
 /*
- * Copyright (C) 2019 Chatopera Inc, All rights reserved.
- * <https://www.chatopera.com>
- * This software and related documentation are provided under a license agreement containing
- * restrictions on use and disclosure and are protected by intellectual property laws.
- * Except as expressly permitted in your license agreement or allowed by law, you may not use,
- * copy, reproduce, translate, broadcast, modify, license, transmit, distribute, exhibit, perform,
- * publish, or display any part, in any form, or by any means. Reverse engineering, disassembly,
- * or decompilation of this software, unless required by law for interoperability, is prohibited.
+ * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-package com.chatopera.cc.proxy;
+package com.chatopera.cc.service;
 
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
@@ -30,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.ui.ModelMap;
 
 import java.util.*;
@@ -38,10 +43,10 @@ import java.util.*;
 /**
  * 向联系人发送消息
  */
-@Component
-public class ContactsProxy {
+@Service
+public class ContactsService {
 
-    private final static Logger logger = LoggerFactory.getLogger(ContactsProxy.class);
+    private final static Logger logger = LoggerFactory.getLogger(ContactsService.class);
 
     @Autowired
     private CacheService cacheService;
@@ -60,7 +65,8 @@ public class ContactsProxy {
 
     @Autowired
     private SNSAccountRepository snsAccountRes;
-
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     /**
      * 在传输SkypeId中有操作混入了非法字符
@@ -147,7 +153,7 @@ public class ContactsProxy {
                 } else {
                     // 该联系人的Skype账号对应的OnlineUser不存在
                     // TODO 新建OnlineUser
-                    OnlineUserProxy.createNewOnlineUserWithContactAndChannel(
+                    onlineUserService.createNewOnlineUserWithContactAndChannel(
                             contact, logined, Constants.CSKEFU_MODULE_SKYPE);
                     result.add(Enums.ChannelType.SKYPE);
                 }

@@ -67,22 +67,23 @@ public class CacheService {
      * @return
      */
     public Optional<AgentUser> findOneAgentUserByUserIdAndOrgi(final String userId, final String orgi) {
-        if (redisCommand.hasHashKV(RedisKey.getAgentUserInQueHashKey(orgi), userId)) {
+        String key = RedisKey.getAgentUserInQueHashKey(orgi);
+        if (redisCommand.hasHashKV(key, userId)) {
             // 排队等待中
-            return Optional.ofNullable((AgentUser) SerializeUtil.deserialize(
-                    redisCommand.getHashKV(RedisKey.getAgentUserInQueHashKey(orgi), userId)));
-        } else if (redisCommand.hasHashKV(RedisKey.getAgentUserInServHashKey(orgi), userId)) {
-            // 服务中
-            return Optional.ofNullable((AgentUser) SerializeUtil.deserialize(
-                    redisCommand.getHashKV(RedisKey.getAgentUserInServHashKey(orgi), userId)));
-        } else if (redisCommand.hasHashKV(RedisKey.getAgentUserEndHashKey(orgi), userId)) {
-            // 已经结束
-            return Optional.ofNullable((AgentUser) SerializeUtil.deserialize(
-                    redisCommand.getHashKV(RedisKey.getAgentUserEndHashKey(orgi), userId)));
-        } else {
-            // 缓存中没有找到，继续到数据库查找
-            return agentUserRes.findOneByUseridAndOrgi(userId, orgi);
+            return Optional.ofNullable(SerializeUtil.deserialize(redisCommand.getHashKV(key, userId)));
         }
+        String key2 = RedisKey.getAgentUserInServHashKey(orgi);
+        if (redisCommand.hasHashKV(key2, userId)) {
+            // 服务中
+            return Optional.ofNullable(SerializeUtil.deserialize(redisCommand.getHashKV(key2, userId)));
+        }
+        String key3 = RedisKey.getAgentUserEndHashKey(orgi);
+        if (redisCommand.hasHashKV(key3, userId)) {
+            // 已经结束
+            return Optional.ofNullable(SerializeUtil.deserialize(redisCommand.getHashKV(key3, userId)));
+        }
+        // 缓存中没有找到，继续到数据库查找
+        return agentUserRes.findOneByUseridAndOrgi(userId, orgi);
     }
 
 

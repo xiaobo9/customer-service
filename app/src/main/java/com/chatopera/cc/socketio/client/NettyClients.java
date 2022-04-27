@@ -19,10 +19,10 @@ package com.chatopera.cc.socketio.client;
 import com.chatopera.cc.activemq.AgentSubscription;
 import com.chatopera.cc.activemq.OnlineUserSubscription;
 import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.util.SerializeUtil;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -74,7 +74,7 @@ public class NettyClients {
     public void closeIMEventClient(String id, String sessionid, String orgi) {
         List<SocketIOClient> userClients = imClients.getClients(id);
         for (SocketIOClient userClient : userClients) {
-            if (MainUtils.getContextID(userClient.getSessionId().toString()).equals(sessionid)) {
+            if (UUIDUtils.removeHyphen(userClient.getSessionId().toString()).equals(sessionid)) {
                 userClient.disconnect();
             }
         }
@@ -131,9 +131,8 @@ public class NettyClients {
 
     public int removeAgentEventClient(final String id, final String sessionid, final String connectid) {
         List<SocketIOClient> keyClients = agentClients.getClients(id);
-        logger.debug(
-                "[removeAgentEventClient] userId {}, sessionId {}, client size {}, connectid {}", id, sessionid,
-                keyClients.size(), connectid);
+        logger.debug("[removeAgentEventClient] userId {}, sessionId {}, client size {}, connectid {}",
+                id, sessionid, keyClients.size(), connectid);
 
         for (final SocketIOClient client : keyClients) {
             if (StringUtils.equals(client.get("connectid"), connectid)) {
@@ -144,21 +143,17 @@ public class NettyClients {
         }
 
         if (keyClients.size() == 0) {
-            logger.info(
-                    "[removeAgentEventClient] 0 clients for userId {} after remove, remove all keys from NettyClientMap",
-                    id);
+            logger.info("[removeAgentEventClient] 0 clients for userId {} after remove, remove all keys from NettyClientMap", id);
             agentClients.removeAll(id);
         } else {
             //  以下代码打印剩余的SocketIO的连接的信息
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (SocketIOClient client : keyClients) {
-                sb.append(MainUtils.getContextID(client.getSessionId().toString()));
+                sb.append(UUIDUtils.removeHyphen(client.getSessionId().toString()));
                 sb.append(", ");
             }
 
-            logger.info(
-                    "[removeAgentEventClient] still get userId {} remaining clients[{}]: {}", id, keyClients.size(),
-                    sb.toString());
+            logger.info("[removeAgentEventClient] still get userId {} remaining clients[{}]: {}", id, keyClients.size(), sb);
         }
         return keyClients.size();
     }

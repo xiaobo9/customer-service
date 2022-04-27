@@ -27,9 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface SNSAccountRepository
-        extends JpaRepository<SNSAccount, String> {
+public interface SNSAccountRepository extends JpaRepository<SNSAccount, String> {
     SNSAccount findByIdAndOrgi(String paramString, String orgi);
 
     boolean existsBySnsidAndSnstypeAndOrgi(String snsid, String snsType, String orgi);

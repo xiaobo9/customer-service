@@ -19,7 +19,7 @@ package com.chatopera.cc.aspect;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
-import com.chatopera.cc.proxy.AgentAuditProxy;
+import com.chatopera.cc.service.AgentAuditProxy;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.entity.AgentUser;
 import org.apache.commons.lang.StringUtils;

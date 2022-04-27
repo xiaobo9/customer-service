@@ -17,6 +17,7 @@
 package com.chatopera.cc.basic;
 
 import com.chatopera.cc.cache.CacheService;
+import com.chatopera.cc.service.SystemConfigService;
 import com.chatopera.cc.service.TemplateService;
 import com.chatopera.cc.util.CronTools;
 import com.chatopera.cc.util.Dict;
@@ -27,7 +28,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.xiaobo9.bean.JobTask;
-import com.github.xiaobo9.commons.enums.DateFormatEnum;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.commons.kit.ObjectKit;
 import com.github.xiaobo9.commons.mail.MailSender;
@@ -50,7 +50,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotNull;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -68,10 +67,6 @@ public class MainUtils {
     private static final Random random = new Random();
 
     public static SimpleDateFormat timeRangeDateFormat = new SimpleDateFormat("HH:mm");
-
-    public static String getContextID(String session) {
-        return session.replaceAll("-", "");
-    }
 
     public static void copyProperties(Object source, Object target, String... ignoreProperties)
             throws BeansException {
@@ -508,20 +503,6 @@ public class MainUtils {
     }
 
     /**
-     * 获取系统配置
-     */
-    @NotNull
-    public static SystemConfig getSystemConfig() {
-        SystemConfig systemConfig = MainContext.getCache().findOneSystemByIdAndOrgi("systemConfig", Constants.SYSTEM_ORGI);
-        if (systemConfig == null) {
-            SystemConfigRepository systemConfigRes = MainContext.getContext().getBean(SystemConfigRepository.class);
-            systemConfig = systemConfigRes.findByOrgi(Constants.SYSTEM_ORGI);
-        }
-        // FIXME 默认配置
-        return systemConfig != null ? systemConfig : new SystemConfig();
-    }
-
-    /**
      * 初始化呼叫中心功能里需要隐藏号码的字段
      */
     public static void initSystemSecField(TablePropertiesRepository tpRes) {
@@ -634,7 +615,7 @@ public class MainUtils {
      * @throws Exception
      */
     public static void sendMail(String email, String cc, String subject, String content, List<String> filenames) throws Exception {
-        SystemConfig config = MainUtils.getSystemConfig();
+        SystemConfig config = MainContext.getContext().getBean(SystemConfigService.class).getSystemConfig();
         if (config.isEnablemail() && config.getEmailid() != null) {
             SystemMessage systemMessage = MainContext.getContext().getBean(
                     SystemMessageRepository.class).findByIdAndOrgi(config.getEmailid(), config.getOrgi());
@@ -810,40 +791,6 @@ public class MainUtils {
         }
 
         return null;
-    }
-
-    /**
-     * @param userid
-     * @param client
-     * @param session
-     * @param orgi
-     * @param ipaddr
-     * @param hostname
-     * @return
-     */
-    public static WorkSession createWorkSession(String userid, String client, String session, String orgi, String ipaddr, String hostname, String admin, boolean first) {
-        WorkSession workSession = new WorkSession();
-        workSession.setCreatetime(new Date());
-        workSession.setBegintime(new Date());
-        workSession.setAgent(userid);
-        workSession.setAgentno(userid);
-        workSession.setAgentno(userid);
-        if (StringUtils.isNotBlank(admin) && admin.equalsIgnoreCase("true")) {
-            workSession.setAdmin(true);
-        }
-
-        workSession.setFirsttime(first);
-
-        workSession.setIpaddr(ipaddr);
-        workSession.setHostname(hostname);
-        workSession.setUserid(userid);
-        workSession.setClientid(client);
-        workSession.setSessionid(session);
-        workSession.setOrgi(orgi);
-
-        workSession.setDatestr(DateFormatEnum.DAY.format(new Date()));
-
-        return workSession;
     }
 
     public static String convertCrond(JobTask plan) {

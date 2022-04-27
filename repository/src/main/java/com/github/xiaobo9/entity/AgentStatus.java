@@ -22,6 +22,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @Entity
@@ -63,7 +64,7 @@ public class AgentStatus implements java.io.Serializable, Comparable<AgentStatus
     private String userid;
 
     // 接入的 技能组ID, 不保存到数据库，每次加载时解析
-    private HashMap<String /* Organ Id */, String /* Organ Name*/> skills;
+    private Map<String /* Organ Id */, String /* Organ Name*/> skills;
 
     @Id
     @Column(length = 32)
@@ -134,11 +135,11 @@ public class AgentStatus implements java.io.Serializable, Comparable<AgentStatus
     }
 
     @Transient
-    public HashMap<String, String> getSkills() {
+    public Map<String, String> getSkills() {
         return skills;
     }
 
-    public void setSkills(final HashMap<String, String> skills) {
+    public void setSkills(final Map<String, String> skills) {
         this.skills = skills;
     }
 

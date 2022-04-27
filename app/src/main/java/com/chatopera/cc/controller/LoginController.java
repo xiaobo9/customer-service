@@ -20,7 +20,7 @@ import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.auth.AuthToken;
-import com.chatopera.cc.proxy.AgentProxy;
+import com.chatopera.cc.service.AgentProxyService;
 import com.chatopera.cc.service.LoginService;
 import com.chatopera.cc.service.SystemConfigService;
 import com.chatopera.cc.util.Menu;
@@ -76,7 +76,7 @@ public class LoginController extends Handler {
     private AuthToken authToken;
 
     @Autowired
-    private AgentProxy agentProxy;
+    private AgentProxyService agentServiceService;
 
     @Autowired
     private ACDWorkMonitor acdWorkMonitor;
@@ -202,10 +202,10 @@ public class LoginController extends Handler {
                          * 登录成功，设置该坐席为就绪状态（默认）
                          ****************************************/
                         // https://gitlab.chatopera.com/chatopera/cosinee.w4l/issues/306
-                        final AgentStatus agentStatus = agentProxy.resolveAgentStatusByAgentnoAndOrgi(
+                        final AgentStatus agentStatus = agentServiceService.resolveAgentStatusByAgentnoAndOrgi(
                                 loginUser.getId(), orgi, loginUser.getSkills());
                         agentStatus.setBusy(false);
-                        agentProxy.ready(loginUser, agentStatus, false);
+                        agentServiceService.ready(loginUser, agentStatus, false);
 
                         // 工作状态记录
                         acdWorkMonitor.recordAgentStatus(agentStatus.getAgentno(),
