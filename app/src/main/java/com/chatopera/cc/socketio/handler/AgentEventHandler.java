@@ -8,7 +8,7 @@ import com.chatopera.cc.basic.IPUtils;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.ChatMessage;
-import com.chatopera.cc.service.AgentSessionProxy;
+import com.chatopera.cc.service.AgentSessionService;
 import com.chatopera.cc.service.AgentProxyService;
 import com.chatopera.cc.service.AgentUserService;
 import com.chatopera.cc.service.UserService;
@@ -49,7 +49,7 @@ public class AgentEventHandler {
     private final AgentStatusRepository agentStatusRes;
     private final AgentUserService agentUserService;
     private final AgentProxyService agentServiceService;
-    private final AgentSessionProxy agentSessionProxy;
+    private final AgentSessionService agentSessionService;
     private final UserService userService;
 
     private final WorkSessionRepository workSessionRepository;
@@ -62,14 +62,14 @@ public class AgentEventHandler {
             AgentStatusRepository agentStatusRes,
             AgentUserService agentUserService,
             AgentProxyService agentServiceService,
-            AgentSessionProxy agentSessionProxy,
+            AgentSessionService agentSessionService,
             UserService userService, WorkSessionRepository workSessionRepository, CacheService cacheService) {
         this.server = server;
         this.brokerPublisher = brokerPublisher;
         this.agentStatusRes = agentStatusRes;
         this.agentUserService = agentUserService;
         this.agentServiceService = agentServiceService;
-        this.agentSessionProxy = agentSessionProxy;
+        this.agentSessionService = agentSessionService;
         this.userService = userService;
         this.workSessionRepository = workSessionRepository;
         this.cacheService = cacheService;
@@ -90,7 +90,7 @@ public class AgentEventHandler {
         }
 
         // 验证当前的SSO中的session是否和传入的session匹配
-        if (agentSessionProxy.isInvalidSessionId(userid, session, orgi)) {
+        if (agentSessionService.isInvalidSessionId(userid, session, orgi)) {
             // 该session信息不合法
             log.info("[onConnect] invalid sessionId {}", session);
             return;
@@ -198,7 +198,7 @@ public class AgentEventHandler {
         }
 
         // 验证当前的SSO中的session是否和传入的session匹配
-        if (agentSessionProxy.isInvalidSessionId(agentno, session, agentUser.getOrgi())) {
+        if (agentSessionService.isInvalidSessionId(agentno, session, agentUser.getOrgi())) {
             // 该session信息不合法
             log.info("[onIntervetionEvent] invalid sessionId {}", session);
             // 强制退出
@@ -272,7 +272,7 @@ public class AgentEventHandler {
 
 
         // 验证当前的SSO中的session是否和传入的session匹配
-        if (agentSessionProxy.isInvalidSessionId(agentno, session, received.getOrgi())) {
+        if (agentSessionService.isInvalidSessionId(agentno, session, received.getOrgi())) {
             // 该session信息不合法
             log.info("[onMessageEvent] invalid sessionId {}", session);
             // 强制退出

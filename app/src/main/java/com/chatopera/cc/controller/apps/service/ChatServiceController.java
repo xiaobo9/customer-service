@@ -63,7 +63,7 @@ public class ChatServiceController extends Handler {
     private AgentUserService agentUserService;
 
     @Autowired
-    private AgentStatusProxy agentStatusProxy;
+    private AgentStatusService agentStatusService;
 
     @Autowired
     private ACDAgentService acdAgentService;
@@ -108,7 +108,7 @@ public class ChatServiceController extends Handler {
     private ACDMessageHelper acdMessageHelper;
 
     @Autowired
-    private LeaveMsgProxy leaveMsgProxy;
+    private LeaveMsgService leaveMsgService;
 
     @RequestMapping("/history/index.html")
     @Menu(type = "service", subtype = "history", admin = true)
@@ -531,7 +531,7 @@ public class ChatServiceController extends Handler {
         }
         cacheService.deleteAgentStatusByAgentnoAndOrgi(agentStatus.getAgentno(), super.getOrgi(request));
 
-        agentStatusProxy.broadcastAgentsStatus(
+        agentStatusService.broadcastAgentsStatus(
                 super.getOrgi(request), "agent", "offline", super.getUser(request).getId());
 
         return request(super.pageTplResponse("redirect:/service/agent/index.html"));
@@ -577,7 +577,7 @@ public class ChatServiceController extends Handler {
                 Direction.DESC, "createtime"));
         logger.info("[leavemsg] current organ {}, find message size {}", currentOrgan.getId(), leaveMsgs.getSize());
         for (final LeaveMsg l : leaveMsgs) {
-            leaveMsgProxy.resolveChannelBySnsid(l);
+            leaveMsgService.resolveChannelBySnsid(l);
         }
 
         map.put("leaveMsgList", leaveMsgs);

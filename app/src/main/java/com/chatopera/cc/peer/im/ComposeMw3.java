@@ -3,7 +3,7 @@ package com.chatopera.cc.peer.im;
 import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerContext;
 import com.chatopera.cc.peer.PeerUtils;
-import com.chatopera.cc.service.AgentAuditProxy;
+import com.chatopera.cc.service.AgentAuditService;
 import com.chatopera.cc.socketio.message.Message;
 import com.chatopera.compose4j.Functional;
 import com.chatopera.compose4j.Middleware;
@@ -24,7 +24,7 @@ public class ComposeMw3 implements Middleware<PeerContext> {
             ComposeMw3.class);
 
     @Autowired
-    private AgentAuditProxy agentAuditProxy;
+    private AgentAuditService agentAuditService;
 
     @Override
     public void apply(final PeerContext ctx, final Functional next) {
@@ -71,7 +71,7 @@ public class ComposeMw3 implements Middleware<PeerContext> {
             // 忽略坐席转出事件
             return;
         }
-        agentAuditProxy.publishMessage(message.getAgentUser(), message.getChannelMessage(),
+        agentAuditService.publishMessage(message.getAgentUser(), message.getChannelMessage(),
                 Enums.MessageType.toValue(("audit_" + ctx.getMsgType().toString()))
         );
     }

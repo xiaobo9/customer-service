@@ -109,7 +109,7 @@ public class AgentAuditController extends Handler {
     private TagRelationRepository tagRelationRes;
 
     @Autowired
-    private BlackEntityProxy blackEntityProxy;
+    private BlackEntityService blackEntityService;
 
     @Autowired
     private BrokerPublisher brokerPublisher;
@@ -651,7 +651,7 @@ public class AgentAuditController extends Handler {
         payload.put("orgi", orgi);
         ModelAndView view = end(request, agentuserid);
         // 更新或创建黑名单
-        blackEntityProxy.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
+        blackEntityService.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
 
         // 创建定时任务 取消拉黑
         brokerPublisher.send(new MqMessage().destination(Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST)

@@ -22,11 +22,11 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
-public class LeaveMsgProxy {
-    private final static Logger logger = LoggerFactory.getLogger(LeaveMsgProxy.class);
+@Service
+public class LeaveMsgService {
+    private final static Logger logger = LoggerFactory.getLogger(LeaveMsgService.class);
 
     @Autowired
     private SNSAccountRepository snsAccountRes;

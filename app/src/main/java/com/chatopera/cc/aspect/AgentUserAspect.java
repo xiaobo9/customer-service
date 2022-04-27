@@ -19,7 +19,7 @@ package com.chatopera.cc.aspect;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
-import com.chatopera.cc.service.AgentAuditProxy;
+import com.chatopera.cc.service.AgentAuditService;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.entity.AgentUser;
 import org.apache.commons.lang.StringUtils;
@@ -51,7 +51,7 @@ public class AgentUserAspect {
     private RedisCommand redisCommand;
 
     @Autowired
-    private AgentAuditProxy agentAuditProxy;
+    private AgentAuditService agentAuditService;
 
     @After("execution(* com.github.xiaobo9.repository.AgentUserRepository.save(..))")
     public void save(final JoinPoint joinPoint) {
@@ -66,7 +66,7 @@ public class AgentUserAspect {
         }
 
         // 更新坐席监控信息
-        agentAuditProxy.updateAgentUserAudits(agentUser);
+        agentAuditService.updateAgentUserAudits(agentUser);
 
         // 同步缓存
         cacheService.putAgentUserByOrgi(agentUser, agentUser.getOrgi());

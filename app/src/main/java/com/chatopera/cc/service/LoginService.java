@@ -32,7 +32,7 @@ public class LoginService {
     private AgentProxyService agentServiceService;
 
     @Autowired
-    private AgentSessionProxy agentSessionProxy;
+    private AgentSessionService agentSessionService;
 
     @Autowired
     private UserService userService;
@@ -50,7 +50,7 @@ public class LoginService {
         // 设置登录用户的状态
         loginUser.setLogin(true);
         // 更新redis session信息，用以支持sso
-        agentSessionProxy.updateUserSession(loginUser.getId(), UUIDUtils.removeHyphen(sessionId), loginUser.getOrgi());
+        agentSessionService.updateUserSession(loginUser.getId(), UUIDUtils.removeHyphen(sessionId), loginUser.getOrgi());
         loginUser.setSessionid(UUIDUtils.removeHyphen(sessionId));
 
         List<UserRole> userRoleList = userRoleRes.findByOrgiAndUser(loginUser.getOrgi(), loginUser);

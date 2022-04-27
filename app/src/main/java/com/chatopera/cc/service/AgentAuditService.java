@@ -20,28 +20,27 @@ import com.chatopera.cc.activemq.BrokerPublisher;
 import com.chatopera.cc.activemq.MqMessage;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.cache.CacheService;
-import com.github.xiaobo9.commons.exception.CacheEx;
 import com.chatopera.cc.util.SerializeUtil;
-import com.github.xiaobo9.commons.enums.Enums;
-import com.github.xiaobo9.entity.AgentUser;
 import com.github.xiaobo9.bean.AgentUserAudit;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.exception.CacheEx;
+import com.github.xiaobo9.entity.AgentUser;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * 会话监控常用方法
  */
-@Component
-public class AgentAuditProxy {
+@Service
+public class AgentAuditService {
 
-    private final static Logger logger = LoggerFactory.getLogger(AgentAuditProxy.class);
+    private final static Logger logger = LoggerFactory.getLogger(AgentAuditService.class);
 
     @Autowired
     private BrokerPublisher brokerPublisher;

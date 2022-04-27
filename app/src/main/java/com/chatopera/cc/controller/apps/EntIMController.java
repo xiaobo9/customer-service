@@ -25,7 +25,7 @@ import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncEntIM;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.service.AttachmentProxy;
+import com.chatopera.cc.service.AttachmentService;
 import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.service.UploadService;
 import com.chatopera.cc.socketio.client.NettyClients;
@@ -86,7 +86,7 @@ public class EntIMController extends Handler {
     private JpaBlobHelper jpaBlobHelper;
 
     @Autowired
-    AttachmentProxy attachmentProxy;
+    AttachmentService attachmentService;
 
     @Autowired
     PeerSyncEntIM peerSyncEntIM;
@@ -415,7 +415,7 @@ public class EntIMController extends Handler {
                 sf.setData(jpaBlobHelper.createBlob(multipart.getInputStream(), multipart.getSize()));
                 streamingFileRepository.save(sf);
 
-                String id = attachmentProxy.processAttachmentFile(multipart,
+                String id = attachmentService.processAttachmentFile(multipart,
                         fileid, logined.getOrgi(), logined.getId()
                 );
                 upload = new UploadStatus("0", "/res/file.html?id=" + id);

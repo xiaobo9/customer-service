@@ -28,7 +28,7 @@ import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.cache.RedisKey;
 import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.peer.PeerSyncIM;
-import com.chatopera.cc.service.AgentStatusProxy;
+import com.chatopera.cc.service.AgentStatusService;
 import com.chatopera.cc.service.AgentUserService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.Message;
@@ -58,7 +58,7 @@ public class ACDAgentService {
     private ACDMessageHelper acdMessageHelper;
 
     @Autowired
-    private AgentStatusProxy agentStatusProxy;
+    private AgentStatusService agentStatusService;
 
     @Autowired
     private ACDPolicyService acdPolicyService;
@@ -244,7 +244,7 @@ public class ACDAgentService {
                 break;
             }
         }
-        agentStatusProxy.broadcastAgentsStatus(orgi, "agent", "success", agentno);
+        agentStatusService.broadcastAgentsStatus(orgi, "agent", "success", agentno);
     }
 
     /**
@@ -290,7 +290,7 @@ public class ACDAgentService {
                         Enums.MessageType.NEW, agentUser.getAgentno(), outMessage, true);
 
                 // 通知更新在线数据
-                agentStatusProxy.broadcastAgentsStatus(agentUser.getOrgi(), "agent", "pickup", agentStatus.getAgentno());
+                agentStatusService.broadcastAgentsStatus(agentUser.getOrgi(), "agent", "pickup", agentStatus.getAgentno());
             }
         } catch (Exception ex) {
             logger.warn("[assignVisitors] fail to process service", ex);
@@ -444,7 +444,7 @@ public class ACDAgentService {
                     assignVisitors(agentStatus.getAgentno(), orgi);
                 }
             }
-            agentStatusProxy.broadcastAgentsStatus(
+            agentStatusService.broadcastAgentsStatus(
                     orgi, "end", "success", agentUser != null ? agentUser.getId() : null);
         } else {
             logger.info("[finishAgentService] orgi {}, invalid agent user, should not be null", orgi);

@@ -735,7 +735,7 @@ public class CacheService {
     public <T extends Serializable> List<T> findOneSystemListByIdAndOrgi(final String id, final String orgi) {
         String serialized = redisCommand.getHashKV(RedisKey.getSystemHashKeyByOrgi(orgi), id);
         if (StringUtils.isNotBlank(serialized)) {
-            return (List<T>) SerializeUtil.deserialize(serialized);
+            return SerializeUtil.deserialize(serialized);
         }
         return null;
     }
@@ -743,7 +743,7 @@ public class CacheService {
     public <TK, TV extends Serializable> Map<TK, TV> findOneSystemMapByIdAndOrgi(final String id, final String orgi) {
         String serialized = redisCommand.getHashKV(RedisKey.getSystemHashKeyByOrgi(orgi), id);
         if (StringUtils.isNotBlank(serialized)) {
-            return (Map<TK, TV>) SerializeUtil.deserialize(serialized);
+            return SerializeUtil.deserialize(serialized);
         }
         return null;
     }

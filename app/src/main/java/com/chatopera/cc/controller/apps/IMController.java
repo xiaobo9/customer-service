@@ -530,6 +530,7 @@ public class IMController extends Handler {
             ModelMap map,
             HttpServletRequest request,
             HttpServletResponse response,
+            @Valid Contacts contacts,
             @Valid final String orgi,
             @Valid final String aiid,
             @Valid final String traceid,
@@ -545,7 +546,6 @@ public class IMController extends Handler {
             @Valid final String sessionid,
             @Valid final String skill,
             @Valid final String agent,
-            @Valid Contacts contacts,
             @Valid final String product,
             @Valid final String description,
             @Valid final String imgurl,
@@ -553,17 +553,17 @@ public class IMController extends Handler {
             @Valid final String purl,
             @Valid final boolean isInvite) throws Exception {
         logger.info("[index] orgi {}, skill {}, agent {}, traceid {}, isInvite {}, exchange {}", orgi, skill, agent, traceid, isInvite, exchange);
-        Map<String, String> sessionMessageObj = cacheService.findOneSystemMapByIdAndOrgi(sessionid, orgi);
+        Map<String, String> sessionMsg = cacheService.findOneSystemMapByIdAndOrgi(sessionid, orgi);
 
         HttpSession session = request.getSession();
-        if (sessionMessageObj != null) {
-            session.setAttribute("Sessionusername", sessionMessageObj.get("username"));
-            session.setAttribute("Sessioncid", sessionMessageObj.get("cid"));
-            session.setAttribute("Sessioncompany_name", sessionMessageObj.get("company_name"));
-            session.setAttribute("Sessionsid", sessionMessageObj.get("sid"));
-            session.setAttribute("Sessionsystem_name", sessionMessageObj.get("system_name"));
-            session.setAttribute("sessionid", sessionMessageObj.get("sessionid"));
-            session.setAttribute("Sessionuid", sessionMessageObj.get("uid"));
+        if (sessionMsg != null) {
+            session.setAttribute("Sessionusername", sessionMsg.get("username"));
+            session.setAttribute("Sessioncid", sessionMsg.get("cid"));
+            session.setAttribute("Sessioncompany_name", sessionMsg.get("company_name"));
+            session.setAttribute("Sessionsid", sessionMsg.get("sid"));
+            session.setAttribute("Sessionsystem_name", sessionMsg.get("system_name"));
+            session.setAttribute("sessionid", sessionMsg.get("sessionid"));
+            session.setAttribute("Sessionuid", sessionMsg.get("uid"));
         }
 
         ModelAndView view = request(super.pageTplResponse("/apps/im/index"));
@@ -576,16 +576,12 @@ public class IMController extends Handler {
             return view;
         }
 
-        String randomUserId; // 随机生成OnlineUser的用户名，使用了浏览器指纹做唯一性KEY
-        if (StringUtils.isNotBlank(userid)) {
-            randomUserId = Base62Utils.genIDByKey(userid);
-        } else {
-            randomUserId = Base62Utils.genIDByKey(sessionid);
-        }
+        // 随机生成OnlineUser的用户名，使用了浏览器指纹做唯一性KEY
+        String randomUserId = Base62Utils.genIDByKey(StringUtils.isNotBlank(userid) ? userid : sessionid);
         String nickname;
 
-        if (sessionMessageObj != null) {
-            nickname = sessionMessageObj.get("username") + "@" + sessionMessageObj.get("company_name");
+        if (sessionMsg != null) {
+            nickname = sessionMsg.get("username") + "@" + sessionMsg.get("company_name");
         } else if (session.getAttribute("Sessionusername") != null) {
             String struname = (String) session.getAttribute("Sessionusername");
             String strcname = (String) session.getAttribute("Sessioncompany_name");

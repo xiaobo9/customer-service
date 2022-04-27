@@ -19,7 +19,7 @@ package com.chatopera.cc.activemq;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.cache.CacheService;
 import com.github.xiaobo9.commons.exception.ServerException;
-import com.chatopera.cc.service.AgentAuditProxy;
+import com.chatopera.cc.service.AgentAuditService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.util.SerializeUtil;
 import com.github.xiaobo9.entity.AgentUser;
@@ -45,7 +45,7 @@ public class AgentAuditSubscription {
     private CacheService cacheService;
 
     @Autowired
-    private AgentAuditProxy agentAuditProxy;
+    private AgentAuditService agentAuditService;
 
     @Autowired
     private AgentUserRepository agentUserRes;
@@ -72,7 +72,7 @@ public class AgentAuditSubscription {
                         json.get("agentUserId").getAsString()).orElseGet(() -> {
                     final AgentUser agentUser = agentUserRes.findById(json.get("agentUserId").getAsString()).orElse(null);
                     if (agentUser != null) {
-                        return agentAuditProxy.updateAgentUserAudits(agentUser);
+                        return agentAuditService.updateAgentUserAudits(agentUser);
                     } else {
                         logger.warn(
                                 "[onMessage] can not find agent user by id {}", json.get("agentUserId").getAsString());

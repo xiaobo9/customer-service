@@ -24,16 +24,16 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /**
  * 坐席的登录会话管理
  * 存入user的session，存储这组信息是为了让客户的账号只能在一个浏览器内登录使用
  * 如果一个用户账号在多个浏览器使用，则登出之前的登录，只保留最后一个登录正常使用
  */
-@Component
-public class AgentSessionProxy {
-    private final static Logger logger = LoggerFactory.getLogger(AgentSessionProxy.class);
+@Service
+public class AgentSessionService {
+    private final static Logger logger = LoggerFactory.getLogger(AgentSessionService.class);
 
     @Autowired
     private CacheService cacheService;

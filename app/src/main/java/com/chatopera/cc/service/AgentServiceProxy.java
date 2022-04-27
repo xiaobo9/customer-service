@@ -22,10 +22,10 @@ import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.es.QuickReplyRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.github.xiaobo9.commons.utils.mobile.MobileAddress;
-import com.github.xiaobo9.commons.utils.mobile.MobileNumberUtils;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.utils.mobile.MobileAddress;
+import com.github.xiaobo9.commons.utils.mobile.MobileNumberUtils;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.*;
 import org.apache.commons.lang.StringUtils;
@@ -34,13 +34,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
-@Component
+@Service
 public class AgentServiceProxy {
     private final static Logger logger = LoggerFactory.getLogger(AgentServiceProxy.class);
 

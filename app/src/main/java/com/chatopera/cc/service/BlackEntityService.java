@@ -24,12 +24,12 @@ import com.github.xiaobo9.repository.AgentServiceRepository;
 import com.github.xiaobo9.repository.BlackListRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
-@Component
-public class BlackEntityProxy {
+@Service
+public class BlackEntityService {
 
     @Autowired
     private BlackListRepository blackListRes;

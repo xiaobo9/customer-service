@@ -163,7 +163,7 @@
      private JpaBlobHelper jpaBlobHelper;
 
      @Autowired
-     private BlackEntityProxy blackEntityProxy;
+     private BlackEntityService blackEntityService;
 
      @Autowired
      private CacheService cacheService;
@@ -181,7 +181,7 @@
      private BrokerPublisher brokerPublisher;
 
      @Autowired
-     private AgentStatusProxy agentStatusProxy;
+     private AgentStatusService agentStatusService;
 
      @Autowired
      private UserService userService;
@@ -598,7 +598,7 @@
          cacheService.putAgentStatusByOrgi(agentStatus, orgi);
          agentStatusRes.save(agentStatus);
 
-         agentStatusProxy.broadcastAgentsStatus(orgi, "agent", "notready", agentStatus.getAgentno());
+         agentStatusService.broadcastAgentsStatus(orgi, "agent", "notready", agentStatus.getAgentno());
 
          acdWorkMonitor.recordAgentStatus(agentStatus.getAgentno(),
                  agentStatus.getUsername(),
@@ -643,7 +643,7 @@
          cacheService.putAgentStatusByOrgi(agentStatus, super.getOrgi(request));
          agentStatusRes.save(agentStatus);
 
-         agentStatusProxy.broadcastAgentsStatus(super.getOrgi(request), "agent", "busy", logined.getId());
+         agentStatusService.broadcastAgentsStatus(super.getOrgi(request), "agent", "busy", logined.getId());
 
          return request(super.pageTplResponse("/public/success"));
      }
@@ -804,7 +804,7 @@
          ModelAndView view = end(request, agentuserid);
 
          // 更新或创建黑名单
-         blackEntityProxy.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
+         blackEntityService.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
 
          // 创建定时任务 取消拉黑
          brokerPublisher.send(new MqMessage().destination(Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST)
