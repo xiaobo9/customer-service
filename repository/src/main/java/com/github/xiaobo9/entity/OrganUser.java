@@ -17,6 +17,8 @@
 
 package com.github.xiaobo9.entity;
 
+import com.github.xiaobo9.entity.keys.OrganUserId;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;

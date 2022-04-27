@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.xiaobo9.entity;
+package com.github.xiaobo9.entity.keys;
 
 import org.apache.commons.lang3.StringUtils;
 
