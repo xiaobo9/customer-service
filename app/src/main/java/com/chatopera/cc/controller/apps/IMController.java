@@ -556,15 +556,7 @@ public class IMController extends Handler {
         Map<String, String> sessionMsg = cacheService.findOneSystemMapByIdAndOrgi(sessionid, orgi);
 
         HttpSession session = request.getSession();
-        if (sessionMsg != null) {
-            session.setAttribute("Sessionusername", sessionMsg.get("username"));
-            session.setAttribute("Sessioncid", sessionMsg.get("cid"));
-            session.setAttribute("Sessioncompany_name", sessionMsg.get("company_name"));
-            session.setAttribute("Sessionsid", sessionMsg.get("sid"));
-            session.setAttribute("Sessionsystem_name", sessionMsg.get("system_name"));
-            session.setAttribute("sessionid", sessionMsg.get("sessionid"));
-            session.setAttribute("Sessionuid", sessionMsg.get("uid"));
-        }
+        someSession(sessionMsg, session);
 
         ModelAndView view = request(super.pageTplResponse("/apps/im/index"));
         BlackEntity blackEntity = cacheService.findOneBlackEntityByUserIdAndOrgi(userid, Constants.SYSTEM_ORGI).orElse(null);
@@ -776,6 +768,18 @@ public class IMController extends Handler {
         updateInviteRecord(orgi, traceid, title, url, userid);
         logger.info("[index] return view");
         return view;
+    }
+
+    private void someSession(Map<String, String> sessionMsg, HttpSession session) {
+        if (sessionMsg != null) {
+            session.setAttribute("Sessionusername", sessionMsg.get("username"));
+            session.setAttribute("Sessioncid", sessionMsg.get("cid"));
+            session.setAttribute("Sessioncompany_name", sessionMsg.get("company_name"));
+            session.setAttribute("Sessionsid", sessionMsg.get("sid"));
+            session.setAttribute("Sessionsystem_name", sessionMsg.get("system_name"));
+            session.setAttribute("sessionid", sessionMsg.get("sessionid"));
+            session.setAttribute("Sessionuid", sessionMsg.get("uid"));
+        }
     }
 
     private void addAttribute(ModelMap map, String key, String value) {

@@ -416,7 +416,8 @@ public class Handler {
      * @return
      */
     public ModelAndView request(Viewport data) {
-        return new ModelAndView(data.getTemplet() != null ? data.getTemplet() : data.getPage(), "data", data);
+        String viewName = data.getTemplet() != null ? data.getTemplet() : data.getPage();
+        return new ModelAndView(viewName, "data", data);
     }
 
     protected PageRequest page(HttpServletRequest request) {
