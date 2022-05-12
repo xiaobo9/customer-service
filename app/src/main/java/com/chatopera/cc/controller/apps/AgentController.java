@@ -50,6 +50,7 @@
  import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
  import com.github.xiaobo9.repository.*;
  import com.github.xiaobo9.commons.utils.UUIDUtils;
+ import com.github.xiaobo9.service.BlackEntityService;
  import freemarker.template.TemplateException;
  import org.apache.commons.lang.StringUtils;
  import org.slf4j.Logger;
@@ -804,7 +805,7 @@
          ModelAndView view = end(request, agentuserid);
 
          // 更新或创建黑名单
-         blackEntityService.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
+         blackEntityService.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid);
 
          // 创建定时任务 取消拉黑
          brokerPublisher.send(new MqMessage().destination(Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST)
@@ -843,11 +844,9 @@
      @RequestMapping("/image/upload.html")
      @Menu(type = "im", subtype = "image", access = false)
      public ModelAndView upload(
-             ModelMap map,
-             HttpServletRequest request,
-             @RequestParam(value = "imgFile", required = false) MultipartFile multipart,
-             @Valid String id,
-             @Valid boolean paste) throws IOException {
+             ModelMap map, HttpServletRequest request,
+             @RequestParam(value = "imgFile") MultipartFile multipart,
+             @Valid String id, @Valid boolean paste) throws IOException {
          logger.info("[upload] image file, agentUser id {}, paste {}", id, paste);
          final User logined = super.getUser(request);
          final String orgi = super.getOrgi(request);
@@ -855,19 +854,21 @@
          UploadStatus notify;
          final AgentUser agentUser = agentUserRes.findByIdAndOrgi(id, orgi);
 
-         if (multipart != null && multipart.getOriginalFilename().lastIndexOf(".") > 0) {
-             try {
-                 StreamingFile sf = agentServiceService.saveFileIntoMySQLBlob(logined, multipart);
-                 // 发送通知
-                 if (!paste) {
-                     agentServiceService.sendFileMessageByAgent(logined, agentUser, multipart, sf);
-                 }
-                 notify = new UploadStatus("0", sf.getFileUrl());
-             } catch (ServerException e) {
-                 notify = new UploadStatus("请选择文件");
-             }
-         } else {
+         if (multipart.getOriginalFilename() == null || multipart.getOriginalFilename().lastIndexOf(".") <= 0) {
              notify = new UploadStatus("请选择图片文件");
+             map.addAttribute("upload", notify);
+             return view;
+         }
+
+         try {
+             StreamingFile sf = agentServiceService.saveFileIntoMySQLBlob(logined, multipart);
+             // 发送通知
+             if (!paste) {
+                 agentServiceService.sendFileMessageByAgent(logined, agentUser, multipart, sf);
+             }
+             notify = new UploadStatus("0", sf.getFileUrl());
+         } catch (ServerException e) {
+             notify = new UploadStatus("请选择文件");
          }
          map.addAttribute("upload", notify);
          return view;

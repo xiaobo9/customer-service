@@ -33,7 +33,7 @@ public class BatchDataProcess implements JPAProcess{
 	public BatchDataProcess(MetadataTable metadata , ESDataExchangeImpl esDataExchangeImpl) {
 		this.metadata = metadata ;
 		this.esDataExchangeImpl = esDataExchangeImpl ;
-		builder = MainContext.getTemplet().getClient().prepareBulk() ;
+		builder = MainContext.getTemplate().getClient().prepareBulk() ;
 	}
 	
 	@SuppressWarnings("unchecked")

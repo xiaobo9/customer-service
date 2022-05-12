@@ -77,7 +77,7 @@ public class ChatMessage implements java.io.Serializable {
     private String headimgurl;        //用户头像 ，临时用
 
     private String filename;        //文件名
-    private int filesize;            //文件尺寸
+    private long filesize;            //文件尺寸
     private String attachmentid;    //附件ID
 
     private boolean datastatus;    //数据状态，是否已撤回消息
@@ -359,11 +359,11 @@ public class ChatMessage implements java.io.Serializable {
         this.filename = filename;
     }
 
-    public int getFilesize() {
+    public long getFilesize() {
         return filesize;
     }
 
-    public void setFilesize(int filesize) {
+    public void setFilesize(long filesize) {
         this.filesize = filesize;
     }
 

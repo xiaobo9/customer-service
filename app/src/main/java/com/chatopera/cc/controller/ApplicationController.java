@@ -72,9 +72,6 @@ public class ApplicationController extends Handler {
     @Autowired
     private CacheService cacheService;
 
-    @Value("${tongji.baidu.sitekey}")
-    private String tongjiBaiduSiteKey;
-
     @Autowired
     private OrganService organService;
 
@@ -130,11 +127,6 @@ public class ApplicationController extends Handler {
                 }
                 view.addObject("webrtc", webrtcData);
             }));
-        }
-
-        if (StringUtils.isNotBlank(tongjiBaiduSiteKey) && !StringUtils.equalsIgnoreCase(tongjiBaiduSiteKey, "placeholder")) {
-            logger.info("tongjiBaiduSiteKey: {}", tongjiBaiduSiteKey);
-            view.addObject("tongjiBaiduSiteKey", tongjiBaiduSiteKey);
         }
 
         return view;

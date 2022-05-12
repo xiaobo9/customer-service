@@ -58,7 +58,7 @@ public class HumanUtils {
      * @param msgtype
      * @param userid
      */
-    protected static void processMessage(final ChatMessage chatMessage, final String msgtype, final String userid) {
+    public static void processMessage(final ChatMessage chatMessage, final String msgtype, final String userid) {
         logger.info("[processMessage] userid {}, msgtype {}", userid, msgtype);
         AgentUser agentUser = MainContext.getCache().findOneAgentUserByUserIdAndOrgi(
                 userid, Constants.SYSTEM_ORGI).orElse(null);

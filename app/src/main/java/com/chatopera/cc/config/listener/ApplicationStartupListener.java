@@ -57,6 +57,6 @@ public class ApplicationStartupListener implements ApplicationListener<ContextRe
             elasticSearchTemplate.putMapping(Favorites.class);
             elasticSearchTemplate.putMapping(WorkOrders.class);
         }
-        MainContext.setTemplet(elasticSearchTemplate);
+        MainContext.setTemplate(elasticSearchTemplate);
     }
 }

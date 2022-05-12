@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.chatopera.cc.service;
+package com.github.xiaobo9.service;
 
 import com.chatopera.cc.cache.CacheService;
 import com.github.xiaobo9.entity.AgentService;
@@ -42,22 +42,13 @@ public class BlackEntityService {
 
     /**
      * 更新或创建黑名单记录
-     *
-     * @param pre
-     * @param owner
-     * @param userid
-     * @param orgi
-     * @param agentserviceid
-     * @param agentuserid
-     * @return
      */
-    public BlackEntity updateOrCreateBlackEntity(
+    public void updateOrCreateBlackEntity(
             final BlackEntity pre,
             final User owner,
             final String userid,
             final String orgi,
-            final String agentserviceid,
-            final String agentuserid) {
+            final String agentserviceid) {
         final BlackEntity blackEntityUpdated = cacheService.findOneBlackEntityByUserIdAndOrgi(
                 userid, orgi).orElseGet(
                 () -> {
@@ -100,6 +91,5 @@ public class BlackEntityService {
 
         blackListRes.save(blackEntityUpdated);
 
-        return blackEntityUpdated;
     }
 }

@@ -22,25 +22,24 @@ import com.chatopera.cc.acd.ACDWorkMonitor;
 import com.chatopera.cc.basic.*;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
-import com.github.xiaobo9.model.UploadStatus;
-import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.chatopera.cc.controller.vo.IMUploadFileBO;
+import com.chatopera.cc.controller.vo.IMVO;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.service.OnlineUserService;
-import com.chatopera.cc.service.SystemConfigService;
-import com.chatopera.cc.service.UploadService;
-import com.chatopera.cc.socketio.util.RichMediaUtils;
+import com.chatopera.cc.service.*;
 import com.chatopera.cc.util.*;
 import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.github.xiaobo9.commons.kit.StringKit;
 import com.github.xiaobo9.commons.utils.Base62Utils;
-import com.github.xiaobo9.commons.utils.MD5Utils;
-import com.github.xiaobo9.entity.*;
-import com.github.xiaobo9.repository.*;
 import com.github.xiaobo9.commons.utils.BrowserClient;
+import com.github.xiaobo9.commons.utils.MD5Utils;
 import com.github.xiaobo9.commons.utils.UUIDUtils;
-import freemarker.template.TemplateException;
-import org.apache.commons.io.FileUtils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.model.UploadStatus;
+import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.service.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,15 +52,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -73,7 +68,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * FIXME method tooooooo long
@@ -96,6 +94,11 @@ public class IMController extends Handler {
     @Autowired
     private OnlineUserRepository onlineUserRes;
 
+    @Autowired
+    private AttachmentService attachmentService;
+
+    @Autowired
+    private IMService imService;
     @Value("${uk.im.server.port}")
     private Integer port;
 
@@ -136,9 +139,6 @@ public class IMController extends Handler {
     private AgentUserRepository agentUserRepository;
 
     @Autowired
-    private AttachmentRepository attachementRes;
-
-    @Autowired
     private ContactsRepository contactsRes;
 
     @Autowired
@@ -162,28 +162,18 @@ public class IMController extends Handler {
     @Autowired
     private OnlineUserService onlineUserService;
 
-    @PostConstruct
-    private void init() {
-    }
+    @Autowired
+    private DictService dictService;
 
     /**
      * 在客户或第三方网页内，写入聊天控件
-     *
-     * @param request
-     * @param id
-     * @param userid
-     * @param title
-     * @param aiid
-     * @return
      */
     @RequestMapping("/{id}.html")
     @Menu(type = "im", subtype = "point", access = true)
     public ModelAndView point(
-            HttpServletRequest request,
-            @PathVariable String id,
-            @Valid String userid,
-            @Valid String title,
-            @Valid String aiid) {
+            HttpServletRequest request, @PathVariable String id,
+            @Valid String userid, @Valid String title, @Valid String aiid) {
+
         ModelAndView view = request(super.pageTplResponse("/apps/im/point"));
         view.addObject("channelVisitorSeparate", channelWebIMVisitorSeparate);
 
@@ -240,15 +230,8 @@ public class IMController extends Handler {
                 // 记录用户行为日志
                 // 每次有一个新网页加载出聊天控件，都会生成一个userHistory
                 UserHistory userHistory = new UserHistory();
-                String url = request.getHeader("referer");
-                if (StringUtils.isNotBlank(url)) {
-                    if (url.length() > 255) {
-                        userHistory.setUrl(url.substring(0, 255));
-                    } else {
-                        userHistory.setUrl(url);
-                    }
-                    userHistory.setReferer(userHistory.getUrl());
-                }
+                userHistory.setUrl(StringKit.subLongString(request.getHeader("referer"), 255));
+                userHistory.setReferer(userHistory.getUrl());
                 userHistory.setParam(MainUtils.getParameter(request));
                 userHistory.setMaintype("send");
                 userHistory.setSubtype("point");
@@ -264,13 +247,7 @@ public class IMController extends Handler {
                     userHistory.setOrgi(Constants.SYSTEM_ORGI);
                 }
 
-                if (StringUtils.isNotBlank(title)) {
-                    if (title.length() > 255) {
-                        userHistory.setTitle(title.substring(0, 255));
-                    } else {
-                        userHistory.setTitle(title);
-                    }
-                }
+                userHistory.setTitle(StringKit.subLongString(title, 255));
 
                 userHistory.setOrgi(invite.getOrgi());
                 userHistory.setAppid(id);
@@ -301,47 +278,16 @@ public class IMController extends Handler {
                 // 用户的浏览历史会有很大的数据量，目前强制开启
                 userHistoryRes.save(userHistory);
 
-                view.addObject(
-                        "pointAd",
-                        MainUtils.getPointAdv(Enums.AdPosEnum.POINT.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI));
-                view.addObject(
-                        "inviteAd",
-                        MainUtils.getPointAdv(Enums.AdPosEnum.INVITE.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI));
+                AdType pointAdv = imService.getPointAdv(Enums.AdPosEnum.POINT.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI);
+                view.addObject("pointAd", pointAdv);
+                AdType inviteAd = imService.getPointAdv(Enums.AdPosEnum.INVITE.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI);
+                view.addObject("inviteAd", inviteAd);
             } else {
                 logger.info("[point] invite id {}, orgi {} not found", id, Constants.SYSTEM_ORGI);
             }
         }
 
         return view;
-    }
-
-    private void createContacts(
-            final String gid,
-            final String uid,
-            final String cid,
-            final String sid,
-            final String username,
-            final String company_name,
-            final String system_name) {
-        if (StringUtils.isNotBlank(uid) && StringUtils.isNotBlank(sid) && StringUtils.isNotBlank(cid)) {
-            Contacts data = contactsRes.findOneByWluidAndWlsidAndWlcidAndDatastatus(uid, sid, cid, false);
-            if (data == null) {
-                data = new Contacts();
-                data.setCreater(gid);
-                data.setOrgi(Constants.SYSTEM_ORGI);
-                data.setWluid(uid);
-                data.setWlusername(username);
-                data.setWlcid(cid);
-                data.setWlcompany_name(company_name);
-                data.setWlsid(sid);
-                data.setWlsystem_name(system_name);
-                data.setName(username + '@' + company_name);
-                data.setShares("all");
-
-                data.setPinyin(PinYinTools.getInstance().getFirstPinYin(username));
-                contactsRes.save(data);
-            }
-        }
     }
 
     @ResponseBody
@@ -357,7 +303,7 @@ public class IMController extends Handler {
             String sid,
             String system_name,
             Boolean whitelist_mode,
-            @RequestParam String sessionid) throws IOException, TemplateException {
+            @RequestParam String sessionid) {
         final User logined = super.getUser(request);
 
         request.getSession().setAttribute("Sessionuid", uid);
@@ -384,9 +330,27 @@ public class IMController extends Handler {
         Contacts usc = contactsRes.findOneByWluidAndWlsidAndWlcidAndDatastatus(uid, sid, cid, false);
         if (usc != null) {
             return "usc";
-        } else {
-            if (!whitelist_mode) {
-                createContacts(logined.getId(), uid, cid, sid, username, company_name, system_name);
+        }
+        if (whitelist_mode) {
+            return "ok";
+        }
+        if (StringUtils.isNotBlank(uid) && StringUtils.isNotBlank(sid) && StringUtils.isNotBlank(cid)) {
+            Contacts data = contactsRes.findOneByWluidAndWlsidAndWlcidAndDatastatus(uid, sid, cid, false);
+            if (data == null) {
+                data = new Contacts();
+                data.setCreater(logined.getId());
+                data.setOrgi(Constants.SYSTEM_ORGI);
+                data.setWluid(uid);
+                data.setWlusername(username);
+                data.setWlcid(cid);
+                data.setWlcompany_name(company_name);
+                data.setWlsid(sid);
+                data.setWlsystem_name(system_name);
+                data.setName(username + '@' + company_name);
+                data.setShares("all");
+
+                data.setPinyin(PinYinTools.getInstance().getFirstPinYin(username));
+                contactsRes.save(data);
             }
         }
 
@@ -408,13 +372,6 @@ public class IMController extends Handler {
 
     /**
      * 延时获取用户端浏览器的跟踪ID
-     *
-     * @param request
-     * @param orgi
-     * @param appid
-     * @param userid
-     * @param sign
-     * @return
      */
     @RequestMapping("/online")
     @Menu(type = "im", subtype = "online", access = true)
@@ -454,24 +411,6 @@ public class IMController extends Handler {
 
             CousultInvite invite = onlineUserService.consult(appid, orgi);
 
-            // TODO 该contacts的识别并不准确，因为不能关联
-//                if (invite != null && invite.isTraceuser()) {
-//                    contacts = OnlineUserProxy.OnlineUserProxy.processContacts(orgi, contacts, appid, userid);
-//                }
-//
-//                if (StringUtils.isNotBlank(sign)) {
-//                    OnlineUserProxy.online(
-//                            super.getIMUser(request, sign, contacts != null ? contacts.getName() : null, sessionid),
-//                            orgi,
-//                            sessionid,
-//                            Enums.OnlineUserType.WEBIM.toString(),
-//                            request,
-//                            Enums.ChannelType.WEBIM.toString(),
-//                            appid,
-//                            contacts,
-//                            invite);
-            // END 取消关联contacts
-
             if (StringUtils.isNotBlank(sign)) {
                 onlineUserService.online(
                         super.getIMUser(request, sign, null, sessionid),
@@ -496,80 +435,33 @@ public class IMController extends Handler {
      * <p>
      * 此处返回给访客新的页面：根据访客/坐席/机器人的情况进行判断
      * 如果此处返回的是人工服务，那么此处并不寻找服务的坐席信息，而是在返回的页面中查找
-     *
-     * @param map
-     * @param request
-     * @param response
-     * @param orgi
-     * @param aiid
-     * @param traceid
-     * @param exchange
-     * @param title
-     * @param url
-     * @param mobile
-     * @param ai
-     * @param client
-     * @param type
-     * @param appid
-     * @param userid
-     * @param sessionid
-     * @param skill
-     * @param agent
-     * @param contacts
-     * @param product
-     * @param description
-     * @param imgurl
-     * @param pid
-     * @param purl
-     * @return
-     * @throws Exception
      */
     @RequestMapping("/index.html")
     @Menu(type = "im", subtype = "index", access = true)
     public ModelAndView index(
-            ModelMap map,
+            ModelMap modelMap,
             HttpServletRequest request,
             HttpServletResponse response,
             @Valid Contacts contacts,
-            @Valid final String orgi,
-            @Valid final String aiid,
-            @Valid final String traceid,
-            @Valid final String exchange,
-            @Valid final String title,
-            @Valid final String url,
-            @Valid final String mobile,
-            @Valid final String ai,
-            @Valid final String client,
-            @Valid final String type,
-            @Valid final String appid,
-            @Valid final String userid,
-            @Valid final String sessionid,
-            @Valid final String skill,
-            @Valid final String agent,
-            @Valid final String product,
-            @Valid final String description,
-            @Valid final String imgurl,
-            @Valid final String pid,
-            @Valid final String purl,
-            @Valid final boolean isInvite) throws Exception {
-        logger.info("[index] orgi {}, skill {}, agent {}, traceid {}, isInvite {}, exchange {}", orgi, skill, agent, traceid, isInvite, exchange);
-        Map<String, String> sessionMsg = cacheService.findOneSystemMapByIdAndOrgi(sessionid, orgi);
+            @Valid IMVO imvo) throws Exception {
+        logger.info("{}", imvo);
+        Map<String, String> sessionMsg = cacheService.findOneSystemMapByIdAndOrgi(imvo.getSessionid(), imvo.getOrgi());
 
         HttpSession session = request.getSession();
         someSession(sessionMsg, session);
 
         ModelAndView view = request(super.pageTplResponse("/apps/im/index"));
-        BlackEntity blackEntity = cacheService.findOneBlackEntityByUserIdAndOrgi(userid, Constants.SYSTEM_ORGI).orElse(null);
-        CousultInvite invite = onlineUserService.consult(appid, orgi);
+        BlackEntity blackEntity = cacheService.findOneBlackEntityByUserIdAndOrgi(imvo.getUserid(), Constants.SYSTEM_ORGI).orElse(null);
+        CousultInvite invite = onlineUserService.consult(imvo.getAppid(), imvo.getOrgi());
         // appid 或者 用户在黑名单里直接返回
-        if (StringUtils.isBlank(appid) || (blackEntity != null && blackEntity.inBlackStatus())) {
+        if (StringUtils.isBlank(imvo.getAppid()) || (blackEntity != null && blackEntity.inBlackStatus())) {
             view.addObject("inviteData", invite);
             logger.info("[index] return view");
             return view;
         }
 
         // 随机生成OnlineUser的用户名，使用了浏览器指纹做唯一性KEY
-        String randomUserId = Base62Utils.genIDByKey(StringUtils.isNotBlank(userid) ? userid : sessionid);
+        String randomUserId = Base62Utils.genIDByKey(StringUtils.isNotBlank(imvo.getUserid()) ? imvo.getUserid() : imvo.getSessionid());
         String nickname;
 
         if (sessionMsg != null) {
@@ -585,52 +477,52 @@ public class IMController extends Handler {
         view.addObject("nickname", nickname);
 
         boolean consult = true;                //是否已收集用户信息
-        SessionConfig sessionConfig = acdPolicyService.initSessionConfig(skill, orgi);
+        SessionConfig sessionConfig = acdPolicyService.initSessionConfig(imvo.getSkill(), imvo.getOrgi());
 
         // 强制开启满意调查问卷
         sessionConfig.setSatisfaction(true);
 
-        map.addAttribute("sessionConfig", sessionConfig);
-        map.addAttribute("hostname", request.getServerName());
+        modelMap.addAttribute("sessionConfig", sessionConfig);
+        modelMap.addAttribute("hostname", request.getServerName());
 
         if (sslPort != null) {
-            map.addAttribute("port", sslPort);
+            modelMap.addAttribute("port", sslPort);
         } else {
-            map.addAttribute("port", port);
+            modelMap.addAttribute("port", port);
         }
 
-        map.addAttribute("appid", appid);
-        map.addAttribute("userid", userid);
-        map.addAttribute("schema", request.getScheme());
-        map.addAttribute("sessionid", sessionid);
-        map.addAttribute("isInvite", isInvite);
+        modelMap.addAttribute("appid", imvo.getAppid());
+        modelMap.addAttribute("userid", imvo.getUserid());
+        modelMap.addAttribute("schema", request.getScheme());
+        modelMap.addAttribute("sessionid", imvo.getSessionid());
+        modelMap.addAttribute("isInvite", imvo.isInvite());
 
 
-        view.addObject("product", product);
-        view.addObject("description", description);
-        view.addObject("imgurl", imgurl);
-        view.addObject("pid", pid);
-        view.addObject("purl", purl);
+        view.addObject("product", imvo.getProduct());
+        view.addObject("description", imvo.getDescription());
+        view.addObject("imgurl", imvo.getImgurl());
+        view.addObject("pid", imvo.getPid());
+        view.addObject("purl", imvo.getPurl());
 
-        map.addAttribute("ip", MD5Utils.md5(request.getRemoteAddr()));
+        modelMap.addAttribute("ip", MD5Utils.md5(request.getRemoteAddr()));
 
-        addAttribute(map, "traceid", traceid);
-        addAttribute(map, "exchange", exchange);
-        addAttribute(map, "title", title);
-        addAttribute(map, "url", traceid);
+        addAttribute(modelMap, "traceid", imvo.getTraceid());
+        addAttribute(modelMap, "exchange", imvo.getExchange());
+        addAttribute(modelMap, "title", imvo.getTitle());
+        addAttribute(modelMap, "url", imvo.getUrl());
 
-        map.addAttribute("cskefuport", request.getServerPort());
+        modelMap.addAttribute("cskefuport", request.getServerPort());
 
         // 先检查 invite
         if (invite == null) {
-            logger.info("[index] can not invite for appid {}, orgi {}", appid, orgi);
+            logger.info("[index] can not invite for appid {}, orgi {}", imvo.getAppid(), imvo.getOrgi());
             return view;
         }
         logger.info("[index] invite id {}, orgi {}", invite.getId(), invite.getOrgi());
-        map.addAttribute("orgi", invite.getOrgi());
-        map.addAttribute("inviteData", invite);
+        modelMap.addAttribute("orgi", invite.getOrgi());
+        modelMap.addAttribute("inviteData", invite);
 
-        addAttribute(map, "aiid", StringUtils.isNotBlank(aiid) ? aiid : invite.getAiid());
+        addAttribute(modelMap, "aiid", StringUtils.isNotBlank(imvo.getAiid()) ? imvo.getAiid() : invite.getAiid());
 
         AgentReport report;
         if (invite.isSkill() && invite.isConsult_skill_fixed()) { // 绑定技能组
@@ -647,11 +539,12 @@ public class IMController extends Handler {
             // 没有坐席在线，进入留言
             isLeavemsg = true;
             boolean isInWorkingHours = MainUtils.isInWorkingHours(sessionConfig.getWorkinghours());
-            map.addAttribute("isInWorkingHours", isInWorkingHours);
+            modelMap.addAttribute("isInWorkingHours", isInWorkingHours);
             view = request(super.pageTplResponse("/apps/im/leavemsg"));
         } else if (invite.isConsult_info()) {    //启用了信息收集，从Request获取， 或从 Cookies 里去
             // 验证 OnlineUser 信息
-            if (contacts != null && StringUtils.isNotBlank(contacts.getName())) {    //contacts用于传递信息，并不和 联系人表发生 关联，contacts信息传递给 Socket.IO，然后赋值给 AgentUser，最终赋值给 AgentService永久存储
+            // contacts用于传递信息，并不和 联系人表发生 关联，contacts信息传递给 Socket.IO，然后赋值给 AgentUser，最终赋值给 AgentService永久存储
+            if (StringUtils.isNotBlank(contacts.getName())) {
                 consult = true;
                 //存入 Cookies
                 if (invite.isConsult_info_cookies()) {
@@ -674,44 +567,40 @@ public class IMController extends Handler {
             }
         } else {
             // TODO 该contacts的识别并不准确，因为不能关联
-//                    contacts = OnlineUserProxy.processContacts(invite.getOrgi(), contacts, appid, userid);
+            // contacts = OnlineUserProxy.processContacts(invite.getOrgi(), contacts, appid, userid);
             String uid = (String) session.getAttribute("Sessionuid");
             String sid = (String) session.getAttribute("Sessionsid");
             String cid = (String) session.getAttribute("Sessioncid");
 
             if (StringUtils.isNotBlank(uid) && StringUtils.isNotBlank(sid) && StringUtils.isNotBlank(cid)) {
-                Contacts contacts1 = contactsRes.findOneByWluidAndWlsidAndWlcidAndDatastatus(
-                        uid, sid, cid, false);
+                Contacts contacts1 = contactsRes.findOneByWluidAndWlsidAndWlcidAndDatastatus(uid, sid, cid, false);
                 if (contacts1 != null) {
-                    agentUserRepository.findOneByUseridAndOrgi(userid, orgi).ifPresent(p -> {
+                    agentUserRepository.findOneByUseridAndOrgi(imvo.getUserid(), imvo.getOrgi()).ifPresent(p -> {
                         // 关联AgentService的联系人
                         if (StringUtils.isNotBlank(p.getAgentserviceid())) {
                             AgentService agentService = agentServiceRepository.findById(p.getAgentserviceid()).orElseThrow(EntityNotFoundEx::new);
                             agentService.setContactsid(contacts1.getId());
                         }
 
-                        saveAgentUserContacts(request, orgi, appid, userid, session, contacts1, p);
+                        saveAgentUserContacts(request, imvo.getOrgi(), imvo.getAppid(), imvo.getUserid(), session, contacts1, p);
                     });
                 }
             }
         }
 
-        addAttribute(map, "client", client);
-        addAttribute(map, "skill", skill);
-        addAttribute(map, "agent", agent);
-        addAttribute(map, "type", type);
+        vo2ModelMap(imvo, modelMap);
 
-        map.addAttribute("contacts", contacts);
+        modelMap.addAttribute("contacts", contacts);
 
         IP ipdata = IPTools.findGeography(IPUtils.getIpAddress(request));
-        map.addAttribute("skillGroups", onlineUserService.organ(invite.getOrgi(), ipdata, invite, true));
+        modelMap.addAttribute("skillGroups", onlineUserService.organ(invite.getOrgi(), ipdata, invite, true));
 
         if (consult) {
-            if (contacts != null && StringUtils.isNotBlank(contacts.getName())) {
+            if (StringUtils.isNotBlank(contacts.getName())) {
                 nickname = contacts.getName();
             }
 
-            map.addAttribute("username", nickname);
+            modelMap.addAttribute("username", nickname);
             boolean isChatbotAgentFirst = false;
             boolean isEnableExchangeAgentType = false;
 
@@ -724,13 +613,13 @@ public class IMController extends Handler {
                     isEnableExchangeAgentType = !StringUtils.equals(bot.getWorkmode(), Constants.CHATBOT_CHATBOT_ONLY);
 
                     // 判断是否机器人客服优先
-                    if (StringUtils.equals(ai, "true") || (invite.isAifirst() && ai == null)) {
+                    if (StringUtils.equals(imvo.getAi(), "true") || (invite.isAifirst() && imvo.getAi() == null)) {
                         isChatbotAgentFirst = true;
                     }
                 }
             }
 
-            map.addAttribute("exchange", isEnableExchangeAgentType);
+            modelMap.addAttribute("exchange", isEnableExchangeAgentType);
 
             if (isChatbotAgentFirst) {
                 // 机器人坐席
@@ -741,33 +630,40 @@ public class IMController extends Handler {
                 chatbotConfig.put("botfirst", Boolean.toString(invite.isAifirst()));
                 chatbotConfig.put("isai", Boolean.toString(invite.isAi()));
 
-                map.addAttribute("chatbotConfig", chatbotConfig);
+                modelMap.addAttribute("chatbotConfig", chatbotConfig);
                 view = request(super.pageTplResponse("/apps/im/chatbot/index"));
-                if (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(mobile)) {
+                if (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(imvo.getMobile())) {
                     view = request(super.pageTplResponse("/apps/im/chatbot/mobile"));        // 智能机器人 移动端
                 }
             } else {
                 // 维持人工坐席的设定，检查是否进入留言
-                if (!isLeavemsg && (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(mobile))) {
+                if (!isLeavemsg && (BrowserClient.isMobile(request.getHeader("User-Agent")) || StringUtils.isNotBlank(imvo.getMobile()))) {
                     view = request(super.pageTplResponse("/apps/im/mobile"));    // WebIM移动端。再次点选技能组？
                 }
             }
 
             PageRequest pageRequest = super.page(request, Direction.DESC, "updatetime");
-            map.addAttribute("chatMessageList", chatMessageRes.findByUsessionAndOrgi(userid, orgi, pageRequest));
+            modelMap.addAttribute("chatMessageList", chatMessageRes.findByUsessionAndOrgi(imvo.getUserid(), imvo.getOrgi(), pageRequest));
         }
-        view.addObject("commentList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_COMMENT_DIC));
-        view.addObject("commentItemList", Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_COMMENT_ITEM_DIC));
-        view.addObject("welcomeAd", MainUtils.getPointAdv(Enums.AdPosEnum.WELCOME.toString(), skill, orgi));
-        view.addObject("imageAd", MainUtils.getPointAdv(Enums.AdPosEnum.IMAGE.toString(), skill, orgi));
+        view.addObject("commentList", dictService.getDic(Constants.CSKEFU_SYSTEM_COMMENT_DIC));
+        view.addObject("commentItemList", dictService.getDic(Constants.CSKEFU_SYSTEM_COMMENT_ITEM_DIC));
+        view.addObject("welcomeAd", imService.getPointAdv(Enums.AdPosEnum.WELCOME.toString(), imvo.getSkill(), imvo.getOrgi()));
+        view.addObject("imageAd", imService.getPointAdv(Enums.AdPosEnum.IMAGE.toString(), imvo.getSkill(), imvo.getOrgi()));
 
         // 确定"接受邀请"被处理后，通知浏览器关闭弹出窗口
-        onlineUserService.sendWebIMClients(userid, "accept");
+        onlineUserService.sendWebIMClients(imvo.getUserid(), "accept");
 
         // 更新InviteRecord
-        updateInviteRecord(orgi, traceid, title, url, userid);
+        updateInviteRecord(imvo.getOrgi(), imvo.getTraceid(), imvo.getTitle(), imvo.getUrl(), imvo.getUserid());
         logger.info("[index] return view");
         return view;
+    }
+
+    private void vo2ModelMap(IMVO imvo, ModelMap map) {
+        addAttribute(map, "client", imvo.getClient());
+        addAttribute(map, "skill", imvo.getSkill());
+        addAttribute(map, "agent", imvo.getAgent());
+        addAttribute(map, "type", imvo.getType());
     }
 
     private void someSession(Map<String, String> sessionMsg, HttpSession session) {
@@ -824,6 +720,7 @@ public class IMController extends Handler {
     }
 
     private void saveAgentUserContacts(HttpServletRequest request, String orgi, String appid, String userid, HttpSession session, Contacts contacts1, AgentUser p) {
+        User user = super.getUser(request);
         // 关联AgentUserContact的联系人
         // NOTE: 如果该userid已经有了关联的Contact则忽略，继续使用之前的
         agentUserContactsRes.findOneByUseridAndOrgi(userid, orgi)
@@ -835,7 +732,7 @@ public class IMController extends Handler {
                     agentUserContacts.setContactsid(contacts1.getId());
                     agentUserContacts.setUserid(userid);
                     agentUserContacts.setUsername((String) session.getAttribute("Sessionusername"));
-                    agentUserContacts.setCreater(super.getUser(request).getId());
+                    agentUserContacts.setCreater(user.getId());
                     agentUserContacts.setCreatetime(new Date());
                     agentUserContactsRes.save(agentUserContacts);
                 });
@@ -977,7 +874,7 @@ public class IMController extends Handler {
 
     @RequestMapping("/refuse")
     @Menu(type = "im", subtype = "refuse", access = true)
-    public void refuse(@Valid String orgi, @Valid String userid) throws Exception {
+    public void refuse(@Valid String orgi, @Valid String userid) {
         onlineUserService.refuseInvite(userid);
         final Date threshold = new Date(System.currentTimeMillis() - Constants.WEBIM_AGENT_INVITE_TIMEOUT);
         Page<InviteRecord> inviteRecords = inviteRecordRes.findByUseridAndOrgiAndResultAndCreatetimeGreaterThan(
@@ -985,12 +882,8 @@ public class IMController extends Handler {
                 orgi,
                 Enums.OnlineUserInviteStatus.DEFAULT.toString(),
                 threshold,
-                new PageRequest(
-                        0,
-                        1,
-                        Direction.DESC,
-                        "createtime"));
-        if (inviteRecords.getContent() != null && inviteRecords.getContent().size() > 0) {
+                PageRequest.of(0, 1, Direction.DESC, "createtime"));
+        if (inviteRecords.getContent().size() > 0) {
             InviteRecord record = inviteRecords.getContent().get(0);
             record.setUpdatetime(new Date());
             record.setResponsetime((int) (System.currentTimeMillis() - record.getCreatetime().getTime()));
@@ -1001,13 +894,11 @@ public class IMController extends Handler {
 
     @RequestMapping("/satis")
     @Menu(type = "im", subtype = "satis", access = true)
-    public void satis(@Valid AgentServiceSatis satis) throws Exception {
+    public void satis(@Valid AgentServiceSatis satis) {
         if (satis != null && StringUtils.isNotBlank(satis.getId())) {
             int count = agentServiceSatisRes.countById(satis.getId());
             if (count == 1) {
-                if (StringUtils.isNotBlank(satis.getSatiscomment()) && satis.getSatiscomment().length() > 255) {
-                    satis.setSatiscomment(satis.getSatiscomment().substring(0, 255));
-                }
+                satis.setSatiscomment(StringKit.subLongString(satis.getSatiscomment(), 255));
                 satis.setSatisfaction(true);
                 satis.setSatistime(new Date());
                 agentServiceSatisRes.save(satis);
@@ -1015,11 +906,11 @@ public class IMController extends Handler {
         }
     }
 
-    @RequestMapping("/image/upload.html")
+    @PostMapping("/image/upload.html")
     @Menu(type = "im", subtype = "image", access = true)
     public ModelAndView upload(
             ModelMap map, HttpServletRequest request,
-            @RequestParam(value = "imgFile", required = false) MultipartFile multipart,
+            @RequestParam(value = "imgFile") MultipartFile multipart,
             @Valid String channel,
             @Valid String userid,
             @Valid String username,
@@ -1027,106 +918,75 @@ public class IMController extends Handler {
             @Valid String orgi,
             @Valid String paste) throws IOException {
         ModelAndView view = request(super.pageTplResponse("/apps/im/upload"));
-        final User logined = super.getUser(request);
 
-        if (multipart == null || multipart.getOriginalFilename().lastIndexOf(".") <= 0 || StringUtils.isBlank(userid)) {
-            UploadStatus upload = new UploadStatus("请选择文件");
-            map.addAttribute("upload", upload);
+        String originalFilename = multipart.getOriginalFilename();
+        if (originalFilename == null || originalFilename.lastIndexOf(".") <= 0 || StringUtils.isBlank(userid)) {
+            map.addAttribute("upload", new UploadStatus("请选择文件"));
             return view;
         }
 
-        UploadStatus upload;
+        final User user = super.getUser(request);
+
         String fileid = UUIDUtils.getUUID();
         StreamingFile sf = new StreamingFile();
         sf.setId(fileid);
-        sf.setName(multipart.getOriginalFilename());
+        sf.setName(originalFilename);
         sf.setMime(multipart.getContentType());
+        // 图片
+        long size = multipart.getSize();
         if (multipart.getContentType() != null && multipart.getContentType().contains(Constants.ATTACHMENT_TYPE_IMAGE)) {
-            String invalid = StreamingFileUtil.validate(Constants.ATTACHMENT_TYPE_IMAGE, multipart.getOriginalFilename());
-            if (invalid == null) {
-                File imageFile = new File(uploadService.getUploadPath(), fileid + "_original");
-                FileCopyUtils.copy(multipart.getBytes(), imageFile);
-                File thumbnail = new File(uploadService.getUploadPath(), fileid);
-                ThumbnailUtils.processImage(thumbnail, imageFile);
-
-                //  存储数据库
-                sf.setData(jpaBlobHelper.createBlob(multipart.getInputStream(), multipart.getSize()));
-                sf.setThumbnail(jpaBlobHelper.createBlobWithFile(thumbnail));
-                streamingFileRepository.save(sf);
-                String fileUrl = "/res/image.html?id=" + fileid;
-                upload = new UploadStatus("0", fileUrl);
-
-                if (paste == null) {
-                    if (StringUtils.isNotBlank(channel)) {
-                        RichMediaUtils.uploadImageWithChannel(
-                                fileUrl, fileid, (int) multipart.getSize(), multipart.getName(), channel, userid,
-                                username, appid, orgi);
-                    } else {
-                        RichMediaUtils.uploadImage(fileUrl, fileid, (int) multipart.getSize(), multipart.getName(), userid);
-                    }
-                }
-            } else {
-                upload = new UploadStatus(invalid);
+            String invalid = StreamingFileUtil.validate(Constants.ATTACHMENT_TYPE_IMAGE, originalFilename);
+            if (invalid != null) {
+                map.addAttribute("upload", new UploadStatus(invalid));
+                return view;
             }
-        } else {
-            String invalid = StreamingFileUtil.validate(Constants.ATTACHMENT_TYPE_FILE, multipart.getOriginalFilename());
-            if (invalid == null) {
-                // 存储数据库
-                sf.setData(jpaBlobHelper.createBlob(multipart.getInputStream(), multipart.getSize()));
-                streamingFileRepository.save(sf);
+            File imageFile = new File(uploadService.getUploadPath(), fileid + "_original");
+            FileCopyUtils.copy(multipart.getBytes(), imageFile);
+            File thumbnail = new File(uploadService.getUploadPath(), fileid);
+            ThumbnailUtils.processImage(thumbnail, imageFile);
 
-                // 存储到本地硬盘
-                String id = processAttachmentFile(multipart, fileid, logined.getOrgi(), logined.getId());
-                upload = new UploadStatus("0", "/res/file.html?id=" + id);
-                String file = "/res/file.html?id=" + id;
+            //  存储数据库
+            sf.setData(jpaBlobHelper.createBlob(multipart.getInputStream(), size));
+            sf.setThumbnail(jpaBlobHelper.createBlobWithFile(thumbnail));
+            streamingFileRepository.save(sf);
+            String fileUrl = "/res/image.html?id=" + fileid;
 
-                File tempFile = new File(multipart.getOriginalFilename());
+            if (paste == null) {
+                IMUploadFileBO bo = IMUploadFileBO.of(fileid, multipart.getName(), size, fileUrl, userid)
+                        .setName(username);
                 if (StringUtils.isNotBlank(channel)) {
-                    RichMediaUtils.uploadFileWithChannel(
-                            file, (int) multipart.getSize(), tempFile.getName(), channel, userid, username, appid,
-                            orgi, id);
+                    imService.uploadImageWithChannel(bo, channel, appid, orgi);
                 } else {
-                    RichMediaUtils.uploadFile(file, (int) multipart.getSize(), tempFile.getName(), userid, id);
+                    imService.uploadImage(bo);
                 }
-            } else {
-                upload = new UploadStatus(invalid);
             }
+            map.addAttribute("upload", new UploadStatus("0", fileUrl));
+            return view;
+        }
+
+        // 文件
+        String invalid = StreamingFileUtil.validate(Constants.ATTACHMENT_TYPE_FILE, originalFilename);
+        if (invalid != null) {
+            map.addAttribute("upload", new UploadStatus(invalid));
+            return view;
+        }
+        // 存储数据库
+        sf.setData(jpaBlobHelper.createBlob(multipart.getInputStream(), size));
+        streamingFileRepository.save(sf);
+
+        // 存储到本地硬盘
+        String id = attachmentService.processAttachmentFile(multipart, fileid, user.getOrgi(), user.getId()).getId();
+        String fileUrl = "/res/file.html?id=" + id;
+        UploadStatus upload = new UploadStatus("0", fileUrl);
+
+        IMUploadFileBO bo = IMUploadFileBO.of(id, originalFilename, size, fileUrl, userid)
+                .setUserName(username);
+        if (StringUtils.isNotBlank(channel)) {
+            imService.uploadFileWithChannel(bo, channel, appid, orgi);
+        } else {
+            imService.uploadFile(bo);
         }
         map.addAttribute("upload", upload);
         return view;
-    }
-
-
-    private String processAttachmentFile(
-            final MultipartFile file,
-            final String fileid,
-            final String orgi,
-            final String creator) throws IOException {
-        String id = null;
-
-        if (file.getSize() > 0) {            //文件尺寸 限制 ？在 启动 配置中 设置 的最大值，其他地方不做限制
-            AttachmentFile attachmentFile = new AttachmentFile();
-            attachmentFile.setCreater(creator);
-            attachmentFile.setOrgi(orgi);
-            attachmentFile.setModel(Enums.ModelType.WEBIM.toString());
-            attachmentFile.setFilelength((int) file.getSize());
-            if (file.getContentType() != null && file.getContentType().length() > 255) {
-                attachmentFile.setFiletype(file.getContentType().substring(0, 255));
-            } else {
-                attachmentFile.setFiletype(file.getContentType());
-            }
-            String originalFilename = URLDecoder.decode(file.getOriginalFilename(), "utf-8");
-            File uploadFile = new File(originalFilename);
-            String fileName = uploadFile.getName();
-            attachmentFile.setTitle(fileName.length() > 255 ? fileName.substring(0, 255) : fileName);
-            if (StringUtils.isNotBlank(attachmentFile.getFiletype()) && attachmentFile.getFiletype().contains("image")) {
-                attachmentFile.setImage(true);
-            }
-            attachmentFile.setFileid(fileid);
-            attachementRes.save(attachmentFile);
-            FileUtils.writeByteArrayToFile(new File(uploadService.getUploadPath(), fileid), file.getBytes());
-            id = attachmentFile.getId();
-        }
-        return id;
     }
 }

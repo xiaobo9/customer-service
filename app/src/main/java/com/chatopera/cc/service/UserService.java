@@ -455,4 +455,7 @@ public class UserService {
         }
     }
 
+    public User getUserByUserNameAndPassword(String username, String password) {
+        return userRes.findByUsernameAndPasswordAndDatastatus(username, MD5Utils.md5(password), false);
+    }
 }

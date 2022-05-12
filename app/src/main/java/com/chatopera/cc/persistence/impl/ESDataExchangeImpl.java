@@ -94,11 +94,11 @@ public class ESDataExchangeImpl {
             dataBean.setId((String) dataBean.getValues().get("id"));
         }
         if (!StringUtils.isBlank(dataBean.getType())) {
-            indexRequestBuilder = MainContext.getTemplet().getClient().prepareIndex(Constants.SYSTEM_ORGI,
+            indexRequestBuilder = MainContext.getTemplate().getClient().prepareIndex(Constants.SYSTEM_ORGI,
                             dataBean.getType(), dataBean.getId())
                     .setSource(processValues(dataBean));
         } else {
-            indexRequestBuilder = MainContext.getTemplet().getClient().prepareIndex(Constants.SYSTEM_ORGI,
+            indexRequestBuilder = MainContext.getTemplate().getClient().prepareIndex(Constants.SYSTEM_ORGI,
                             dataBean.getTable().getTablename(), dataBean.getId())
                     .setSource(processValues(dataBean));
         }
@@ -133,7 +133,7 @@ public class ESDataExchangeImpl {
 
     public void deleteIObject(UKDataBean dataBean) throws Exception {
         if (dataBean.getTable() != null) {
-            MainContext.getTemplet().getClient()
+            MainContext.getTemplate().getClient()
                     .prepareDelete(Constants.SYSTEM_ORGI, dataBean.getTable().getTablename(), dataBean.getId())
                     .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
                     .execute()
@@ -149,15 +149,15 @@ public class ESDataExchangeImpl {
      * @throws Exception
      */
     public void deleteByCon(QueryBuilder query, String type) throws Exception {
-        BulkRequestBuilder bulkRequest = MainContext.getTemplet().getClient().prepareBulk();
-        SearchResponse response = MainContext.getTemplet().getClient().prepareSearch(Constants.SYSTEM_ORGI).setTypes(type)
+        BulkRequestBuilder bulkRequest = MainContext.getTemplate().getClient().prepareBulk();
+        SearchResponse response = MainContext.getTemplate().getClient().prepareSearch(Constants.SYSTEM_ORGI).setTypes(type)
                 .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
                 .setQuery(query)
                 .setFrom(0).setSize(10000).setExplain(true).execute().actionGet();
         if (response.getHits().getTotalHits() > 0) {
             for (SearchHit hit : response.getHits()) {
                 String id = hit.getId();
-                bulkRequest.add(MainContext.getTemplet().getClient().prepareDelete(Constants.SYSTEM_ORGI, type, id).request());
+                bulkRequest.add(MainContext.getTemplate().getClient().prepareDelete(Constants.SYSTEM_ORGI, type, id).request());
             }
             bulkRequest.get();
         }
@@ -165,7 +165,7 @@ public class ESDataExchangeImpl {
 
     public void deleteById(String type, String id) {
         if (!StringUtils.isBlank(type) && !StringUtils.isBlank(id)) {
-            MainContext.getTemplet().getClient()
+            MainContext.getTemplate().getClient()
                     .prepareDelete(Constants.SYSTEM_ORGI, type, id).execute().actionGet();
         }
     }
@@ -173,7 +173,7 @@ public class ESDataExchangeImpl {
 
     public UKDataBean getIObjectByPK(UKDataBean dataBean, String id) {
         if (dataBean.getTable() != null) {
-            GetResponse getResponse = MainContext.getTemplet().getClient()
+            GetResponse getResponse = MainContext.getTemplate().getClient()
                     .prepareGet(Constants.SYSTEM_ORGI,
                             dataBean.getTable().getTablename(), dataBean.getId())
                     .execute().actionGet();
@@ -189,7 +189,7 @@ public class ESDataExchangeImpl {
     public UKDataBean getIObjectByPK(String type, String id) {
         UKDataBean dataBean = new UKDataBean();
         if (!StringUtils.isBlank(type)) {
-            GetResponse getResponse = MainContext.getTemplet().getClient()
+            GetResponse getResponse = MainContext.getTemplate().getClient()
                     .prepareGet(Constants.SYSTEM_ORGI,
                             type, id)
                     .execute().actionGet();
@@ -214,7 +214,7 @@ public class ESDataExchangeImpl {
                 }
             }
         }
-        MainContext.getTemplet().getClient()
+        MainContext.getTemplate().getClient()
                 .prepareUpdate(Constants.SYSTEM_ORGI,
                         dataBean.getTable().getTablename(), dataBean.getId()).setDoc(processValues(dataBean)).execute().actionGet();
     }
@@ -225,7 +225,7 @@ public class ESDataExchangeImpl {
 
     public PageImpl<UKDataBean> findAllPageResult(QueryBuilder query, String index, MetadataTable metadata, Pageable page, boolean loadRef, String types) {
         List<UKDataBean> dataBeanList = new ArrayList<UKDataBean>();
-        SearchRequestBuilder searchBuilder = MainContext.getTemplet().getClient().prepareSearch(Constants.SYSTEM_ORGI);
+        SearchRequestBuilder searchBuilder = MainContext.getTemplate().getClient().prepareSearch(Constants.SYSTEM_ORGI);
         if (!StringUtils.isBlank(types)) {
             searchBuilder.setTypes(types);
         }
@@ -329,7 +329,7 @@ public class ESDataExchangeImpl {
 
     public PageImpl<UKDataBean> findAllPageAggResult(QueryBuilder query, String aggField, Pageable page, boolean loadRef, String types) {
         List<UKDataBean> dataBeanList = new ArrayList<>();
-        SearchRequestBuilder searchBuilder = MainContext.getTemplet().getClient().prepareSearch(Constants.SYSTEM_ORGI);
+        SearchRequestBuilder searchBuilder = MainContext.getTemplate().getClient().prepareSearch(Constants.SYSTEM_ORGI);
         if (!StringUtils.isBlank(types)) {
             searchBuilder.setTypes(types);
         }

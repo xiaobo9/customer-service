@@ -21,8 +21,8 @@ import com.chatopera.cc.acd.ACDVisitorDispatcher;
 import com.chatopera.cc.acd.basic.ACDComposeContext;
 import com.chatopera.cc.acd.basic.ACDMessageHelper;
 import com.chatopera.cc.basic.IPUtils;
-import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.basic.MainUtils;
+import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.service.AgentUserService;
 import com.chatopera.cc.service.OnlineUserService;
@@ -46,9 +46,12 @@ import com.github.xiaobo9.repository.AgentServiceRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 
+@Component
 public class IMEventHandler {
     private final static Logger logger = LoggerFactory.getLogger(IMEventHandler.class);
     protected SocketIOServer server;
@@ -57,10 +60,16 @@ public class IMEventHandler {
         this.server = server;
     }
 
-    static private AgentUserService agentUserService;
-    static private AgentServiceRepository agentServiceRepository;
-    static private ACDVisitorDispatcher acdVisitorDispatcher;
-    static private OnlineUserService onlineUserService;
+    @Autowired
+    private AgentUserService agentUserService;
+    @Autowired
+    private AgentServiceRepository agentServiceRepository;
+    @Autowired
+    private ACDVisitorDispatcher acdVisitorDispatcher;
+    @Autowired
+    private OnlineUserService onlineUserService;
+    @Autowired
+    private CacheService cacheService;
 
     /**
      * 接入访客并未访客寻找坐席服务人员
@@ -152,7 +161,7 @@ public class IMEventHandler {
                         user,
                         isInvite,
                         Enums.ChatInitiatorType.USER.toString());
-                getAcdVisitorDispatcher().enqueue(ctx);
+                acdVisitorDispatcher.enqueue(ctx);
                 ACDServiceRouter.getAcdAgentService().notifyAgentUserProcessResult(ctx);
             } else {
                 logger.warn("[onConnect] invalid connection, no user present.");
@@ -176,9 +185,8 @@ public class IMEventHandler {
                 /**
                  * 用户主动断开服务
                  */
-                MainContext.getCache().findOneAgentUserByUserIdAndOrgi(user, orgi).ifPresent(p -> {
-                    ACDServiceRouter.getAcdAgentService().finishAgentService(p
-                            , orgi);
+                cacheService.findOneAgentUserByUserIdAndOrgi(user, orgi).ifPresent(p -> {
+                    ACDServiceRouter.getAcdAgentService().finishAgentService(p, orgi);
                 });
             } catch (Exception e) {
                 logger.warn("[onDisconnect] error", e);
@@ -194,17 +202,17 @@ public class IMEventHandler {
         String user = client.getHandshakeData().getSingleUrlParam("userid");
         String orgi = client.getHandshakeData().getSingleUrlParam("orgi");
 
-        MainContext.getCache().findOneAgentUserByUserIdAndOrgi(user, orgi).ifPresent(p -> {
+        cacheService.findOneAgentUserByUserIdAndOrgi(user, orgi).ifPresent(p -> {
             p.setName(contacts.getName());
             p.setPhone(contacts.getPhone());
             p.setEmail(contacts.getEmail());
             p.setResion(contacts.getMemo());
             p.setChatbotops(false); // 非机器人客服
             p.setOpttype(Enums.OptType.HUMAN.toString());
-            getAgentUserProxy().save(p);
+            agentUserService.save(p);
         });
 
-        getAgentServiceRepository().findOneByUseridAndOrgiOrderByLogindateDesc(
+        agentServiceRepository.findOneByUseridAndOrgiOrderByLogindateDesc(
                 user, orgi).ifPresent(p -> {
             p.setName(contacts.getName());
             p.setPhone(contacts.getPhone());
@@ -229,7 +237,7 @@ public class IMEventHandler {
         /**
          * 以下代码主要用于检查 访客端的字数限制
          */
-        CousultInvite invite = getOnlineUserProxy().consult(data.getAppid(), data.getOrgi());
+        CousultInvite invite = onlineUserService.consult(data.getAppid(), data.getOrgi());
 
         int dataLength = data.getMessage().length();
         if (invite != null && invite.getMaxwordsnum() > 0) {
@@ -245,34 +253,6 @@ public class IMEventHandler {
          */
         data.setMessage(MainUtils.processEmoti(data.getMessage()));
         HumanUtils.processMessage(data, data.getUserid());
-    }
-
-    private OnlineUserService getOnlineUserProxy() {
-        if (onlineUserService == null) {
-            onlineUserService = MainContext.getContext().getBean(OnlineUserService.class);
-        }
-        return onlineUserService;
-    }
-
-    private static AgentUserService getAgentUserProxy() {
-        if (agentUserService == null) {
-            agentUserService = MainContext.getContext().getBean(AgentUserService.class);
-        }
-        return agentUserService;
-    }
-
-    private static AgentServiceRepository getAgentServiceRepository() {
-        if (agentServiceRepository == null) {
-            agentServiceRepository = MainContext.getContext().getBean(AgentServiceRepository.class);
-        }
-        return agentServiceRepository;
-    }
-
-    private static ACDVisitorDispatcher getAcdVisitorDispatcher() {
-        if (acdVisitorDispatcher == null) {
-            acdVisitorDispatcher = MainContext.getContext().getBean(ACDVisitorDispatcher.class);
-        }
-        return acdVisitorDispatcher;
     }
 
 }

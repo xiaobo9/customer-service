@@ -218,7 +218,6 @@ public class ContactsService {
                 !newValue.getAddress().equals(oldValue.getAddress()) ||
                 !newValue.getGender().equals(oldValue.getGender()) ||
                 !newValue.getProvince().equals(oldValue.getProvince()) ||
-                !newValue.getAddress().equals(oldValue.getAddress()) ||
                 !newValue.getMemo().equals(oldValue.getMemo()) ||
                 !(newValue.getCusbirthday().isEmpty() && StringUtils.isEmpty(oldValue.getCusbirthday())) ||
                 (newValue.getCusbirthday().isEmpty() && StringUtils.isNotEmpty(oldValue.getCusbirthday())) ||

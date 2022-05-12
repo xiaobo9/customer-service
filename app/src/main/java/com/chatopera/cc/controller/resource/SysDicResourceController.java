@@ -17,15 +17,15 @@
 package com.chatopera.cc.controller.resource;
 
 import com.chatopera.cc.controller.Handler;
-import com.chatopera.cc.util.Dict;
+import com.github.xiaobo9.service.DictService;
 import com.chatopera.cc.util.Menu;
 import com.github.xiaobo9.entity.SysDic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,15 +34,17 @@ import java.util.List;
 @Controller
 @RequestMapping("/res")
 public class SysDicResourceController extends Handler {
+    @Autowired
+    private DictService dictService;
 
     @RequestMapping("/dic.html")
     @Menu(type = "resouce", subtype = "dic", access = true)
-    public ModelAndView index(ModelMap map, HttpServletResponse response, @Valid String id, @Valid String name, @Valid String attr, @Valid String style) throws IOException {
-        List<SysDic> itemList = new ArrayList<SysDic>();
-        SysDic sysDic = Dict.getInstance().getDicItem(id);
+    public ModelAndView index(ModelMap map, @Valid String id, @Valid String name, @Valid String attr, @Valid String style) throws IOException {
+        List<SysDic> itemList = new ArrayList<>();
+        SysDic sysDic = dictService.getDicItem(id);
         if (sysDic != null) {
-            SysDic dic = Dict.getInstance().getDicItem(sysDic.getDicid());
-            List<SysDic> sysDicList = Dict.getInstance().getSysDic(dic.getCode());
+            SysDic dic = dictService.getDicItem(sysDic.getDicid());
+            List<SysDic> sysDicList = dictService.getSysDic(dic.getCode());
             for (SysDic item : sysDicList) {
                 if (item.getParentid().equals(id)) {
                     itemList.add(item);

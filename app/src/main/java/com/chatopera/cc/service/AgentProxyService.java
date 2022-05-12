@@ -19,19 +19,22 @@ package com.chatopera.cc.service;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.ThumbnailUtils;
 import com.chatopera.cc.cache.CacheService;
-import com.github.xiaobo9.commons.exception.ServerException;
 import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
-import com.github.xiaobo9.commons.enums.Enums;
-import com.github.xiaobo9.entity.*;
-import com.github.xiaobo9.repository.AgentStatusRepository;
 import com.chatopera.cc.socketio.message.Message;
 import com.github.xiaobo9.commons.enums.AgentStatusEnum;
 import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
-import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.exception.ServerException;
 import com.github.xiaobo9.commons.utils.UUIDUtils;
-import org.apache.commons.io.FileUtils;
+import com.github.xiaobo9.entity.*;
+import com.github.xiaobo9.repository.AgentStatusRepository;
+import com.github.xiaobo9.repository.AgentUserTaskRepository;
+import com.github.xiaobo9.repository.SNSAccountRepository;
+import com.github.xiaobo9.repository.StreamingFileRepository;
+import com.github.xiaobo9.service.AttachmentService;
+import com.github.xiaobo9.service.UploadService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +51,6 @@ import java.util.Map;
 @Service
 public class AgentProxyService {
     private final static Logger logger = LoggerFactory.getLogger(AgentProxyService.class);
-
-    @Autowired
-    private AttachmentRepository attachementRes;
 
     @Autowired
     private JpaBlobHelper jpaBlobHelper;
@@ -75,6 +75,9 @@ public class AgentProxyService {
 
     @Autowired
     private UploadService uploadService;
+
+    @Autowired
+    private AttachmentService attachmentService;
 
     /**
      * 设置一个坐席为就绪状态
@@ -123,9 +126,8 @@ public class AgentProxyService {
 
         // 设置SNSAccount信息
         if (StringUtils.isNotBlank(agentUser.getAppid())) {
-            snsAccountRes.findOneBySnsTypeAndSnsIdAndOrgi(
-                    agentUser.getChannel(), agentUser.getAppid(), agentUser.getOrgi()).ifPresent(
-                    p -> outMessage.setSnsAccount(p));
+            snsAccountRes.findOneBySnsTypeAndSnsIdAndOrgi(agentUser.getChannel(), agentUser.getAppid(), agentUser.getOrgi())
+                    .ifPresent(outMessage::setSnsAccount);
         }
 
         outMessage.setContextid(chatMessage.getContextid());
@@ -178,7 +180,7 @@ public class AgentProxyService {
         // 消息体
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setFilename(multipart.getOriginalFilename());
-        chatMessage.setFilesize((int) multipart.getSize());
+        chatMessage.setFilesize(multipart.getSize());
         chatMessage.setAttachmentid(sf.getId());
         chatMessage.setMessage(sf.getFileUrl());
         chatMessage.setId(UUIDUtils.getUUID());
@@ -222,10 +224,9 @@ public class AgentProxyService {
             // 发送消息给访客
             peerSyncIM.send(Enums.ReceiverType.VISITOR,
                     Enums.ChannelType.toValue(agentUser.getChannel()),
-                    agentUser.getAppid(), Enums.MessageType.MESSAGE,
-                    agentUser.getUserid(),
-                    outMessage,
-                    true);
+                    agentUser.getAppid(),
+                    Enums.MessageType.MESSAGE,
+                    agentUser.getUserid(), outMessage, true);
 
             // 发送给坐席自己
             peerSyncIM.send(Enums.ReceiverType.AGENT,
@@ -249,8 +250,7 @@ public class AgentProxyService {
      * @throws IOException
      * @throws ServerException
      */
-    public StreamingFile saveFileIntoMySQLBlob(final User creator, final MultipartFile multipart) throws
-            IOException, ServerException {
+    public StreamingFile saveFileIntoMySQLBlob(User creator, MultipartFile multipart) throws IOException, ServerException {
 
         String fileid = UUIDUtils.getUUID();
         StreamingFile sf = new StreamingFile();
@@ -267,13 +267,15 @@ public class AgentProxyService {
             sf.setFileUrl("/res/image.html?id=" + fileid);
         } else {
             // 其它类型的文件
-            AttachmentFile attachmentFile = processAttachmentFile(creator, multipart, fileid);
+            if (multipart.getSize() == 0) {
+                throw new ServerException("Empty upload file size.");
+            }
+
+            AttachmentFile attachmentFile = attachmentService.processAttachmentFile(multipart, fileid, creator.getOrgi(), creator.getId());
             sf.setFileUrl("/res/file.html?id=" + attachmentFile.getId());
         }
 
-        /**
-         * 保存文件到MySQL数据库
-         */
+        // 保存文件到MySQL数据库
         sf.setId(fileid);
         sf.setData(jpaBlobHelper.createBlob(multipart.getInputStream(), multipart.getSize()));
         sf.setName(multipart.getOriginalFilename());
@@ -282,50 +284,6 @@ public class AgentProxyService {
         streamingFileRepository.save(sf);
 
         return sf;
-    }
-
-
-    /**
-     * 处理multi part为本地文件
-     *
-     * @param owner
-     * @param multipart
-     * @param fileid
-     * @return
-     * @throws IOException
-     * @throws ServerException
-     */
-    public AttachmentFile processAttachmentFile(
-            final User owner, final MultipartFile multipart,
-            final String fileid) throws IOException, ServerException {
-        if (multipart.getSize() == 0) {
-            throw new ServerException("Empty upload file size.");
-        }
-
-        // 文件尺寸 限制 ？在 启动 配置中 设置 的最大值，其他地方不做限制
-        AttachmentFile attachmentFile = new AttachmentFile();
-        attachmentFile.setCreater(owner.getId());
-        attachmentFile.setOrgi(owner.getOrgi());
-        attachmentFile.setModel(Enums.ModelType.WEBIM.toString());
-        attachmentFile.setFilelength((int) multipart.getSize());
-        if (multipart.getContentType() != null && multipart.getContentType().length() > 255) {
-            attachmentFile.setFiletype(multipart.getContentType().substring(0, 255));
-        } else {
-            attachmentFile.setFiletype(multipart.getContentType());
-        }
-        File uploadFile = new File(multipart.getOriginalFilename());
-        if (uploadFile.getName().length() > 255) {
-            attachmentFile.setTitle(uploadFile.getName().substring(0, 255));
-        } else {
-            attachmentFile.setTitle(uploadFile.getName());
-        }
-        if (StringUtils.isNotBlank(attachmentFile.getFiletype()) && attachmentFile.getFiletype().contains(Constants.ATTACHMENT_TYPE_IMAGE)) {
-            attachmentFile.setImage(true);
-        }
-        attachmentFile.setFileid(fileid);
-        attachementRes.save(attachmentFile);
-        FileUtils.writeByteArrayToFile(new File(uploadService.getUploadPath(), fileid), multipart.getBytes());
-        return attachmentFile;
     }
 
     /**

@@ -68,7 +68,7 @@ public class Message extends AbstractContext {
     // 消息属性
     private String message;              // 文本
     private String filename;             // 文件名
-    private int filesize;                // 文件大小
+    private long filesize;                // 文件大小
 
     // boolean 处理结果
     private boolean isResolved;          // 该请求是否被正常处理
@@ -163,11 +163,11 @@ public class Message extends AbstractContext {
         this.filename = filename;
     }
 
-    public int getFilesize() {
+    public long getFilesize() {
         return filesize;
     }
 
-    public void setFilesize(int filesize) {
+    public void setFilesize(long filesize) {
         this.filesize = filesize;
     }
 

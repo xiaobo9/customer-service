@@ -19,14 +19,11 @@ import com.github.xiaobo9.entity.LeaveMsg;
 import com.github.xiaobo9.entity.SNSAccount;
 import com.github.xiaobo9.repository.SNSAccountRepository;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class LeaveMsgService {
-    private final static Logger logger = LoggerFactory.getLogger(LeaveMsgService.class);
 
     @Autowired
     private SNSAccountRepository snsAccountRes;
@@ -39,15 +36,11 @@ public class LeaveMsgService {
      */
     public boolean resolveChannelBySnsid(final LeaveMsg leaveMsg) {
         if (StringUtils.isNotBlank(leaveMsg.getSnsId())) {
-            snsAccountRes.findBySnsid(leaveMsg.getSnsId()).ifPresent(p -> leaveMsg.setChannel(p));
+            snsAccountRes.findBySnsid(leaveMsg.getSnsId()).ifPresent(leaveMsg::setChannel);
         } else {
             leaveMsg.setChannel(new SNSAccount());
         }
 
-        if (leaveMsg.getChannel() != null && StringUtils.isNotBlank(leaveMsg.getChannel().getName())) {
-            return true;
-        } else {
-            return false;
-        }
+        return leaveMsg.getChannel() != null && StringUtils.isNotBlank(leaveMsg.getChannel().getName());
     }
 }

@@ -28,7 +28,7 @@ public class DataBatProcess implements JPAProcess{
 	
 	public DataBatProcess(ESDataExchangeImpl esDataExchangeImpl) {
 		this.esDataExchangeImpl = esDataExchangeImpl ;
-		builder = MainContext.getTemplet().getClient().prepareBulk() ;
+		builder = MainContext.getTemplate().getClient().prepareBulk() ;
 	}
 	
 	@Override

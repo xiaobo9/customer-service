@@ -28,6 +28,7 @@ import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.*;
 import com.github.xiaobo9.commons.utils.BrowserClient;
 import com.github.xiaobo9.commons.utils.UUIDUtils;
+import com.github.xiaobo9.service.SystemConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

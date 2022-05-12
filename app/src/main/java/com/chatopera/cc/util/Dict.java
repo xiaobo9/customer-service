@@ -16,133 +16,52 @@
  */
 package com.chatopera.cc.util;
 
-import com.chatopera.cc.basic.Constants;
-import com.chatopera.cc.basic.MainContext;
-import com.chatopera.cc.cache.RedisKey;
+import com.github.xiaobo9.service.DictService;
 import com.github.xiaobo9.entity.SysDic;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 // FIXME 换个地方吧
-public class Dict<K, V> extends HashMap<K, V> {
+public class Dict {
 
-    private static final long serialVersionUID = 2110217015030751243L;
-    private static Dict<Object, Object> dict = new Dict<Object, Object>();
-    private static final Logger logger = LoggerFactory.getLogger(Dict.class);
+    private static Dict dict = new Dict();
 
-
-    public static Dict<?, ?> getInstance() {
+    public static Dict getInstance() {
         return dict;
     }
 
+    private static DictService dictService;
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public V get(final Object key) {
-        String keystr = String.valueOf(key);
-        // TODO 从日志中看到，有时会查找key为空的调用，这是为什么？
-        logger.debug("[get] key {}", keystr);
-        Object result = null;
-
-        String serialized = MainContext.getRedisCommand().getHashKV(RedisKey.getSysDicHashKeyByOrgi(Constants.SYSTEM_ORGI), keystr);
-
-        if (StringUtils.isNotBlank(serialized)) {
-            Object obj = SerializeUtil.deserialize(serialized);
-            if (obj instanceof List) {
-                result = getDic(keystr);
-            } else {
-                result = obj;
-            }
-        } else if (keystr.endsWith(".subdic") && keystr.lastIndexOf(".subdic") > 0) {
-            String id = keystr.substring(0, keystr.lastIndexOf(".subdic"));
-            SysDic dic = MainContext.getCache().findOneSysDicByIdAndOrgi(id, Constants.SYSTEM_ORGI);
-            if (dic != null) {
-                SysDic sysDic = MainContext.getCache().findOneSysDicByIdAndOrgi(dic.getDicid(), Constants.SYSTEM_ORGI);
-                result = getDic(sysDic.getCode(), dic.getParentid());
-            }
-        }
-
-        return (V) result;
+    public static void setDictService(DictService dictService) {
+        Dict.dictService = dictService;
     }
+
 
     @NotNull
     public List<SysDic> getDic(final String code) {
-        String serialized = MainContext.getRedisCommand().getHashKV(RedisKey.getSysDicHashKeyByOrgi(Constants.SYSTEM_ORGI), code);
-        if (StringUtils.isBlank(serialized)) {
-            return Collections.emptyList();
-        }
-        Object obj = SerializeUtil.deserialize(serialized);
-        if (obj instanceof List) {
-            List<SysDic> sysDicList = (List<SysDic>) obj;
-            return sysDicList.stream()
-                    .filter(dic -> dic.getDicid().equals(dic.getParentid()))
-                    .collect(Collectors.toList());
-        }
-        return Collections.emptyList();
+        return dictService.getDic(code);
     }
 
     /**
      * 获得一个词典的所有子项，并且每个子项的父都是id
-     *
-     * @param code
-     * @param id
-     * @return
      */
-    @SuppressWarnings("unchecked")
     public List<SysDic> getDic(final String code, final String id) {
-        List<SysDic> result = new ArrayList<SysDic>();
-        String serialized = MainContext.getRedisCommand().getHashKV(RedisKey.getSysDicHashKeyByOrgi(Constants.SYSTEM_ORGI), code);
-
-        if (StringUtils.isNotBlank(serialized)) {
-            Object obj = SerializeUtil.deserialize(serialized);
-            if (obj instanceof List) {
-                List<SysDic> sysDics = (List<SysDic>) obj;
-                for (SysDic dic : sysDics) {
-                    if (dic.getParentid().equals(id)) {
-                        result.add(dic);
-                    }
-                }
-            } else if (obj instanceof SysDic) {
-                result.add((SysDic) obj);
-            } else {
-                logger.warn("[getDic] nothing found for code or id {} with deserialize, this is a potential error.", code);
-            }
-        } else {
-            logger.warn("[getDic] nothing found for code or id {}", code);
-        }
-
-        logger.debug("[getDic list] code or id: {}, dict size {}", code, result.size());
-
-        return result;
+        return dictService.getDic(code, id);
     }
 
 
     /**
      * 获得一个根词典的所有子项
-     *
-     * @param code
-     * @return
      */
-    @SuppressWarnings("unchecked")
     public List<SysDic> getSysDic(String code) {
-        return MainContext.getCache().getSysDicItemsByCodeAndOrgi(code, Constants.SYSTEM_ORGI);
+        return dictService.getSysDic(code);
     }
 
     /**
      * 获得一个词典子项
-     *
-     * @param code
-     * @return
      */
     public SysDic getDicItem(String code) {
-        return MainContext.getCache().findOneSysDicByCodeAndOrgi(code, Constants.SYSTEM_ORGI);
+        return dictService.getDicItem(code);
     }
 }

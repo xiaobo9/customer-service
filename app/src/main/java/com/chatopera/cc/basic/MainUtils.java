@@ -16,11 +16,9 @@
  */
 package com.chatopera.cc.basic;
 
-import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.service.SystemConfigService;
-import com.chatopera.cc.service.TemplateService;
+import com.github.xiaobo9.service.SystemConfigService;
+import com.github.xiaobo9.service.TemplateService;
 import com.chatopera.cc.util.CronTools;
-import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.WebIMReport;
 import com.chatopera.cc.util.WeiXinReport;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -33,7 +31,10 @@ import com.github.xiaobo9.commons.kit.ObjectKit;
 import com.github.xiaobo9.commons.mail.MailSender;
 import com.github.xiaobo9.commons.utils.MD5Utils;
 import com.github.xiaobo9.entity.*;
-import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.repository.AdTypeRepository;
+import com.github.xiaobo9.repository.AreaTypeRepository;
+import com.github.xiaobo9.repository.SystemMessageRepository;
+import com.github.xiaobo9.repository.TablePropertiesRepository;
 import com.googlecode.aviator.AviatorEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -63,8 +64,6 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class MainUtils {
-
-    private static final Random random = new Random();
 
     public static SimpleDateFormat timeRangeDateFormat = new SimpleDateFormat("HH:mm");
 
@@ -128,30 +127,25 @@ public class MainUtils {
         return strb.toString();
     }
 
-    /**
-     * @param request
-     * @return
-     */
     public static String getParameter(HttpServletRequest request) {
-        Enumeration<String> names = request.getParameterNames();
-        StringBuilder strb = new StringBuilder();
-        while (names.hasMoreElements()) {
-            String name = names.nextElement();
-            if (!name.contains("password")) {    //不记录 任何包含 password 的参数内容
-                if (strb.length() > 0) {
-                    strb.append(",");
-                }
-                strb.append(name).append("=").append(request.getParameter(name));
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+            String name = entry.getKey();
+            // 不记录 任何包含 password 的参数内容
+            if (name.contains("password")) {
+                continue;
             }
+            if (builder.length() > 0) {
+                builder.append(",");
+            }
+            String[] value = entry.getValue();
+            builder.append(name).append("=").append(value == null ? null : value[0]);
         }
-        return strb.toString();
-
+        return builder.toString();
     }
 
     /**
      * 获取一天的开始时间
-     *
-     * @return
      */
     public static Date getStartTime() {
         Calendar todayStart = Calendar.getInstance();
@@ -380,13 +374,13 @@ public class MainUtils {
 
     public static String encryption(final String str) {
         BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
-        textEncryptor.setPassword(MainContext.getSystemSecrityPassword());
+        textEncryptor.setPassword(MainContext.getSystemSecurityPassword());
         return textEncryptor.encrypt(str);
     }
 
     public static String decryption(final String str) throws NoSuchAlgorithmException {
         BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
-        textEncryptor.setPassword(MainContext.getSystemSecrityPassword());
+        textEncryptor.setPassword(MainContext.getSystemSecurityPassword());
         return textEncryptor.decrypt(str);
     }
 
@@ -538,65 +532,12 @@ public class MainUtils {
     }
 
     /**
-     * 按照权重获取广告
-     */
-    public static AdType getPointAdv(String adpos, String skill, String orgi) {
-        CacheService cache = MainContext.getCache();
-        List<AdType> adTypes = cache.findOneSystemListByIdAndOrgi(Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi);
-        if (adTypes == null) {
-            AdTypeRepository adRes = MainContext.getContext().getBean(AdTypeRepository.class);
-            adTypes = adRes.findByOrgiAndSkill(orgi, skill);
-            cache.putSystemListByIdAndOrgi(Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi, adTypes);
-        }
-        List<SysDic> sysDicList = Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_ADPOS_DIC);
-        SysDic sysDic = null;
-        for (SysDic dic : sysDicList) {
-            if (dic.getCode().equals(adpos)) {
-                sysDic = dic;
-                break;
-            }
-        }
-        List<AdType> adTypeList = new ArrayList<>();
-        if (sysDic != null) {
-            for (AdType adType : adTypes) {
-                if (adType.getAdpos().equals(sysDic.getId())) {
-                    adTypeList.add(adType);
-                }
-            }
-        }
-        return weight(adTypeList);
-    }
-
-    /**
-     * 按照权重，获取广告内容
-     */
-    private static AdType weight(List<AdType> adList) {
-        if (adList == null || adList.isEmpty()) {
-            return null;
-        }
-        int weight = 0;
-        for (AdType ad : adList) {
-            weight += ad.getWeight();
-        }
-        AdType adType = null;
-        int n = random.nextInt(weight), m = 0;
-        for (AdType ad : adList) {
-            if (m <= n && n < m + ad.getWeight()) {
-                adType = ad;
-                break;
-            }
-            m += ad.getWeight();
-        }
-        return adType;
-    }
-
-    /**
      * 16进制字符串转换为字符串
      *
      * @return
      */
     public static String string2HexString(String strPart) {
-        StringBuffer hexString = new StringBuffer();
+        StringBuilder hexString = new StringBuilder();
         for (int i = 0; i < strPart.length(); i++) {
             int ch = (int) strPart.charAt(i);
             String strHex = Integer.toHexString(ch);

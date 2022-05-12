@@ -18,7 +18,6 @@
 package com.chatopera.cc.basic;
 
 import com.chatopera.cc.cache.CacheService;
-import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.util.SystemEnvHelper;
 import org.apache.commons.lang.StringUtils;
@@ -36,13 +35,11 @@ public class MainContext {
 
     private static boolean imServerRunning = false;  // IM服务状态
 
-    private static Set<String> modules = new HashSet<String>();
+    private static final Set<String> modules = new HashSet<>();
 
     private static ApplicationContext applicationContext;
 
-    private static ElasticsearchTemplate templet;
-
-    private static RedisCommand redisCommand;
+    private static ElasticsearchTemplate template;
 
     private static CacheService cacheService;
 
@@ -56,20 +53,18 @@ public class MainContext {
         return applicationContext;
     }
 
-    public static ElasticsearchTemplate getTemplet() {
-        return templet;
+    public static ElasticsearchTemplate getTemplate() {
+        return template;
     }
 
-    public static void setTemplet(ElasticsearchTemplate templet) {
-        MainContext.templet = templet;
+    public static void setTemplate(ElasticsearchTemplate template) {
+        MainContext.template = template;
     }
 
     /**
      * 系统级的加密密码 ， 从CA获取
-     *
-     * @return
      */
-    public static String getSystemSecrityPassword() {
+    public static String getSystemSecurityPassword() {
         return SystemEnvHelper.parseFromApplicationProps("application.security.password");
     }
 
@@ -82,28 +77,16 @@ public class MainContext {
     }
 
     /**
-     * Redis底层接口
-     */
-    public final static RedisCommand getRedisCommand() {
-        if (redisCommand == null) {
-            redisCommand = getContext().getBean(RedisCommand.class);
-        }
-        return redisCommand;
-    }
-
-    /**
      * 缓存管理
-     *
-     * @return
      */
-    public final static CacheService getCache() {
+    public static CacheService getCache() {
         if (cacheService == null) {
             cacheService = getContext().getBean(CacheService.class);
         }
         return cacheService;
     }
 
-    public final static PeerSyncIM getPeerSyncIM() {
+    public static PeerSyncIM getPeerSyncIM() {
         if (peerSyncIM == null) {
             peerSyncIM = getContext().getBean(PeerSyncIM.class);
         }
@@ -112,8 +95,6 @@ public class MainContext {
 
     /**
      * 开启模块
-     *
-     * @param moduleName
      */
     public static void enableModule(final String moduleName) {
         logger.info("[module] enable module {}", moduleName);
@@ -130,8 +111,6 @@ public class MainContext {
 
     /**
      * 获得Model
-     *
-     * @return
      */
     public static Set<String> getModules() {
         return modules;

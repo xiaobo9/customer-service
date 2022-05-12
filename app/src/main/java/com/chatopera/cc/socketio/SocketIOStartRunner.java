@@ -16,13 +16,13 @@
  */
 package com.chatopera.cc.socketio;
 
-import com.github.xiaobo9.commons.enums.Enums;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.socketio.handler.AgentEventHandler;
 import com.chatopera.cc.socketio.handler.EntIMEventHandler;
 import com.chatopera.cc.socketio.handler.IMEventHandler;
 import com.corundumstudio.socketio.SocketIONamespace;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.github.xiaobo9.commons.enums.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -47,8 +47,8 @@ public class SocketIOStartRunner implements CommandLineRunner {
     }
 
     @Bean(name = "imNamespace")
-    public SocketIONamespace getIMSocketIONameSpace(SocketIOServer server) {
-        imSocketNameSpace.addListeners(new IMEventHandler(server));
+    public SocketIONamespace getIMSocketIONameSpace(IMEventHandler imEventHandler) {
+        imSocketNameSpace.addListeners(imEventHandler);
         return imSocketNameSpace;
     }
 

@@ -1,8 +1,11 @@
 package com.github.xiaobo9.commons.exception;
 
+import com.github.xiaobo9.commons.TestAnnotation;
+
 /**
  * entity not found
  */
+@TestAnnotation
 public class EntityNotFoundEx extends RuntimeException {
     public EntityNotFoundEx() {
         super("entity not found");

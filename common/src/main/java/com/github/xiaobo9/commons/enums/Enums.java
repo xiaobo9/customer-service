@@ -234,8 +234,8 @@ public class Enums {
             this.index = index;
         }
 
-        public String toLetters() {
-            return super.toString().toLowerCase();
+        public boolean match(String str) {
+            return this.name.equals(str);
         }
 
         @Override

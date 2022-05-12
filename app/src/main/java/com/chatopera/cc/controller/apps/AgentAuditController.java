@@ -35,6 +35,7 @@ import com.github.xiaobo9.commons.enums.DateFormatEnum;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.*;
+import com.github.xiaobo9.service.BlackEntityService;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -651,7 +652,7 @@ public class AgentAuditController extends Handler {
         payload.put("orgi", orgi);
         ModelAndView view = end(request, agentuserid);
         // 更新或创建黑名单
-        blackEntityService.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid, agentuserid);
+        blackEntityService.updateOrCreateBlackEntity(blackEntity, logined, userid, orgi, agentserviceid);
 
         // 创建定时任务 取消拉黑
         brokerPublisher.send(new MqMessage().destination(Constants.WEBIM_SOCKETIO_ONLINE_USER_BLACKLIST)

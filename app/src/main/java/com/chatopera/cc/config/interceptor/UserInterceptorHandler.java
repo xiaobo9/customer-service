@@ -19,7 +19,7 @@ package com.chatopera.cc.config.interceptor;
 import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.socketio.MessagingServerConfigure;
-import com.chatopera.cc.service.SystemConfigService;
+import com.github.xiaobo9.service.SystemConfigService;
 import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.Menu;

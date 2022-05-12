@@ -14,6 +14,8 @@ import com.github.xiaobo9.entity.SystemConfig;
 import com.github.xiaobo9.entity.SystemMessage;
 import com.github.xiaobo9.entity.Template;
 import com.github.xiaobo9.repository.SystemMessageRepository;
+import com.github.xiaobo9.service.SystemConfigService;
+import com.github.xiaobo9.service.TemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

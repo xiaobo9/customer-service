@@ -36,7 +36,7 @@ public class AttachmentFile implements Serializable {
 	private Date updatetime = new Date();
 	private String title ;
 	private String url ;
-	private int filelength ;
+	private long filelength ;
 	private boolean datastatus ;
 	private String filetype ;
 	private String fileid ;
@@ -97,10 +97,10 @@ public class AttachmentFile implements Serializable {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	public int getFilelength() {
+	public long getFilelength() {
 		return filelength;
 	}
-	public void setFilelength(int filelength) {
+	public void setFilelength(long filelength) {
 		this.filelength = filelength;
 	}
 	public boolean isDatastatus() {
