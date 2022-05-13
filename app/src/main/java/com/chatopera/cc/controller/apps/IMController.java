@@ -40,9 +40,8 @@ import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.model.UploadStatus;
 import com.github.xiaobo9.repository.*;
 import com.github.xiaobo9.service.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -76,11 +75,11 @@ import java.util.Optional;
 /**
  * FIXME method tooooooo long
  */
+@Slf4j
 @Controller
 @RequestMapping("/im")
 @EnableAsync
 public class IMController extends Handler {
-    private final static Logger logger = LoggerFactory.getLogger(IMController.class);
 
     @Autowired
     private SystemConfigService configService;
@@ -178,12 +177,12 @@ public class IMController extends Handler {
         view.addObject("channelVisitorSeparate", channelWebIMVisitorSeparate);
 
         final String sessionid = UUIDUtils.removeHyphen(request.getSession().getId());
-        logger.info("[point] session snsid {}, session {}", id, sessionid);
+        log.info("[point] session snsid {}, session {}", id, sessionid);
 
         if (StringUtils.isNotBlank(id)) {
             boolean webimexist = false;
             view.addObject("hostname", request.getServerName());
-            logger.info("[point] new website is : {}", request.getServerName());
+            log.info("[point] new website is : {}", request.getServerName());
             SNSAccount SnsAccountList = snsAccountRes.findBySnsidAndOrgi(id, super.getUser(request).getOrgi());
             if (SnsAccountList != null) {
                 webimexist = true;
@@ -216,7 +215,7 @@ public class IMController extends Handler {
 
             CousultInvite invite = onlineUserService.consult(id, Constants.SYSTEM_ORGI);
             if (invite != null) {
-                logger.info("[point] find CousultInvite {}", invite.getId());
+                log.info("[point] find CousultInvite {}", invite.getId());
                 view.addObject("inviteData", invite);
                 view.addObject("orgi", invite.getOrgi());
                 view.addObject("appid", id);
@@ -283,7 +282,7 @@ public class IMController extends Handler {
                 AdType inviteAd = imService.getPointAdv(Enums.AdPosEnum.INVITE.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI);
                 view.addObject("inviteAd", inviteAd);
             } else {
-                logger.info("[point] invite id {}, orgi {} not found", id, Constants.SYSTEM_ORGI);
+                log.info("[point] invite id {}, orgi {} not found", id, Constants.SYSTEM_ORGI);
             }
         }
 
@@ -291,7 +290,7 @@ public class IMController extends Handler {
     }
 
     @ResponseBody
-    @RequestMapping("/chatoperainit")
+    @RequestMapping("/chatoperainit.html")
     @Menu(type = "im", subtype = "chatoperainit")
     public String chatoperaInit(
             HttpServletRequest request,
@@ -386,7 +385,7 @@ public class IMController extends Handler {
             final @Valid String traceid) throws InterruptedException {
         Optional<BlackEntity> blackOpt = cacheService.findOneBlackEntityByUserIdAndOrgi(userid, orgi);
         if (blackOpt.isPresent() && (blackOpt.get().getEndtime() == null || blackOpt.get().getEndtime().after(new Date()))) {
-            logger.info("[online] online user {} is in black list.", userid);
+            log.info("[online] online user {} is in black list.", userid);
             // 该访客被拉黑
             return null;
         }
@@ -444,7 +443,7 @@ public class IMController extends Handler {
             HttpServletResponse response,
             @Valid Contacts contacts,
             @Valid IMVO imvo) throws Exception {
-        logger.info("{}", imvo);
+        log.info("{}", imvo);
         Map<String, String> sessionMsg = cacheService.findOneSystemMapByIdAndOrgi(imvo.getSessionid(), imvo.getOrgi());
 
         HttpSession session = request.getSession();
@@ -456,7 +455,7 @@ public class IMController extends Handler {
         // appid 或者 用户在黑名单里直接返回
         if (StringUtils.isBlank(imvo.getAppid()) || (blackEntity != null && blackEntity.inBlackStatus())) {
             view.addObject("inviteData", invite);
-            logger.info("[index] return view");
+            log.info("[index] return view");
             return view;
         }
 
@@ -515,10 +514,10 @@ public class IMController extends Handler {
 
         // 先检查 invite
         if (invite == null) {
-            logger.info("[index] can not invite for appid {}, orgi {}", imvo.getAppid(), imvo.getOrgi());
+            log.info("[index] can not invite for appid {}, orgi {}", imvo.getAppid(), imvo.getOrgi());
             return view;
         }
-        logger.info("[index] invite id {}, orgi {}", invite.getId(), invite.getOrgi());
+        log.info("[index] invite id {}, orgi {}", invite.getId(), invite.getOrgi());
         modelMap.addAttribute("orgi", invite.getOrgi());
         modelMap.addAttribute("inviteData", invite);
 
@@ -582,7 +581,9 @@ public class IMController extends Handler {
                             agentService.setContactsid(contacts1.getId());
                         }
 
-                        saveAgentUserContacts(request, imvo.getOrgi(), imvo.getAppid(), imvo.getUserid(), session, contacts1, p);
+                        User user = super.getUser(request);
+                        String username = (String) session.getAttribute("Sessionusername");
+                        imService.saveAgentUserContacts(imvo, contacts1, p, user, username);
                     });
                 }
             }
@@ -654,10 +655,11 @@ public class IMController extends Handler {
         onlineUserService.sendWebIMClients(imvo.getUserid(), "accept");
 
         // 更新InviteRecord
-        updateInviteRecord(imvo.getOrgi(), imvo.getTraceid(), imvo.getTitle(), imvo.getUrl(), imvo.getUserid());
-        logger.info("[index] return view");
+        imService.updateInviteRecord(imvo);
+        log.info("[index] return view");
         return view;
     }
+
 
     private void vo2ModelMap(IMVO imvo, ModelMap map) {
         addAttribute(map, "client", imvo.getClient());
@@ -693,68 +695,28 @@ public class IMController extends Handler {
     }
 
     private Contacts createContacts(Cookie[] cookies) throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        if (cookies == null) {
-            return new Contacts();
-        }
         Contacts contacts = new Contacts();
-        Map<String, String> map = new HashMap<>();
-
-        for (Cookie cookie : cookies) {
-            if (cookie == null) {
-                continue;
+        if (cookies != null) {
+            Map<String, String> map = new HashMap<>();
+            for (Cookie cookie : cookies) {
+                if (cookie == null) {
+                    continue;
+                }
+                if (StringUtils.isNotBlank(cookie.getName()) && StringUtils.isNotBlank(cookie.getValue())) {
+                    map.put(cookie.getName(), cookie.getValue());
+                }
             }
-            if (StringUtils.isNotBlank(cookie.getName()) && StringUtils.isNotBlank(cookie.getValue())) {
-                map.put(cookie.getName(), cookie.getValue());
-            }
+            contacts.setName(decode(map.get("name")));
+            contacts.setPhone(decode(map.get("phone")));
+            contacts.setEmail(decode(map.get("email")));
+            contacts.setMemo(decode(map.get("memo")));
+            contacts.setSkypeid(decode(map.get("skypeid")));
         }
-        contacts.setName(decode(map.get("name")));
-        contacts.setPhone(decode(map.get("phone")));
-        contacts.setEmail(decode(map.get("email")));
-        contacts.setMemo(decode(map.get("memo")));
-        contacts.setSkypeid(decode(map.get("skypeid")));
         return contacts;
     }
 
     private String decode(String value) throws UnsupportedEncodingException, NoSuchAlgorithmException {
         return URLDecoder.decode(MainUtils.decryption(value), "UTF-8");
-    }
-
-    private void saveAgentUserContacts(HttpServletRequest request, String orgi, String appid, String userid, HttpSession session, Contacts contacts1, AgentUser p) {
-        User user = super.getUser(request);
-        // 关联AgentUserContact的联系人
-        // NOTE: 如果该userid已经有了关联的Contact则忽略，继续使用之前的
-        agentUserContactsRes.findOneByUseridAndOrgi(userid, orgi)
-                .ifPresent(a -> {
-                    AgentUserContacts agentUserContacts = new AgentUserContacts();
-                    agentUserContacts.setOrgi(orgi);
-                    agentUserContacts.setAppid(appid);
-                    agentUserContacts.setChannel(p.getChannel());
-                    agentUserContacts.setContactsid(contacts1.getId());
-                    agentUserContacts.setUserid(userid);
-                    agentUserContacts.setUsername((String) session.getAttribute("Sessionusername"));
-                    agentUserContacts.setCreater(user.getId());
-                    agentUserContacts.setCreatetime(new Date());
-                    agentUserContactsRes.save(agentUserContacts);
-                });
-    }
-
-    private void updateInviteRecord(String orgi, String traceid, String title, String url, String userid) {
-        logger.info("[index] update inviteRecord for user {}", userid);
-        final Date threshold = new Date(System.currentTimeMillis() - Constants.WEBIM_AGENT_INVITE_TIMEOUT);
-        PageRequest page = PageRequest.of(0, 1, Direction.DESC, "createtime");
-        Page<InviteRecord> records = inviteRecordRes.findByUseridAndOrgiAndResultAndCreatetimeGreaterThan(
-                userid, orgi, Enums.OnlineUserInviteStatus.DEFAULT.toString(), threshold, page);
-        if (records.getContent().size() > 0) {
-            final InviteRecord record = records.getContent().get(0);
-            record.setUpdatetime(new Date());
-            record.setTraceid(traceid);
-            record.setTitle(title);
-            record.setUrl(url);
-            record.setResponsetime((int) (System.currentTimeMillis() - record.getCreatetime().getTime()));
-            record.setResult(Enums.OnlineUserInviteStatus.ACCEPT.toString());
-            logger.info("[index] re-save inviteRecord id {}", record.getId());
-            inviteRecordRes.save(record);
-        }
     }
 
     @RequestMapping("/text/{appid}.html")

@@ -372,8 +372,9 @@ public class Handler {
     }
 
     public void setUser(HttpServletRequest request, User user) {
-        request.getSession(true).removeAttribute(Constants.USER_SESSION_NAME);
-        request.getSession(true).setAttribute(Constants.USER_SESSION_NAME, user);
+        HttpSession session = request.getSession(true);
+        session.removeAttribute(Constants.USER_SESSION_NAME);
+        session.setAttribute(Constants.USER_SESSION_NAME, user);
     }
 
 

@@ -20,23 +20,24 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainContext;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.vo.IMUploadFileBO;
+import com.chatopera.cc.controller.vo.IMVO;
 import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.socketio.util.HumanUtils;
 import com.chatopera.cc.util.Dict;
 import com.github.xiaobo9.commons.enums.Enums;
-import com.github.xiaobo9.entity.AdType;
-import com.github.xiaobo9.entity.AgentUser;
-import com.github.xiaobo9.entity.SysDic;
+import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.AdTypeRepository;
+import com.github.xiaobo9.repository.AgentUserContactsRepository;
+import com.github.xiaobo9.repository.InviteRecordRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -44,6 +45,10 @@ public class IMService {
     private static final Random random = new Random();
     @Autowired
     private CacheService cacheService;
+    @Autowired
+    private AgentUserContactsRepository agentUserContactsRepository;
+    @Autowired
+    private InviteRecordRepository inviteRecordRepository;
 
     /**
      * 上传图片
@@ -187,6 +192,45 @@ public class IMService {
             m += ad.getWeight();
         }
         return adType;
+    }
+
+
+    public void saveAgentUserContacts(IMVO imvo, Contacts contacts, AgentUser p, User user, String username) {
+        // 关联AgentUserContact的联系人
+        // NOTE: 如果该userid已经有了关联的Contact则忽略，继续使用之前的
+        agentUserContactsRepository.findOneByUseridAndOrgi(imvo.getUserid(), imvo.getOrgi())
+                .ifPresent(a -> {
+                    AgentUserContacts agentUserContacts = new AgentUserContacts();
+                    agentUserContacts.setOrgi(imvo.getOrgi());
+                    agentUserContacts.setAppid(imvo.getAppid());
+                    agentUserContacts.setChannel(p.getChannel());
+                    agentUserContacts.setContactsid(contacts.getId());
+                    agentUserContacts.setUserid(imvo.getUserid());
+                    agentUserContacts.setUsername(username);
+                    agentUserContacts.setCreater(user.getId());
+                    agentUserContacts.setCreatetime(new Date());
+                    agentUserContactsRepository.save(agentUserContacts);
+                });
+    }
+
+    public void updateInviteRecord(IMVO imvo) {
+        String userid = imvo.getUserid();
+        log.info("[index] update inviteRecord for user {}", userid);
+        final Date threshold = new Date(System.currentTimeMillis() - Constants.WEBIM_AGENT_INVITE_TIMEOUT);
+        PageRequest page = PageRequest.of(0, 1, Sort.Direction.DESC, "createtime");
+        Page<InviteRecord> records = inviteRecordRepository.findByUseridAndOrgiAndResultAndCreatetimeGreaterThan(
+                userid, imvo.getOrgi(), Enums.OnlineUserInviteStatus.DEFAULT.toString(), threshold, page);
+        if (records.getContent().size() > 0) {
+            final InviteRecord record = records.getContent().get(0);
+            record.setUpdatetime(new Date());
+            record.setTraceid(imvo.getTraceid());
+            record.setTitle(imvo.getTitle());
+            record.setUrl(imvo.getUrl());
+            record.setResponsetime((int) (System.currentTimeMillis() - record.getCreatetime().getTime()));
+            record.setResult(Enums.OnlineUserInviteStatus.ACCEPT.toString());
+            log.info("[index] re-save inviteRecord id {}", record.getId());
+            inviteRecordRepository.save(record);
+        }
     }
 
 }
