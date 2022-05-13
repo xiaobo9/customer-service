@@ -17,8 +17,10 @@
 package com.chatopera.cc.basic;
 
 public class Viewport {
-    private String page;
+    // out template html
     private String templet;
+    // include html
+    private String page;
 
     public Viewport(String templet, String page) {
         this.templet = templet;

@@ -334,15 +334,14 @@ public class ContactsController extends Handler {
         Contacts theOnlyContact = contactsRes.findByskypeidAndOrgiAndDatastatus(skypeIDReplace, user.getOrgi(), false);
         Contacts oldContact = contactsRes.findByidAndOrgiAndDatastatus(contacts.getId(), user.getOrgi(), false);
 
-        boolean determineChange = contactsService.determineChange(contacts, oldContact);
         // 验证skype唯一性验证
         if (theOnlyContact != null && !theOnlyContact.getId().equals(oldContact.getId())) {
             logger.info("[contacts edit] errer :The same skypeid exists");
             String msg = "edit_contacts_fail";
             return request(super.pageTplResponse("redirect:/apps/contacts/index.html?ckind=" + ckindId + "&msg=" + msg));
         }
-        if (!determineChange) {
-            //无修改，直接点击确定
+        if (contactsService.match(contacts, oldContact)) {
+            // 无修改，直接点击确定
             return request(super.pageTplResponse("redirect:/apps/contacts/index.html?ckind=" + ckindId));
         }
         logger.info("[contacts edit] success :The contact has been modified successfully.");
@@ -584,15 +583,13 @@ public class ContactsController extends Handler {
         Contacts theOnlyContact = contactsRes.findByskypeidAndOrgiAndDatastatus(skypeIDReplace, user.getOrgi(), false);
         Contacts oldContact = contactsRes.findByidAndOrgiAndDatastatus(contacts.getId(), user.getOrgi(), false);
 
-        boolean determineChange = contactsService.determineChange(contacts, oldContact);
-
         // 验证skype唯一性验证
         if (theOnlyContact != null && !theOnlyContact.getId().equals(oldContact.getId())) {
             logger.info("[contacts edit] errer :The same skypeid exists");
             String msg = "edit_contacts_fail";
             return request(super.pageTplResponse("redirect:/apps/contacts/embed/index.html?msg=" + msg + "&agentserviceid=" + agentserviceid));
         }
-        if (!determineChange) {
+        if (contactsService.match(contacts, oldContact)) {
             // 无修改，直接点击确定
             return request(super.pageTplResponse("redirect:/apps/contacts/embed/index.html?agentserviceid=" + agentserviceid));
         }

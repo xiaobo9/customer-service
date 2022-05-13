@@ -203,25 +203,19 @@ public class ContactsService {
         return false;
     }
 
-    /**
-     * 判断编辑是否变更
-     *
-     * @param newValue
-     * @param oldValue
-     * @return
-     */
-    public boolean determineChange(Contacts newValue, Contacts oldValue) {
-        return (!newValue.getName().equals(oldValue.getName()) ||
-                !newValue.getPhone().equals(oldValue.getPhone()) ||
-                !newValue.getEmail().equals(oldValue.getEmail()) ||
-                !newValue.getCity().equals(oldValue.getCity()) ||
-                !newValue.getAddress().equals(oldValue.getAddress()) ||
-                !newValue.getGender().equals(oldValue.getGender()) ||
-                !newValue.getProvince().equals(oldValue.getProvince()) ||
-                !newValue.getMemo().equals(oldValue.getMemo()) ||
-                !(newValue.getCusbirthday().isEmpty() && StringUtils.isEmpty(oldValue.getCusbirthday())) ||
-                (newValue.getCusbirthday().isEmpty() && StringUtils.isNotEmpty(oldValue.getCusbirthday())) ||
-                !newValue.getMobileno().equals(oldValue.getMobileno()) ||
-                !newValue.getSkypeid().equals(oldValue.getSkypeid()));
+    public boolean match(Contacts newValue, Contacts oldValue) {
+        return newValue.getName().equals(oldValue.getName()) &&
+                newValue.getPhone().equals(oldValue.getPhone()) &&
+                newValue.getEmail().equals(oldValue.getEmail()) &&
+                newValue.getCity().equals(oldValue.getCity()) &&
+                newValue.getAddress().equals(oldValue.getAddress()) &&
+                newValue.getGender().equals(oldValue.getGender()) &&
+                newValue.getProvince().equals(oldValue.getProvince()) &&
+                newValue.getMemo().equals(oldValue.getMemo()) &&
+                newValue.getMobileno().equals(oldValue.getMobileno()) &&
+                StringUtils.equals(newValue.getSkypeid(), oldValue.getSkypeid()) &&
+                StringUtils.equals(newValue.getCusbirthday(), oldValue.getCusbirthday())
+                ;
     }
+
 }
