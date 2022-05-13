@@ -305,69 +305,41 @@ public class Handler {
      * 创建或从HTTP会话中查找到访客的User对象，该对象不在数据库中，属于临时会话。
      * 这个User很可能是打开一个WebIM访客聊天控件，随机生成用户名，之后和Contact关联
      * 这个用户可能关联一个OnlineUser，如果开始给TA分配坐席
-     *
-     * @param request
-     * @param userid
-     * @param nickname
-     * @return
      */
     public User getIMUser(HttpServletRequest request, String userid, String nickname) {
-        User user = (User) request.getSession(true).getAttribute(Constants.IM_USER_SESSION_NAME);
-        if (user == null) {
-            user = new User();
-            if (StringUtils.isNotBlank(userid)) {
-                user.setId(userid);
-            } else {
-                user.setId(UUIDUtils.removeHyphen(request.getSession().getId()));
-            }
-            if (StringUtils.isNotBlank(nickname)) {
-                user.setUsername(nickname);
-            } else {
-                Map<String, String> sessionMessage = cacheService.findOneSystemMapByIdAndOrgi(
-                        request.getSession().getId(), Constants.SYSTEM_ORGI);
-                if (sessionMessage != null) {
-                    String struname = sessionMessage.get("username");
-                    String strcname = sessionMessage.get("company_name");
-
-                    user.setUsername(struname + "@" + strcname);
-                } else {
-                    user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
-                }
-            }
-            user.setSessionid(user.getId());
-        } else {
-            user.setSessionid(UUIDUtils.removeHyphen(request.getSession().getId()));
+        HttpSession session = request.getSession(true);
+        User user = (User) session.getAttribute(Constants.IM_USER_SESSION_NAME);
+        if (user != null) {
+            user.setSessionid(UUIDUtils.removeHyphen(session.getId()));
+            return user;
         }
-        return user;
+        return getIMUser(userid, nickname, session.getId(), session.getId());
     }
 
-    public User getIMUser(HttpServletRequest request, String userid, String nickname, String sessionid) {
-        User user = (User) request.getSession(true).getAttribute(Constants.IM_USER_SESSION_NAME);
-        if (user == null) {
-            user = new User();
-            if (StringUtils.isNotBlank(userid)) {
-                user.setId(userid);
-            } else {
-                user.setId(UUIDUtils.removeHyphen(request.getSession().getId()));
-            }
-            if (StringUtils.isNotBlank(nickname)) {
-                user.setUsername(nickname);
-            } else {
-                Map<String, String> sessionMessage = cacheService.findOneSystemMapByIdAndOrgi(
-                        sessionid, Constants.SYSTEM_ORGI);
-                if (sessionMessage != null) {
-                    String struname = sessionMessage.get("username");
-                    String strcname = sessionMessage.get("company_name");
-
-                    user.setUsername(struname + "@" + strcname);
-                } else {
-                    user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
-                }
-            }
-            user.setSessionid(user.getId());
-        } else {
-            user.setSessionid(UUIDUtils.removeHyphen(request.getSession().getId()));
+    public User getIMUser(HttpServletRequest request, String userid, String nickname, String designatedId) {
+        HttpSession session = request.getSession(true);
+        User user = (User) session.getAttribute(Constants.IM_USER_SESSION_NAME);
+        if (user != null) {
+            user.setSessionid(UUIDUtils.removeHyphen(session.getId()));
+            return user;
         }
+        return getIMUser(userid, nickname, designatedId, session.getId());
+    }
+
+    private User getIMUser(String userid, String nickname, String designatedId, String sessionId) {
+        User user = new User();
+        user.setId(StringUtils.isNotBlank(userid) ? userid : UUIDUtils.removeHyphen(sessionId));
+        if (StringUtils.isNotBlank(nickname)) {
+            user.setUsername(nickname);
+        } else {
+            Map<String, String> sessionMsg = cacheService.findOneSystemMapByIdAndOrgi(designatedId, Constants.SYSTEM_ORGI);
+            if (sessionMsg != null) {
+                user.setUsername(sessionMsg.get("username") + "@" + sessionMsg.get("company_name"));
+            } else {
+                user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
+            }
+        }
+        user.setSessionid(user.getId());
         return user;
     }
 

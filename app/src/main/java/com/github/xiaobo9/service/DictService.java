@@ -23,9 +23,8 @@ import com.chatopera.cc.cache.RedisKey;
 import com.chatopera.cc.util.Dict;
 import com.chatopera.cc.util.SerializeUtil;
 import com.github.xiaobo9.entity.SysDic;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,14 +35,46 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class DictService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DictService.class);
-    @Autowired
-    private CacheService cacheService;
-    @Autowired
-    private RedisCommand redisCommand;
+    private final CacheService cacheService;
+    private final RedisCommand redisCommand;
+
+    public DictService(CacheService cacheService, RedisCommand redisCommand) {
+        this.cacheService = cacheService;
+        this.redisCommand = redisCommand;
+    }
+
+    /**
+     * 模板页面 直接拿这个当 数据字段 用，神奇的用法。。。
+     *
+     * @param key the key whose associated value is to be returned
+     * @return SysDic or SysDic list ???
+     */
+    public Object get(@NotNull final String key) {
+        String serialized = redisCommand.getHashKV(RedisKey.getSysDicHashKeyByOrgi(Constants.SYSTEM_ORGI), key);
+
+        if (StringUtils.isNotBlank(serialized)) {
+            Object obj = SerializeUtil.deserialize(serialized);
+            if (obj instanceof List) {
+                return getDic(key);
+            }
+            return obj;
+        }
+
+        Object result = null;
+        if (key.endsWith(".subdic") && key.lastIndexOf(".subdic") > 0) {
+            String id = key.substring(0, key.lastIndexOf(".subdic"));
+            SysDic dic = cacheService.findOneSysDicByIdAndOrgi(id, Constants.SYSTEM_ORGI);
+            if (dic != null) {
+                SysDic sysDic = cacheService.findOneSysDicByIdAndOrgi(dic.getDicid(), Constants.SYSTEM_ORGI);
+                result = getSubDict(sysDic.getCode(), dic.getParentid());
+            }
+        }
+        return result;
+    }
 
     @NotNull
     public List<SysDic> getDic(final String code) {
@@ -64,30 +95,23 @@ public class DictService {
     /**
      * 获得一个词典的所有子项，并且每个子项的父都是id
      */
-    public List<SysDic> getDic(final String code, final String id) {
-        List<SysDic> result = new ArrayList<SysDic>();
+    public List<SysDic> getSubDict(final String code, final String parentId) {
         String serialized = redisCommand.getHashKV(RedisKey.getSysDicHashKeyByOrgi(Constants.SYSTEM_ORGI), code);
-
-        if (StringUtils.isNotBlank(serialized)) {
-            Object obj = SerializeUtil.deserialize(serialized);
-            if (obj instanceof List) {
-                List<SysDic> sysDics = (List<SysDic>) obj;
-                for (SysDic dic : sysDics) {
-                    if (dic.getParentid().equals(id)) {
-                        result.add(dic);
-                    }
-                }
-            } else if (obj instanceof SysDic) {
-                result.add((SysDic) obj);
-            } else {
-                logger.warn("[getDic] nothing found for code or id {} with deserialize, this is a potential error.", code);
-            }
-        } else {
-            logger.warn("[getDic] nothing found for code or id {}", code);
+        if (StringUtils.isBlank(serialized)) {
+            return Collections.emptyList();
         }
-
-        logger.debug("[getDic list] code or id: {}, dict size {}", code, result.size());
-
+        List<SysDic> result = new ArrayList<>();
+        Object obj = SerializeUtil.deserialize(serialized);
+        if (obj instanceof List) {
+            List<SysDic> sysDics = (List<SysDic>) obj;
+            for (SysDic dic : sysDics) {
+                if (dic.getParentid().equals(parentId)) {
+                    result.add(dic);
+                }
+            }
+        } else if (obj instanceof SysDic) {
+            result.add((SysDic) obj);
+        }
         return result;
     }
 

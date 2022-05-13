@@ -175,118 +175,113 @@ public class IMController extends Handler {
 
         ModelAndView view = request(super.pageTplResponse("/apps/im/point"));
         view.addObject("channelVisitorSeparate", channelWebIMVisitorSeparate);
+        if (StringUtils.isBlank(id)) {
+            return view;
+        }
 
         final String sessionid = UUIDUtils.removeHyphen(request.getSession().getId());
         log.info("[point] session snsid {}, session {}", id, sessionid);
 
-        if (StringUtils.isNotBlank(id)) {
-            boolean webimexist = false;
-            view.addObject("hostname", request.getServerName());
-            log.info("[point] new website is : {}", request.getServerName());
-            SNSAccount SnsAccountList = snsAccountRes.findBySnsidAndOrgi(id, super.getUser(request).getOrgi());
-            if (SnsAccountList != null) {
-                webimexist = true;
-            }
-            view.addObject("webimexist", webimexist);
+        SNSAccount SnsAccountList = snsAccountRes.findBySnsidAndOrgi(id, super.getUser(request).getOrgi());
+        view.addObject("webimexist", SnsAccountList != null);
 
-            SystemConfig systemConfig = configService.getSystemConfig();
-            if (systemConfig.isEnablessl()) {
-                view.addObject("schema", "https");
-                if (request.getServerPort() == 80) {
-                    view.addObject("port", 443);
-                } else {
-                    view.addObject("port", request.getServerPort());
-                }
-            } else {
-                view.addObject("schema", request.getScheme());
-                String header = request.getHeader("X-Forwarded-Proto");
-                if (header != null) {
-                    view.addObject("schema", header);
-                }
-                view.addObject("port", request.getServerPort());
-            }
-            BrowserClient client = BrowserClient.parseClient(request.getHeader(BrowserClient.USER_AGENT));
+        buildServerUrl(request, view);
 
+        BrowserClient client = BrowserClient.parseClient(request.getHeader(BrowserClient.USER_AGENT));
+
+        view.addObject("appid", id);
+        view.addObject("client", UUIDUtils.getUUID());
+        view.addObject("sessionid", sessionid);
+        view.addObject("ip", MD5Utils.md5(request.getRemoteAddr()));
+        view.addObject("mobile", client.isMobile());
+
+        CousultInvite invite = onlineUserService.consult(id, Constants.SYSTEM_ORGI);
+        if (invite != null) {
+            log.info("[point] find CousultInvite {}", invite.getId());
+            view.addObject("inviteData", invite);
+            view.addObject("orgi", invite.getOrgi());
             view.addObject("appid", id);
-            view.addObject("client", UUIDUtils.getUUID());
-            view.addObject("sessionid", sessionid);
-            view.addObject("ip", MD5Utils.md5(request.getRemoteAddr()));
-            view.addObject("mobile", client.isMobile());
 
-            CousultInvite invite = onlineUserService.consult(id, Constants.SYSTEM_ORGI);
-            if (invite != null) {
-                log.info("[point] find CousultInvite {}", invite.getId());
-                view.addObject("inviteData", invite);
-                view.addObject("orgi", invite.getOrgi());
-                view.addObject("appid", id);
-
-                if (StringUtils.isNotBlank(aiid)) {
-                    view.addObject("aiid", aiid);
-                } else if (StringUtils.isNotBlank(invite.getAiid())) {
-                    view.addObject("aiid", invite.getAiid());
-                }
-
-                // 记录用户行为日志
-                // 每次有一个新网页加载出聊天控件，都会生成一个userHistory
-                UserHistory userHistory = new UserHistory();
-                userHistory.setUrl(StringKit.subLongString(request.getHeader("referer"), 255));
-                userHistory.setReferer(userHistory.getUrl());
-                userHistory.setParam(MainUtils.getParameter(request));
-                userHistory.setMaintype("send");
-                userHistory.setSubtype("point");
-                userHistory.setName("online");
-                userHistory.setAdmin(false);
-                userHistory.setAccessnum(true);
-                userHistory.setModel(Enums.ChannelType.WEBIM.toString());
-
-                final User imUser = super.getIMUser(request, userid, null);
-                if (imUser != null) {
-                    userHistory.setCreater(imUser.getId());
-                    userHistory.setUsername(imUser.getUsername());
-                    userHistory.setOrgi(Constants.SYSTEM_ORGI);
-                }
-
-                userHistory.setTitle(StringKit.subLongString(title, 255));
-
-                userHistory.setOrgi(invite.getOrgi());
-                userHistory.setAppid(id);
-                userHistory.setSessionid(sessionid);
-
-                String ip = IPUtils.getIpAddress(request);
-                userHistory.setHostname(ip);
-                userHistory.setIp(ip);
-                IP ipdata = IPTools.findGeography(ip);
-                userHistory.setCountry(ipdata.getCountry());
-                userHistory.setProvince(ipdata.getProvince());
-                userHistory.setCity(ipdata.getCity());
-                userHistory.setIsp(ipdata.getIsp());
-
-                userHistory.setOstype(client.getOs());
-                userHistory.setBrowser(client.getBrowser());
-                userHistory.setMobile(client.isMobile() ? "1" : "0");
-
-                if (invite.isSkill() && !invite.isConsult_skill_fixed()) { // 展示所有技能组
-                    // 查询 技能组 ， 缓存？
-                    view.addObject("skillGroups", onlineUserService.organ(Constants.SYSTEM_ORGI, ipdata, invite, true));
-                    // 查询坐席 ， 缓存？
-                    view.addObject("agentList", onlineUserService.agents(Constants.SYSTEM_ORGI));
-                }
-
-                view.addObject("traceid", userHistory.getId());
-
-                // 用户的浏览历史会有很大的数据量，目前强制开启
-                userHistoryRes.save(userHistory);
-
-                AdType pointAdv = imService.getPointAdv(Enums.AdPosEnum.POINT.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI);
-                view.addObject("pointAd", pointAdv);
-                AdType inviteAd = imService.getPointAdv(Enums.AdPosEnum.INVITE.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI);
-                view.addObject("inviteAd", inviteAd);
-            } else {
-                log.info("[point] invite id {}, orgi {} not found", id, Constants.SYSTEM_ORGI);
+            if (StringUtils.isNotBlank(aiid)) {
+                view.addObject("aiid", aiid);
+            } else if (StringUtils.isNotBlank(invite.getAiid())) {
+                view.addObject("aiid", invite.getAiid());
             }
-        }
 
+            // 记录用户行为日志
+            // 每次有一个新网页加载出聊天控件，都会生成一个userHistory
+            UserHistory userHistory = new UserHistory();
+            userHistory.setUrl(StringKit.subLongString(request.getHeader("referer"), 255));
+            userHistory.setReferer(userHistory.getUrl());
+            userHistory.setParam(MainUtils.getParameter(request));
+            userHistory.setMaintype("send");
+            userHistory.setSubtype("point");
+            userHistory.setName("online");
+            userHistory.setAdmin(false);
+            userHistory.setAccessnum(true);
+            userHistory.setModel(Enums.ChannelType.WEBIM.toString());
+
+            final User imUser = super.getIMUser(request, userid, null);
+            if (imUser != null) {
+                userHistory.setCreater(imUser.getId());
+                userHistory.setUsername(imUser.getUsername());
+                userHistory.setOrgi(Constants.SYSTEM_ORGI);
+            }
+
+            userHistory.setTitle(StringKit.subLongString(title, 255));
+
+            userHistory.setOrgi(invite.getOrgi());
+            userHistory.setAppid(id);
+            userHistory.setSessionid(sessionid);
+
+            String ip = IPUtils.getIpAddress(request);
+            userHistory.setHostname(ip);
+            userHistory.setIp(ip);
+            IP ipdata = IPTools.findGeography(ip);
+            userHistory.setCountry(ipdata.getCountry());
+            userHistory.setProvince(ipdata.getProvince());
+            userHistory.setCity(ipdata.getCity());
+            userHistory.setIsp(ipdata.getIsp());
+
+            userHistory.setOstype(client.getOs());
+            userHistory.setBrowser(client.getBrowser());
+            userHistory.setMobile(client.isMobile() ? "1" : "0");
+
+            if (invite.isSkill() && !invite.isConsult_skill_fixed()) { // 展示所有技能组
+                // 查询 技能组 ， 缓存？
+                view.addObject("skillGroups", onlineUserService.organ(Constants.SYSTEM_ORGI, ipdata, invite, true));
+                // 查询坐席 ， 缓存？
+                view.addObject("agentList", onlineUserService.agents(Constants.SYSTEM_ORGI));
+            }
+
+            view.addObject("traceid", userHistory.getId());
+
+            // 用户的浏览历史会有很大的数据量，目前强制开启
+            userHistoryRes.save(userHistory);
+
+            AdType pointAdv = imService.getPointAdv(Enums.AdPosEnum.POINT.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI);
+            view.addObject("pointAd", pointAdv);
+            AdType inviteAd = imService.getPointAdv(Enums.AdPosEnum.INVITE.toString(), invite.getConsult_skill_fixed_id(), Constants.SYSTEM_ORGI);
+            view.addObject("inviteAd", inviteAd);
+        } else {
+            log.info("[point] invite id {}, orgi {} not found", id, Constants.SYSTEM_ORGI);
+        }
         return view;
+    }
+
+    private void buildServerUrl(HttpServletRequest request, ModelAndView view) {
+        SystemConfig systemConfig = configService.getSystemConfig();
+        String hostName = request.getServerName();
+        String schema = request.getScheme();
+        int port = request.getServerPort();
+        if (systemConfig.isEnablessl()) {
+            schema = "https";
+            port = port == 80 ? 443 : port;
+        } else {
+            String header = request.getHeader("X-Forwarded-Proto");
+            schema = header == null ? schema : header;
+        }
+        view.addObject("serverUrl", schema + "://" + hostName + ":" + port);
     }
 
     @ResponseBody
@@ -917,9 +912,9 @@ public class IMController extends Handler {
                 IMUploadFileBO bo = IMUploadFileBO.of(fileid, multipart.getName(), size, fileUrl, userid)
                         .setName(username);
                 if (StringUtils.isNotBlank(channel)) {
-                    imService.uploadImageWithChannel(bo, channel, appid, orgi);
+                    imService.uploadMediaMessageWithChannel(bo, Enums.MediaType.IMAGE, channel, appid, orgi);
                 } else {
-                    imService.uploadImage(bo);
+                    imService.uploadMediaMessage(bo, Enums.MediaType.IMAGE);
                 }
             }
             map.addAttribute("upload", new UploadStatus("0", fileUrl));
@@ -944,9 +939,9 @@ public class IMController extends Handler {
         IMUploadFileBO bo = IMUploadFileBO.of(id, originalFilename, size, fileUrl, userid)
                 .setUserName(username);
         if (StringUtils.isNotBlank(channel)) {
-            imService.uploadFileWithChannel(bo, channel, appid, orgi);
+            imService.uploadMediaMessageWithChannel(bo, Enums.MediaType.FILE, channel, appid, orgi);
         } else {
-            imService.uploadFile(bo);
+            imService.uploadMediaMessage(bo, Enums.MediaType.FILE);
         }
         map.addAttribute("upload", upload);
         return view;

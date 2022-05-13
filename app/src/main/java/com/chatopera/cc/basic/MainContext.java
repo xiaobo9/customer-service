@@ -18,6 +18,7 @@
 package com.chatopera.cc.basic;
 
 import com.chatopera.cc.cache.CacheService;
+import com.chatopera.cc.cache.RedisCommand;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.util.SystemEnvHelper;
 import org.apache.commons.lang.StringUtils;
@@ -40,6 +41,8 @@ public class MainContext {
     private static ApplicationContext applicationContext;
 
     private static ElasticsearchTemplate template;
+
+    private static RedisCommand redisCommand;
 
     private static CacheService cacheService;
 
@@ -74,6 +77,16 @@ public class MainContext {
 
     public static boolean getIMServerStatus() {
         return imServerRunning;
+    }
+
+    /**
+     * Redis底层接口
+     */
+    public final static RedisCommand getRedisCommand() {
+        if (redisCommand == null) {
+            redisCommand = getContext().getBean(RedisCommand.class);
+        }
+        return redisCommand;
     }
 
     /**

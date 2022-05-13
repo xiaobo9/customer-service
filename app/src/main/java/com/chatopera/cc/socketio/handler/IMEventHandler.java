@@ -29,7 +29,6 @@ import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.socketio.client.NettyClients;
 import com.chatopera.cc.socketio.message.AgentStatusMessage;
 import com.chatopera.cc.socketio.util.HumanUtils;
-import com.chatopera.cc.socketio.util.IMServiceUtils;
 import com.chatopera.cc.util.IP;
 import com.chatopera.cc.util.IPTools;
 import com.corundumstudio.socketio.AckRequest;
@@ -129,7 +128,7 @@ public class IMEventHandler {
                 /**
                  * 更新坐席服务类型
                  */
-                IMServiceUtils.shiftOpsType(user, orgi, Enums.OptType.HUMAN);
+                shiftOpsType(user, orgi, Enums.OptType.HUMAN);
 
                 IP ipdata = null;
                 if ((StringUtils.isNotBlank(ip))) {
@@ -253,6 +252,26 @@ public class IMEventHandler {
          */
         data.setMessage(MainUtils.processEmoti(data.getMessage()));
         HumanUtils.processMessage(data, data.getUserid());
+    }
+
+
+    public void shiftOpsType(final String userId, final String orgi, final Enums.OptType opsType) {
+        cacheService.findOneAgentUserByUserIdAndOrgi(userId, orgi).ifPresent(p -> {
+            switch (opsType) {
+                case CHATBOT:
+                    p.setOpttype(Enums.OptType.CHATBOT.toString());
+                    p.setChatbotops(true);
+                    break;
+                case HUMAN:
+                    p.setOpttype(Enums.OptType.HUMAN.toString());
+                    p.setChatbotops(false);
+                    break;
+                default:
+                    logger.warn("shiftOpsType unknown type.");
+                    break;
+            }
+            agentUserService.save(p);
+        });
     }
 
 }

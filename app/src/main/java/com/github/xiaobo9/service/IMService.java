@@ -1,19 +1,3 @@
-/*
- * Copyright 2022 xiaobo9 <https://github.com/xiaobo9>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.github.xiaobo9.service;
 
 import com.chatopera.cc.basic.Constants;
@@ -23,7 +7,6 @@ import com.chatopera.cc.controller.vo.IMUploadFileBO;
 import com.chatopera.cc.controller.vo.IMVO;
 import com.chatopera.cc.model.ChatMessage;
 import com.chatopera.cc.socketio.util.HumanUtils;
-import com.chatopera.cc.util.Dict;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.AdTypeRepository;
@@ -50,60 +33,28 @@ public class IMService {
     @Autowired
     private InviteRecordRepository inviteRecordRepository;
 
-    /**
-     * 上传图片
-     */
-    public ChatMessage uploadImage(IMUploadFileBO bo) {
-        return createRichMediaMessage(bo, Enums.MediaType.IMAGE.toString());
-    }
-
-    /**
-     * 上传文件
-     */
-    public ChatMessage uploadFile(IMUploadFileBO bo) {
-        return createRichMediaMessage(bo, Enums.MediaType.FILE.toString());
-    }
-
-    /**
-     * 上传图片
-     */
-    public ChatMessage uploadImageWithChannel(IMUploadFileBO bo, String channel, String appid, String orgi) {
-        return createRichMediaMessageWithChannel(bo, channel, Enums.MediaType.IMAGE.toString(), appid, orgi);
-    }
-
-    /**
-     * 上传文件
-     */
-    public ChatMessage uploadFileWithChannel(IMUploadFileBO bo, String channel, String appid, String orgi) {
-        return createRichMediaMessageWithChannel(bo, channel, Enums.MediaType.FILE.toString(), appid, orgi);
-    }
+    @Autowired
+    private DictService dictService;
 
     /**
      * 创建图片，文件消息
      */
-    private ChatMessage createRichMediaMessage(IMUploadFileBO bo, String msgtype) {
-        ChatMessage data = new ChatMessage();
-        data.setFilesize(bo.getSize());
-        data.setFilename(bo.getName());
-        data.setAttachmentid(bo.getId());
-        data.setMessage(bo.getUrl());
-        data.setMsgtype(msgtype);
-        data.setType(Enums.MessageType.MESSAGE.toString());
+    public ChatMessage uploadMediaMessage(IMUploadFileBO bo, Enums.MediaType mediaType) {
+        ChatMessage data = createChatMessage(bo, mediaType);
 
-        MainContext.getCache().findOneAgentUserByUserIdAndOrgi(bo.getUserId(), Constants.SYSTEM_ORGI).ifPresent(p -> {
-            data.setUserid(p.getUserid());
-            data.setUsername(p.getUsername());
-            data.setTouser(p.getAgentno());
-            data.setAppid(p.getAppid());
-            data.setOrgi(p.getOrgi());
-            if (p.isChatbotops()) {
-                // TODO #75 create Chatbot Message
-                // https://github.com/chatopera/cosin/issues/75
-                log.info("[createRichMediaMessageWithChannel] TODO #75 create Chatbot Message");
-            } else {
-                HumanUtils.processMessage(data, msgtype, bo.getUserId());
-            }
-        });
+        MainContext.getCache().findOneAgentUserByUserIdAndOrgi(bo.getUserId(), Constants.SYSTEM_ORGI)
+                .ifPresent(agentUser -> {
+                    data.setTouser(agentUser.getAgentno());
+                    data.setAppid(agentUser.getAppid());
+                    data.setOrgi(agentUser.getOrgi());
+                    if (agentUser.isChatbotops()) {
+                        // TODO #75 create Chatbot Message
+                        // https://github.com/chatopera/cosin/issues/75
+                        log.info("[createRichMediaMessageWithChannel] TODO #75 create Chatbot Message");
+                    } else {
+                        HumanUtils.processMessage(data, data.getMsgtype(), bo.getUserId());
+                    }
+                });
 
         return data;
     }
@@ -111,20 +62,12 @@ public class IMService {
     /**
      * 创建图片，文件消息
      */
-    private ChatMessage createRichMediaMessageWithChannel(IMUploadFileBO bo, String channel, String msgtype, String appid, String orgi) {
-        ChatMessage data = new ChatMessage();
-        data.setUserid(bo.getUserId());
-        data.setUsername(bo.getUserName());
+    public ChatMessage uploadMediaMessageWithChannel(IMUploadFileBO bo, Enums.MediaType mediaType, String channel, String appid, String orgi) {
+        ChatMessage data = createChatMessage(bo, mediaType);
         data.setTouser(bo.getUserId());
         data.setAppid(appid);
         data.setOrgi(orgi);
         data.setChannel(channel);
-        data.setMessage(bo.getUrl());
-        data.setFilesize(bo.getSize());
-        data.setFilename(bo.getName());
-        data.setAttachmentid(bo.getId());
-        data.setMsgtype(msgtype);
-        data.setType(Enums.MessageType.MESSAGE.toString());
 
         if (StringUtils.isNotBlank(bo.getUserId())) {
             CacheService cache = MainContext.getCache();
@@ -136,9 +79,22 @@ public class IMService {
 //                        data, appid, channel, Enums.CallType.IN.toString(),
 //                        Enums.ChatbotItemType.USERINPUT.toString(), msgtype, data.getUserid(), orgi);
             } else {
-                HumanUtils.processMessage(data, msgtype, bo.getUserId());
+                HumanUtils.processMessage(data, data.getMsgtype(), bo.getUserId());
             }
         }
+        return data;
+    }
+
+    private ChatMessage createChatMessage(IMUploadFileBO bo, Enums.MediaType mediaType) {
+        ChatMessage data = new ChatMessage();
+        data.setAttachmentid(bo.getId());
+        data.setFilename(bo.getName());
+        data.setFilesize(bo.getSize());
+        data.setMessage(bo.getUrl());
+        data.setType(Enums.MessageType.MESSAGE.toString());
+        data.setMsgtype(mediaType.toString());
+        data.setUserid(bo.getUserId());
+        data.setUsername(bo.getUserName());
         return data;
     }
 
@@ -152,7 +108,7 @@ public class IMService {
             adTypes = adRes.findByOrgiAndSkill(orgi, skill);
             cacheService.putSystemListByIdAndOrgi(Constants.CSKEFU_SYSTEM_ADV + "_" + skill, orgi, adTypes);
         }
-        List<SysDic> sysDicList = Dict.getInstance().getDic(Constants.CSKEFU_SYSTEM_ADPOS_DIC);
+        List<SysDic> sysDicList = dictService.getDic(Constants.CSKEFU_SYSTEM_ADPOS_DIC);
         SysDic sysDic = null;
         for (SysDic dic : sysDicList) {
             if (dic.getCode().equals(adpos)) {

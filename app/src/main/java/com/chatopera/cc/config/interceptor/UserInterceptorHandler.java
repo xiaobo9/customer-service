@@ -131,7 +131,7 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
         if (imUser == null) {
             imUser = new User();
             imUser.setUsername(Constants.GUEST_USER);
-            imUser.setId(UUIDUtils.removeHyphen(request.getSession(true).getId()));
+            imUser.setId(UUIDUtils.removeHyphen(session.getId()));
             imUser.setSessionid(imUser.getId());
             view.addObject("imuser", imUser);
         }

@@ -16,14 +16,20 @@
  */
 package com.chatopera.cc.util;
 
+import com.chatopera.cc.basic.Constants;
+import com.chatopera.cc.basic.MainContext;
+import com.chatopera.cc.cache.RedisKey;
 import com.github.xiaobo9.service.DictService;
 import com.github.xiaobo9.entity.SysDic;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
 import java.util.List;
 
-// FIXME 换个地方吧
-public class Dict {
+@Slf4j
+public class Dict<K, V> extends HashMap<K, V> {
 
     private static Dict dict = new Dict();
 
@@ -37,6 +43,19 @@ public class Dict {
         Dict.dictService = dictService;
     }
 
+    /**
+     * 模板页面 直接拿这个当 数据字段 用，神奇的用法。。。
+     *
+     * @param key the key whose associated value is to be returned
+     * @return
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public V get(final Object key) {
+        // TODO 从日志中看到，有时会查找key为空的调用，这是为什么？
+        log.debug("[get] key {}", key);
+        return (V) dictService.get(String.valueOf(key));
+    }
 
     @NotNull
     public List<SysDic> getDic(final String code) {
@@ -47,7 +66,7 @@ public class Dict {
      * 获得一个词典的所有子项，并且每个子项的父都是id
      */
     public List<SysDic> getDic(final String code, final String id) {
-        return dictService.getDic(code, id);
+        return dictService.getSubDict(code, id);
     }
 
 

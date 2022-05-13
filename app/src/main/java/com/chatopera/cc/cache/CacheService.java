@@ -622,7 +622,7 @@ public class CacheService {
         String serialized = redisCommand.getHashKV(RedisKey.getJobHashKeyByOrgi(orgi), jobId);
 
         if (StringUtils.isNotBlank(serialized)) {
-            return (JobDetail) SerializeUtil.deserialize(serialized);
+            return SerializeUtil.deserialize(serialized);
         }
         return null;
     }
@@ -657,7 +657,7 @@ public class CacheService {
     public List<SysDic> getSysDicItemsByCodeAndOrgi(final String code, final String orgi) {
         String serialized = redisCommand.getHashKV(RedisKey.getSysDicHashKeyByOrgi(orgi), code);
         if (serialized != null) {
-            return (List<SysDic>) SerializeUtil.deserialize(serialized);
+            return SerializeUtil.deserialize(serialized);
         }
         return null;
     }
@@ -670,7 +670,7 @@ public class CacheService {
             return null;
         }
 
-        return (SysDic) SerializeUtil.deserialize(serialized);
+        return SerializeUtil.deserialize(serialized);
     }
 
     // 获得词典
@@ -681,7 +681,7 @@ public class CacheService {
             return null;
         }
 
-        return (SysDic) SerializeUtil.deserialize(serialized);
+        return SerializeUtil.deserialize(serialized);
     }
 
     // 批量存储

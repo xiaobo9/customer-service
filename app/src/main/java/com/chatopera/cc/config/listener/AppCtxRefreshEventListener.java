@@ -48,12 +48,12 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
         if (MainContext.getContext() == null) {
             logger.info("[onApplicationEvent] set main context and initialize the Cache System.");
             MainContext.setApplicationContext(event.getApplicationContext());
-            SysDicRepository sysDicRes = event.getApplicationContext().getBean(SysDicRepository.class);
-            BlackListRepository blackListRes = event.getApplicationContext().getBean(BlackListRepository.class);
+            SysDicRepository sysDicRepository = event.getApplicationContext().getBean(SysDicRepository.class);
+            BlackListRepository blackListRepository = event.getApplicationContext().getBean(BlackListRepository.class);
             CacheService cacheService = event.getApplicationContext().getBean(CacheService.class);
             String cacheSetupStrategy = event.getApplicationContext().getEnvironment().getProperty("cache.setup.strategy");
 
-            if (!StringUtils.equalsIgnoreCase(cacheSetupStrategy, Constants.cache_setup_strategy_skip)) {
+            if (!Constants.cache_setup_strategy_skip.equalsIgnoreCase(cacheSetupStrategy)) {
 
                 /**************************
                  * 加载系统到缓存
@@ -63,7 +63,7 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
                 // 首先将之前缓存清空，此处使用系统的默认租户信息
                 cacheService.eraseSysDicByOrgi(Constants.SYSTEM_ORGI);
 
-                List<SysDic> sysDicList = sysDicRes.findAll();
+                List<SysDic> sysDicList = sysDicRepository.findAll();
                 Map<String, List<SysDic>> rootDictItems = new HashMap<>(); // 关联根词典及其子项
                 Map<String, SysDic> rootDics = new HashMap<>();
                 Set<String> parents = new HashSet<>();
@@ -106,7 +106,7 @@ public class AppCtxRefreshEventListener implements ApplicationListener<ContextRe
                     cacheService.putSysDicByOrgi(entry.getValue(), Constants.SYSTEM_ORGI);
                 }
 
-                List<BlackEntity> blackList = blackListRes.findByOrgi(Constants.SYSTEM_ORGI);
+                List<BlackEntity> blackList = blackListRepository.findByOrgi(Constants.SYSTEM_ORGI);
                 for (final BlackEntity black : blackList) {
                     if (StringUtils.isNotBlank(black.getUserid())) {
                         if (black.getEndtime() == null || black.getEndtime().after(new Date())) {
