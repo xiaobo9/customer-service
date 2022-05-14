@@ -23,6 +23,7 @@ import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
 import com.chatopera.cc.peer.PeerSyncIM;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.kit.CookiesKit;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.AgentStatusRepository;
 import com.chatopera.cc.socketio.message.Message;
@@ -187,8 +188,6 @@ public class AgentUserService {
      * @param sort
      * @param user
      * @param orgi
-     * @throws IOException
-     * @throws TemplateException
      */
     public void buildIndexViewWithModels(
             final ModelAndView view,
@@ -198,17 +197,12 @@ public class AgentUserService {
             String sort,
             final User user,
             final String orgi,
-            final AgentUser agentUser) throws IOException, TemplateException {
+            final AgentUser agentUser) {
         Sort defaultSort = null;
         if (StringUtils.isBlank(sort)) {
-            Cookie[] cookies = request.getCookies();// 这样便可以获取一个cookie数组
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals("sort")) {
-                        sort = cookie.getValue();
-                        break;
-                    }
-                }
+            Optional<Cookie> optional = CookiesKit.getCookie(request, "sort");
+            if (optional.isPresent()) {
+                sort = optional.get().getValue();
             }
         }
         if (StringUtils.isNotBlank(sort)) {

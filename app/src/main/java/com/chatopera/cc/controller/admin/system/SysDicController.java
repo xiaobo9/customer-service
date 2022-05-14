@@ -38,7 +38,6 @@ import java.util.List;
 @RequestMapping("/admin/sysdic")
 public class SysDicController extends Handler {
 
-
     @Autowired
     private SysDicRepository sysDicRes;
 
@@ -54,7 +53,7 @@ public class SysDicController extends Handler {
 
     @RequestMapping("/add")
     @Menu(type = "admin", subtype = "sysdic")
-    public ModelAndView add(ModelMap map, HttpServletRequest request) {
+    public ModelAndView add() {
         return request(super.pageTplResponse("/admin/system/sysdic/add"));
     }
 
@@ -79,7 +78,7 @@ public class SysDicController extends Handler {
 
     @RequestMapping("/edit")
     @Menu(type = "admin", subtype = "sysdic")
-    public ModelAndView edit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String p) {
+    public ModelAndView edit(ModelMap map, @Valid String id, @Valid String p) {
         map.addAttribute("sysDic", sysDicRes.findById(id).orElseThrow(() -> new RuntimeException("not found")));
         map.addAttribute("p", p);
         return request(super.pageTplResponse("/admin/system/sysdic/edit"));
@@ -106,7 +105,7 @@ public class SysDicController extends Handler {
 
     @RequestMapping("/delete")
     @Menu(type = "admin", subtype = "sysdic")
-    public ModelAndView delete(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String p) {
+    public ModelAndView delete(HttpServletRequest request, @Valid String id, @Valid String p) {
         SysDic sysDic = sysDicRes.findById(id).orElseThrow(() -> new RuntimeException("not found"));
         sysDicRes.deleteAll(sysDicRes.findByDicid(id));
         sysDicRes.delete(sysDic);
@@ -126,7 +125,7 @@ public class SysDicController extends Handler {
 
     @RequestMapping("/dicitem/add")
     @Menu(type = "admin", subtype = "sysdic")
-    public ModelAndView dicitemadd(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String p) {
+    public ModelAndView dicitemadd(ModelMap map, @Valid String id, @Valid String p) {
         map.addAttribute("sysDic", sysDicRes.findById(id).orElseThrow(() -> new RuntimeException("not found")));
         map.addAttribute("p", p);
         return request(super.pageTplResponse("/admin/system/sysdic/dicitemadd"));
@@ -153,9 +152,6 @@ public class SysDicController extends Handler {
 
     /**
      * 更新系统词典缓存
-     *
-     * @param dic
-     * @param orgi
      */
     public void reloadSysDicItem(final SysDic dic, final String orgi) {
         cacheService.putSysDicByOrgi(dic.getId(), orgi, dic);
@@ -176,7 +172,7 @@ public class SysDicController extends Handler {
 
     @RequestMapping("/dicitem/batadd")
     @Menu(type = "admin", subtype = "sysdic")
-    public ModelAndView dicitembatadd(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String p) {
+    public ModelAndView dicitembatadd(ModelMap map, @Valid String id, @Valid String p) {
         map.addAttribute("sysDic", sysDicRes.findById(id).orElseThrow(() -> new RuntimeException("not found")));
         map.addAttribute("p", p);
         return request(super.pageTplResponse("/admin/system/sysdic/batadd"));
@@ -185,11 +181,11 @@ public class SysDicController extends Handler {
     @RequestMapping("/dicitem/batsave")
     @Menu(type = "admin", subtype = "sysdic")
     public ModelAndView dicitembatsave(HttpServletRequest request, @Valid SysDic sysDic, @Valid String content, @Valid String p) {
-        String[] dicitems = content.split("[\n\r\n]");
+        String[] dicitems = content.split("[\n\r]");
         int count = 0;
         String orig = super.getOrgi(request);
         for (String dicitem : dicitems) {
-            String[] dicValues = dicitem.split("[\t, ;]{1,}");
+            String[] dicValues = dicitem.split("[\t, ;]+");
             if (dicValues.length == 2 && dicValues[0].length() > 0 && dicValues[1].length() > 0) {
                 SysDic dic = new SysDic();
                 dic.setOrgi(orig);
@@ -215,7 +211,7 @@ public class SysDicController extends Handler {
 
     @RequestMapping("/dicitem/edit")
     @Menu(type = "admin", subtype = "sysdic")
-    public ModelAndView dicitemedit(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String p) {
+    public ModelAndView dicitemedit(ModelMap map, @Valid String id, @Valid String p) {
         map.addAttribute("sysDic", sysDicRes.findById(id).orElseThrow(() -> new RuntimeException("not found")));
         map.addAttribute("p", p);
         return request(super.pageTplResponse("/admin/system/sysdic/dicitemedit"));
@@ -245,7 +241,7 @@ public class SysDicController extends Handler {
 
     @RequestMapping("/dicitem/delete")
     @Menu(type = "admin", subtype = "sysdic")
-    public ModelAndView dicitemdelete(ModelMap map, HttpServletRequest request, @Valid String id, @Valid String p) {
+    public ModelAndView dicitemdelete(HttpServletRequest request, @Valid String id, @Valid String p) {
         sysDicRes.deleteAll(sysDicRes.findByDicid(id));
         SysDic dic = sysDicRes.getOne(id);
         sysDicRes.delete(dic);

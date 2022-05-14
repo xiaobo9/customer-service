@@ -21,10 +21,10 @@ import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.Handler;
 import com.chatopera.cc.persistence.es.ContactsRepository;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.service.OrganService;
 import com.chatopera.cc.service.UserService;
 import com.chatopera.cc.util.Menu;
-import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.commons.utils.MD5Utils;
 import com.github.xiaobo9.entity.*;
@@ -80,6 +80,9 @@ public class AppsController extends Handler {
 
     @Autowired
     private ConsultInviteRepository invite;
+
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @RequestMapping({"/apps/content.html"})
     @Menu(type = "apps", subtype = "content")
@@ -149,65 +152,33 @@ public class AppsController extends Handler {
 
     private void aggValues(ModelMap map, HttpServletRequest request) {
         Organ currentOrgan = super.getOrgan(request);
-        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, super.getOrgi(request));
+        String orgi = super.getOrgi(request);
+        Map<String, Organ> organs = organService.findAllOrganByParentAndOrgi(currentOrgan, orgi);
 
         List<Object> onlineUsers = new ArrayList<>();
         List<Object> userEvents = new ArrayList<>();
         if (organs.size() > 0) {
-            List<String> appids = invite.findSNSIdByOrgiAndSkill(super.getOrgi(request), organs.keySet());
+            List<String> appids = invite.findSNSIdByOrgiAndSkill(orgi, organs.keySet());
 
             if (appids.size() > 0) {
                 onlineUsers = onlineUserRes.findByOrgiAndStatusAndInAppIds(
-                        super.getOrgi(request),
-                        Enums.OnlineUserStatusEnum.ONLINE.toString(), appids);
+                        orgi, Enums.OnlineUserStatusEnum.ONLINE.toString(), appids);
 
-                userEvents = userEventRes.findByOrgiAndCreatetimeRangeAndInAppIds(super.getOrgi(request), MainUtils.getStartTime(),
+                userEvents = userEventRes.findByOrgiAndCreatetimeRangeAndInAppIds(orgi, MainUtils.getStartTime(),
                         MainUtils.getEndTime(), appids);
             }
         }
 
-        map.put("agentReport", acdWorkMonitor.getAgentReport(currentOrgan != null ? currentOrgan.getId() : null, super.getOrgi(request)));
-        map.put(
-                "webIMReport", MainUtils.getWebIMReport(userEvents));
+        map.put("agentReport", acdWorkMonitor.getAgentReport(currentOrgan != null ? currentOrgan.getId() : null, orgi));
+        map.put("webIMReport", MainUtils.getWebIMReport(userEvents));
 
         // TODO 此处为什么不用agentReport中的agents？
         map.put("agents", getUsers(request).size());
 
-        map.put(
-                "webIMInvite", MainUtils.getWebIMInviteStatus(onlineUsers));
+        map.put("webIMInvite", MainUtils.getWebIMInviteStatus(onlineUsers));
 
-        map.put(
-                "inviteResult", MainUtils.getWebIMInviteResult(
-                        onlineUserRes.findByOrgiAndAgentnoAndCreatetimeRange(
-                                super.getOrgi(request),
-                                super.getUser(request).getId(),
-                                MainUtils.getStartTime(),
-                                MainUtils.getEndTime())));
-
-        map.put(
-                "agentUserCount", onlineUserRes.countByAgentForAgentUser(
-                        super.getOrgi(request),
-                        AgentUserStatusEnum.INSERVICE.toString(),
-                        super.getUser(request).getId(),
-                        MainUtils.getStartTime(),
-                        MainUtils.getEndTime()));
-
-        map.put(
-                "agentServicesCount", onlineUserRes.countByAgentForAgentUser(
-                        super.getOrgi(request),
-                        AgentUserStatusEnum.END.toString(),
-                        super.getUser(request).getId(),
-                        MainUtils.getStartTime(),
-                        MainUtils.getEndTime()));
-
-        map.put(
-                "agentServicesAvg", onlineUserRes.countByAgentForAvagTime(
-                        super.getOrgi(request),
-                        AgentUserStatusEnum.END.toString(),
-                        super.getUser(request).getId(),
-                        MainUtils.getStartTime(),
-                        MainUtils.getEndTime()));
-
+        User user = super.getUser(request);
+        onlineUserService.onlineUserInfo(user, map, orgi);
     }
 
     @RequestMapping({"/apps/onlineuser.html"})

@@ -22,7 +22,9 @@ import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.interfaces.DataExchangeInterface;
 import com.chatopera.cc.util.*;
+import com.github.xiaobo9.commons.enums.AgentUserStatusEnum;
 import com.github.xiaobo9.commons.enums.Enums;
+import com.github.xiaobo9.commons.kit.CookiesKit;
 import com.github.xiaobo9.commons.kit.ParameterKit;
 import com.github.xiaobo9.entity.*;
 import com.github.xiaobo9.repository.*;
@@ -35,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.PostConstruct;
@@ -43,7 +46,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.CharacterCodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -104,10 +106,6 @@ public class OnlineUserService {
 
     /**
      * 在Cache中查询OnlineUser，或者从数据库中根据UserId，Orgi和Invite查询
-     *
-     * @param userid
-     * @param orgi
-     * @return
      */
     public OnlineUser onlineuser(String userid, String orgi) {
         // 从Cache中查找
@@ -117,144 +115,62 @@ public class OnlineUserService {
 
     /**
      * @param orgi
-     * @param ipdata
+     * @param ipdata       根据 ip 属地进行过滤？
      * @param invite
      * @param isJudgeShare 是否判断是否共享租户
      * @return
      */
-    @SuppressWarnings("unchecked")
     public List<Organ> organ(String orgi, final IP ipdata, final CousultInvite invite, boolean isJudgeShare) {
-        String origOrig = orgi;
-        boolean isShare = false;
-        if (isJudgeShare) {
-            SystemConfig systemConfig = configService.getSystemConfig();
-            if (systemConfig.isEnabletneant() && systemConfig.isTenantshare()) {
-                orgi = Constants.SYSTEM_ORGI;
-                isShare = true;
-            }
-        }
-        List<Organ> skillGroups = cacheService.findOneSystemByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig);
-        if (skillGroups == null) {
-            skillGroups = organRepository.findByOrgiAndSkill(orgi, true);
-            // 租户共享时 查出该租住要显的绑定的技能组
-            if (isShare && !(Constants.SYSTEM_ORGI.equals((invite == null ? origOrig : invite.getOrgi())))) {
-                List<OrgiSkillRel> orgiSkillRelList = null;
-                orgiSkillRelList = skillRelRepository.findByOrgi((invite == null ? origOrig : invite.getOrgi()));
-                List<Organ> skillTempList = new ArrayList<>();
-                if (!orgiSkillRelList.isEmpty()) {
-                    for (Organ organ : skillGroups) {
-                        for (OrgiSkillRel rel : orgiSkillRelList) {
-                            if (organ.getId().equals(rel.getSkillid())) {
-                                skillTempList.add(organ);
-                            }
-                        }
-                    }
-                }
-                skillGroups = skillTempList;
-            }
-
-            if (skillGroups.size() > 0) {
-                cacheService.putSystemListByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig, skillGroups);
-            }
-        }
-
-        if (ipdata == null && invite == null) {
-            return skillGroups;
-        }
-
+        List<Organ> skillGroups = organ(orgi, invite, isJudgeShare);
         List<Organ> regOrganList = new ArrayList<>();
         for (Organ organ : skillGroups) {
             String area = organ.getArea();
-            if (StringUtils.isNotBlank(area)) {
-                if (area.contains(ipdata.getProvince()) || area.contains(ipdata.getCity())) {
-                    regOrganList.add(organ);
-                }
-            } else {
+            if (StringUtils.isBlank(area) || area.contains(ipdata.getProvince()) || area.contains(ipdata.getCity())) {
                 regOrganList.add(organ);
             }
         }
         return regOrganList;
     }
 
-
-    /**
-     * @param orgi
-     * @param isJudgeShare
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public List<Organ> organ(String orgi, boolean isJudgeShare) {
-        return organ(orgi, null, null, isJudgeShare);
-    }
-
-    private List<AreaType> getAreaTypeList(String area, List<AreaType> areaTypeList) {
-        List<AreaType> atList = new ArrayList<AreaType>();
-        if (areaTypeList != null && areaTypeList.size() > 0) {
-            for (AreaType areaType : areaTypeList) {
-                if (StringUtils.isNotBlank(area) && area.indexOf(areaType.getId()) >= 0) {
-                    atList.add(areaType);
-                }
-            }
+    private List<Organ> organ(String orgi, CousultInvite invite, boolean isJudgeShare) {
+        String origOrig = orgi;
+        boolean isShare = false;
+        SystemConfig systemConfig = configService.getSystemConfig();
+        if (isJudgeShare && systemConfig.isEnabletneant() && systemConfig.isTenantshare()) {
+            orgi = Constants.SYSTEM_ORGI;
+            isShare = true;
         }
-        return atList;
-    }
-
-    /**
-     * 只要有一级 地区命中就就返回
-     *
-     * @param orgi
-     * @param ipdata
-     * @param topicTypeList
-     * @return
-     */
-    public List<KnowledgeType> topicType(String orgi, IP ipdata, List<KnowledgeType> topicTypeList) {
-        List<KnowledgeType> tempTopicTypeList = new ArrayList<KnowledgeType>();
-        for (KnowledgeType topicType : topicTypeList) {
-            if (getParentArea(ipdata, topicType, topicTypeList) != null) {
-                tempTopicTypeList.add(topicType);
-            }
+        List<Organ> skillGroups = cacheService.findOneSystemByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig);
+        // 缓存命中，直接用缓存的
+        if (skillGroups != null) {
+            return skillGroups;
         }
-        return tempTopicTypeList;
-    }
-
-    /**
-     * @param topicType
-     * @param topicTypeList
-     * @return
-     */
-    private KnowledgeType getParentArea(IP ipdata, KnowledgeType topicType, List<KnowledgeType> topicTypeList) {
-        KnowledgeType area = null;
-        if (StringUtils.isNotBlank(topicType.getArea())) {
-            if ((topicType.getArea().indexOf(ipdata.getProvince()) >= 0 || topicType.getArea().indexOf(
-                    ipdata.getCity()) >= 0)) {
-                area = topicType;
-            }
-        } else {
-            if (StringUtils.isNotBlank(topicType.getParentid()) && !topicType.getParentid().equals("0")) {
-                for (KnowledgeType temp : topicTypeList) {
-                    if (temp.getId().equals(topicType.getParentid())) {
-                        if (StringUtils.isNotBlank(temp.getArea())) {
-                            if ((temp.getArea().indexOf(ipdata.getProvince()) >= 0 || temp.getArea().indexOf(
-                                    ipdata.getCity()) >= 0)) {
-                                area = temp;
-                                break;
-                            } else {
-                                break;
-                            }
-                        } else {
-                            area = getParentArea(ipdata, temp, topicTypeList);
+        skillGroups = organRepository.findByOrgiAndSkill(orgi, true);
+        // 租户共享时 查出该租住要显的绑定的技能组
+        String whichOrgan = invite == null ? origOrig : invite.getOrgi();
+        if (isShare && !(Constants.SYSTEM_ORGI.equals(whichOrgan))) {
+            List<OrgiSkillRel> orgiSkillRelList = skillRelRepository.findByOrgi(whichOrgan);
+            List<Organ> skillTempList = new ArrayList<>();
+            if (!orgiSkillRelList.isEmpty()) {
+                for (Organ organ : skillGroups) {
+                    for (OrgiSkillRel rel : orgiSkillRelList) {
+                        if (organ.getId().equals(rel.getSkillid())) {
+                            skillTempList.add(organ);
                         }
                     }
                 }
-            } else {
-                area = topicType;
             }
+            skillGroups = skillTempList;
         }
-        return area;
+        // 放到缓存
+        if (skillGroups.size() > 0) {
+            cacheService.putSystemListByIdAndOrgi(Constants.CACHE_SKILL + origOrig, origOrig, skillGroups);
+        }
+        return skillGroups;
     }
 
-    public List<Topic> topic(String orgi, List<KnowledgeType> topicTypeList, List<Topic> topicList) {
-        List<Topic> tempTopicList = new ArrayList<Topic>();
+    public List<Topic> topic(List<KnowledgeType> topicTypeList, List<Topic> topicList) {
+        List<Topic> tempTopicList = new ArrayList<>();
         if (topicList != null) {
             for (Topic topic : topicList) {
                 if (StringUtils.isBlank(topic.getCate()) || Constants.DEFAULT_TYPE.equals(
@@ -268,13 +184,9 @@ public class OnlineUserService {
 
     /**
      * 根据热点知识找到 非空的 分类
-     *
-     * @param topicTypeList
-     * @param topicList
-     * @return
      */
     public List<KnowledgeType> filterTopicType(List<KnowledgeType> topicTypeList, List<Topic> topicList) {
-        List<KnowledgeType> tempTopicTypeList = new ArrayList<KnowledgeType>();
+        List<KnowledgeType> tempTopicTypeList = new ArrayList<>();
         if (topicTypeList != null) {
             for (KnowledgeType knowledgeType : topicTypeList) {
                 boolean hasTopic = false;
@@ -294,10 +206,6 @@ public class OnlineUserService {
 
     /**
      * 找到知识点对应的 分类
-     *
-     * @param cate
-     * @param topicTypeList
-     * @return
      */
     private KnowledgeType getTopicType(String cate, List<KnowledgeType> topicTypeList) {
         KnowledgeType kt = null;
@@ -310,10 +218,6 @@ public class OnlineUserService {
         return kt;
     }
 
-    /**
-     * @param orgi
-     * @return
-     */
     @SuppressWarnings("unchecked")
     public List<User> agents(String orgi) {
         String origOrig = orgi;
@@ -339,9 +243,7 @@ public class OnlineUserService {
                 }
             }
         }
-        agentList = agentTempList;
-
-        return agentList;
+        return agentTempList;
     }
 
     public Contacts processContacts(
@@ -350,11 +252,8 @@ public class OnlineUserService {
             final String appid,
             final String userid) {
         if (contacts != null) {
-            if (contacts != null &&
-                    (StringUtils.isNotBlank(contacts.getName()) ||
-                            StringUtils.isNotBlank(contacts.getPhone()) ||
-                            StringUtils.isNotBlank(contacts.getEmail()))) {
-                StringBuffer query = new StringBuffer();
+            if (StringUtils.isNotBlank(contacts.getName()) || StringUtils.isNotBlank(contacts.getPhone()) || StringUtils.isNotBlank(contacts.getEmail())) {
+                StringBuilder query = new StringBuilder();
                 query.append(contacts.getName());
                 if (StringUtils.isNotBlank(contacts.getPhone())) {
                     query.append(" OR ").append(contacts.getPhone());
@@ -363,7 +262,7 @@ public class OnlineUserService {
                     query.append(" OR ").append(contacts.getEmail());
                 }
                 Page<Contacts> contactsList = contactsRes.findByOrgi(
-                        orgi, false, query.toString(), new PageRequest(0, 1));
+                        orgi, false, query.toString(), PageRequest.of(0, 1));
                 if (contactsList.getContent().size() > 0) {
                     contacts = contactsList.getContent().get(0);
                 } else {
@@ -399,18 +298,6 @@ public class OnlineUserService {
     /**
      * 创建OnlineUser并上线
      * 根据user判断追踪，在浏览器里，用fingerprint2生成的ID作为唯一标识
-     *
-     * @param user
-     * @param orgi
-     * @param sessionid
-     * @param optype
-     * @param request
-     * @param channel
-     * @param appid
-     * @param contacts
-     * @param invite
-     * @return
-     * @throws CharacterCodingException
      */
     public OnlineUser online(
             final User user,
@@ -422,189 +309,147 @@ public class OnlineUserService {
             final String appid,
             final Contacts contacts,
             final CousultInvite invite) {
-//        logger.info(
-//                "[online] user {}, orgi {}, sessionid {}, optype {}, channel {}", user.getId(), orgi, sessionid, optype,
-//                channel);
-        OnlineUser onlineUser = null;
+        if (invite == null) {
+            return null;
+        }
         final Date now = new Date();
-        if (invite != null) {
-            // resolve user from cache or db.
-            onlineUser = onlineuser(user.getId(), orgi);
+        // resolve user from cache or db.
+        OnlineUser onlineUser = onlineuser(user.getId(), orgi);
+        if (onlineUser == null) {
+            onlineUser = new OnlineUser();
+            onlineUser.setId(user.getId());
+            onlineUser.setCreater(user.getId());
+            onlineUser.setUsername(user.getUsername());
+            onlineUser.setCreatetime(now);
+            onlineUser.setUpdatetime(now);
+            onlineUser.setUpdateuser(user.getUsername());
+            onlineUser.setSessionid(sessionid);
 
-            if (onlineUser == null) {
-//                logger.info("[online] create new online user.");
-                onlineUser = new OnlineUser();
-                onlineUser.setId(user.getId());
-                onlineUser.setCreater(user.getId());
-                onlineUser.setUsername(user.getUsername());
-                onlineUser.setCreatetime(now);
-                onlineUser.setUpdatetime(now);
-                onlineUser.setUpdateuser(user.getUsername());
-                onlineUser.setSessionid(sessionid);
+            if (contacts != null) {
+                onlineUser.setContactsid(contacts.getId());
+            }
 
-                if (contacts != null) {
-                    onlineUser.setContactsid(contacts.getId());
-                }
+            onlineUser.setOrgi(orgi);
+            onlineUser.setChannel(channel);
 
-                onlineUser.setOrgi(orgi);
-                onlineUser.setChannel(channel);
+            // 从Server session信息中查找该用户相关的历史信息
+            String cookie = CookiesKit.getCookie(request, "R3GUESTUSEKEY")
+                    .map(Cookie::getValue).orElse(null);
+            // 1 表示 之前有session的访客???
+            onlineUser.setOlduser(StringUtils.equals(user.getSessionid(), cookie) ? "0" : "1");
+            onlineUser.setMobile(BrowserClient.isMobile(request.getHeader("User-Agent")) ? "1" : "0");
 
-                // 从Server session信息中查找该用户相关的历史信息
-                String cookie = getCookie(request, "R3GUESTUSEKEY");
-                if ((StringUtils.isBlank(cookie))
-                        || (StringUtils.equals(user.getSessionid(), cookie))) {
-                    onlineUser.setOlduser("0");
+            String url = request.getHeader("referer");
+            onlineUser.setUrl(url);
+            if (StringUtils.isNotBlank(url)) {
+                onlineUser.setSource(this.getSource(url));
+            }
+            onlineUser.setAppid(appid);
+            onlineUser.setUserid(user.getId());
+            onlineUser.setUsername(user.getUsername());
+
+            if (StringUtils.isNotBlank(request.getParameter("title"))) {
+                String title = request.getParameter("title");
+                if (title.length() > 255) {
+                    onlineUser.setTitle(title.substring(0, 255));
                 } else {
-                    // 之前有session的访客
-                    onlineUser.setOlduser("1");
+                    onlineUser.setTitle(title);
                 }
-                onlineUser.setMobile(BrowserClient.isMobile(request
-                        .getHeader("User-Agent")) ? "1" : "0");
+            }
 
-                // onlineUser.setSource(user.getId());
+            onlineUser.setLogintime(now);
 
-                String url = request.getHeader("referer");
-                onlineUser.setUrl(url);
-                if (StringUtils.isNotBlank(url)) {
-                    try {
-                        URL referer = new URL(url);
-                        onlineUser.setSource(referer.getHost());
-                    } catch (MalformedURLException e) {
-                        log.info("[online] error when parsing URL", e);
-                    }
-                }
+            // 地理信息
+            String ip = IPUtils.getIpAddress(request);
+            onlineUser.setIp(ip);
+            IP ipdata = IPTools.findGeography(ip);
+            onlineUser.setCountry(ipdata.getCountry());
+            onlineUser.setProvince(ipdata.getProvince());
+            onlineUser.setCity(ipdata.getCity());
+            onlineUser.setIsp(ipdata.getIsp());
+            onlineUser.setRegion(ipdata + "（" + ip + "）");
+
+            onlineUser.setDatestr(new SimpleDateFormat("yyyMMdd")
+                    .format(now));
+
+            onlineUser.setHostname(ip);
+            onlineUser.setSessionid(sessionid);
+            onlineUser.setOptype(optype);
+            onlineUser.setStatus(Enums.OnlineUserStatusEnum.ONLINE.toString());
+            final BrowserClient client = BrowserClient.parseClient(request.getHeader(BrowserClient.USER_AGENT));
+
+            // 浏览器信息
+            onlineUser.setOpersystem(client.getOs());
+            onlineUser.setBrowser(client.getBrowser());
+            onlineUser.setUseragent(client.getUseragent());
+
+            log.info("[online] new online user is created but not persisted.");
+        } else {
+            // 从DB或缓存找到OnlineUser
+            onlineUser.setCreatetime(now); // 刷新创建时间
+            if ((StringUtils.isNotBlank(onlineUser.getSessionid()) && !StringUtils.equals(
+                    onlineUser.getSessionid(), sessionid)) ||
+                    !StringUtils.equals(
+                            Enums.OnlineUserStatusEnum.ONLINE.toString(), onlineUser.getStatus())) {
+                // 当新的session与从DB或缓存查找的session不一致时，或者当数据库或缓存的OnlineUser状态不是ONLINE时
+                // 代表该用户登录了新的Session或从离线变为上线！
+
+                onlineUser.setStatus(Enums.OnlineUserStatusEnum.ONLINE.toString()); // 设置用户到上线
+                onlineUser.setChannel(channel);          // 设置渠道
                 onlineUser.setAppid(appid);
-                onlineUser.setUserid(user.getId());
-                onlineUser.setUsername(user.getUsername());
-
-                if (StringUtils.isNotBlank(request.getParameter("title"))) {
-                    String title = request.getParameter("title");
-                    if (title.length() > 255) {
-                        onlineUser.setTitle(title.substring(0, 255));
-                    } else {
-                        onlineUser.setTitle(title);
-                    }
+                onlineUser.setUpdatetime(now);           // 刷新更新时间
+                if (StringUtils.isNotBlank(onlineUser.getSessionid()) && !StringUtils.equals(
+                        onlineUser.getSessionid(), sessionid)) {
+                    onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
+                    onlineUser.setSessionid(sessionid);  // 设置新的session信息
+                    onlineUser.setLogintime(now);        // 设置更新时间
+                    onlineUser.setInvitetimes(0);        // 重置邀请次数
                 }
+            }
 
-                onlineUser.setLogintime(now);
-
-                // 地理信息
-                String ip = IPUtils.getIpAddress(request);
-                onlineUser.setIp(ip);
-                IP ipdata = IPTools.findGeography(ip);
-                onlineUser.setCountry(ipdata.getCountry());
-                onlineUser.setProvince(ipdata.getProvince());
-                onlineUser.setCity(ipdata.getCity());
-                onlineUser.setIsp(ipdata.getIsp());
-                onlineUser.setRegion(ipdata.toString() + "（"
-                        + ip + "）");
-
-                onlineUser.setDatestr(new SimpleDateFormat("yyyMMdd")
-                        .format(now));
-
-                onlineUser.setHostname(ip);
-                onlineUser.setSessionid(sessionid);
-                onlineUser.setOptype(optype);
-                onlineUser.setStatus(Enums.OnlineUserStatusEnum.ONLINE.toString());
-                final BrowserClient client = BrowserClient.parseClient(request.getHeader(BrowserClient.USER_AGENT));
-
-                // 浏览器信息
-                onlineUser.setOpersystem(client.getOs());
-                onlineUser.setBrowser(client.getBrowser());
-                onlineUser.setUseragent(client.getUseragent());
-
-                log.info("[online] new online user is created but not persisted.");
-            } else {
-                // 从DB或缓存找到OnlineUser
-                onlineUser.setCreatetime(now); // 刷新创建时间
-                if ((StringUtils.isNotBlank(onlineUser.getSessionid()) && !StringUtils.equals(
-                        onlineUser.getSessionid(), sessionid)) ||
-                        !StringUtils.equals(
-                                Enums.OnlineUserStatusEnum.ONLINE.toString(), onlineUser.getStatus())) {
-                    // 当新的session与从DB或缓存查找的session不一致时，或者当数据库或缓存的OnlineUser状态不是ONLINE时
-                    // 代表该用户登录了新的Session或从离线变为上线！
-
-                    onlineUser.setStatus(Enums.OnlineUserStatusEnum.ONLINE.toString()); // 设置用户到上线
-                    onlineUser.setChannel(channel);          // 设置渠道
-                    onlineUser.setAppid(appid);
-                    onlineUser.setUpdatetime(now);           // 刷新更新时间
-                    if (StringUtils.isNotBlank(onlineUser.getSessionid()) && !StringUtils.equals(
-                            onlineUser.getSessionid(), sessionid)) {
-                        onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.DEFAULT.toString());
-                        onlineUser.setSessionid(sessionid);  // 设置新的session信息
-                        onlineUser.setLogintime(now);        // 设置更新时间
-                        onlineUser.setInvitetimes(0);        // 重置邀请次数
+            // 处理联系人关联信息
+            if (contacts != null) {
+                // 当关联到联系人
+                if (StringUtils.isNotBlank(contacts.getId()) && StringUtils.isNotBlank(
+                        contacts.getName()) && (StringUtils.isBlank(
+                        onlineUser.getContactsid()) || !contacts.getName().equals(onlineUser.getUsername()))) {
+                    if (StringUtils.isBlank(onlineUser.getContactsid())) {
+                        onlineUser.setContactsid(contacts.getId());
                     }
-                }
-
-                // 处理联系人关联信息
-                if (contacts != null) {
-                    // 当关联到联系人
-                    if (StringUtils.isNotBlank(contacts.getId()) && StringUtils.isNotBlank(
-                            contacts.getName()) && (StringUtils.isBlank(
-                            onlineUser.getContactsid()) || !contacts.getName().equals(onlineUser.getUsername()))) {
-                        if (StringUtils.isBlank(onlineUser.getContactsid())) {
-                            onlineUser.setContactsid(contacts.getId());
-                        }
-                        if (!contacts.getName().equals(onlineUser.getUsername())) {
-                            onlineUser.setUsername(contacts.getName());
-                        }
-                        onlineUser.setUpdatetime(now);
+                    if (!contacts.getName().equals(onlineUser.getUsername())) {
+                        onlineUser.setUsername(contacts.getName());
                     }
-                }
-
-                if (StringUtils.isBlank(onlineUser.getUsername()) && StringUtils.isNotBlank(user.getUsername())) {
-                    onlineUser.setUseragent(user.getUsername());
                     onlineUser.setUpdatetime(now);
                 }
             }
 
-            if (invite.isRecordhis() && StringUtils.isNotBlank(request.getParameter("traceid"))) {
-                UserTraceHistory trace = new UserTraceHistory();
-                trace.setId(request.getParameter("traceid"));
-                trace.setTitle(request.getParameter("title"));
-                trace.setUrl(request.getParameter("url"));
-                trace.setOrgi(invite.getOrgi());
-                trace.setUpdatetime(new Date());
-                trace.setUsername(onlineUser.getUsername());
-                userTraceRes.save(trace);
+            if (StringUtils.isBlank(onlineUser.getUsername()) && StringUtils.isNotBlank(user.getUsername())) {
+                onlineUser.setUseragent(user.getUsername());
+                onlineUser.setUpdatetime(now);
             }
+        }
 
-            // 完成获取及更新OnlineUser, 将信息加入缓存
-            if (onlineUser != null && StringUtils.isNotBlank(onlineUser.getUserid())) {
-//                logger.info(
-//                        "[online] onlineUser id {}, status {}, invite status {}", onlineUser.getId(),
-//                        onlineUser.getStatus(), onlineUser.getInvitestatus());
-                // 存储到缓存及数据库
+        if (invite.isRecordhis() && StringUtils.isNotBlank(request.getParameter("traceid"))) {
+            UserTraceHistory trace = new UserTraceHistory();
+            trace.setId(request.getParameter("traceid"));
+            trace.setTitle(request.getParameter("title"));
+            trace.setUrl(request.getParameter("url"));
+            trace.setOrgi(invite.getOrgi());
+            trace.setUpdatetime(new Date());
+            trace.setUsername(onlineUser.getUsername());
+            userTraceRes.save(trace);
+        }
 
-                onlineUserRes.save(onlineUser);
-            }
+        // 完成获取及更新OnlineUser, 将信息加入缓存
+        if (StringUtils.isNotBlank(onlineUser.getUserid())) {
+            // 存储到缓存及数据库
+            onlineUserRes.save(onlineUser);
         }
         return onlineUser;
     }
 
     /**
-     * @param request
-     * @param key
-     * @return
-     */
-    public String getCookie(HttpServletRequest request, String key) {
-        Cookie data = null;
-        if (request != null && request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (cookie.getName().equals(key)) {
-                    data = cookie;
-                    break;
-                }
-            }
-        }
-        return data != null ? data.getValue() : null;
-    }
-
-    /**
-     * @param user
-     * @param orgi
-     * @throws Exception
+     * 设置onlineUser为离线
      */
     public void offline(String user, String orgi) {
         OnlineUser onlineUser = cacheService.findOneOnlineUserByUserIdAndOrgi(user, orgi);
@@ -625,24 +470,7 @@ public class OnlineUserService {
         cacheService.deleteOnlineUserByIdAndOrgi(user, orgi);
     }
 
-    /**
-     * 设置onlineUser为离线
-     *
-     * @param onlineUser
-     * @throws Exception
-     */
-    public void offline(OnlineUser onlineUser) {
-        if (onlineUser != null) {
-            offline(onlineUser.getId(), onlineUser.getOrgi());
-        }
-    }
-
-    /**
-     * @param user
-     * @throws Exception
-     */
     public void refuseInvite(final String user) {
-
         onlineUserRes.findById(user)
                 .ifPresent(onlineUser -> {
                     onlineUser.setInvitestatus(Enums.OnlineUserInviteStatus.REFUSE.toString());
@@ -652,43 +480,13 @@ public class OnlineUserService {
                 });
     }
 
-    public String unescape(String src) {
-        StringBuilder tmp = new StringBuilder();
-        try {
-            tmp.append(java.net.URLDecoder.decode(src, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        return tmp.toString();
-    }
-
-    public String getKeyword(String url) {
-        Map<String, String[]> values = new HashMap<>();
-        try {
-            ParameterKit.parseParameters(values, url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        StringBuilder strb = new StringBuilder();
-        String[] data = values.get("q");
-        if (data != null) {
-            for (String v : data) {
-                strb.append(v);
-            }
-        }
-        return strb.toString();
-    }
-
     public String getSource(String url) {
-        String source = "0";
         try {
-            URL addr = new URL(url);
-            source = addr.getHost();
+            return new URL(url).getHost();
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+            log.info("[online] error when parsing URL", e);
+            return null;
         }
-        return source;
     }
 
     /**
@@ -766,9 +564,7 @@ public class OnlineUserService {
         onlineUser.setOrgi(logined.getOrgi());
         onlineUser.setCreater(logined.getId());
 
-        log.info(
-                "[createNewOnlineUserWithContactAndChannel] onlineUser id {}, userId {}", onlineUser.getId(),
-                onlineUser.getUserid());
+        log.info("[createNewOnlineUserWithContactAndChannel] onlineUser id {}, userId {}", onlineUser.getId(), onlineUser.getUserid());
         // TODO 此处没有创建 onlineUser 的 appid
 
         onlineUserRes.save(onlineUser);
@@ -778,6 +574,23 @@ public class OnlineUserService {
 
     public void removeClient(String userid, String client, boolean timeout) throws Exception {
         webIMClients.removeClient(userid, client, timeout);
+    }
+
+    public void onlineUserInfo(User user, ModelMap map, String orgi) {
+        String userId = user.getId();
+        Date startTime = MainUtils.getStartTime();
+        Date endTime = MainUtils.getEndTime();
+        map.put("inviteResult", MainUtils.getWebIMInviteResult(
+                onlineUserRes.findByOrgiAndAgentnoAndCreatetimeRange(orgi, userId, startTime, endTime)));
+
+        map.put("agentUserCount", onlineUserRes.countByAgentForAgentUser(
+                orgi, AgentUserStatusEnum.INSERVICE.toString(), userId, startTime, endTime));
+
+        map.put("agentServicesCount", onlineUserRes.countByAgentForAgentUser(
+                orgi, AgentUserStatusEnum.END.toString(), userId, startTime, endTime));
+
+        map.put("agentServicesAvg", onlineUserRes.countByAgentForAvagTime(
+                orgi, AgentUserStatusEnum.END.toString(), userId, startTime, endTime));
     }
 
     @PostConstruct

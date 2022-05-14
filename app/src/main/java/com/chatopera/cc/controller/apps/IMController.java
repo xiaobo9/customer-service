@@ -27,10 +27,11 @@ import com.chatopera.cc.controller.vo.IMVO;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.chatopera.cc.persistence.es.ContactsRepository;
 import com.chatopera.cc.persistence.repository.ChatMessageRepository;
-import com.chatopera.cc.service.*;
+import com.chatopera.cc.service.OnlineUserService;
 import com.chatopera.cc.util.*;
 import com.github.xiaobo9.commons.enums.Enums;
 import com.github.xiaobo9.commons.exception.EntityNotFoundEx;
+import com.github.xiaobo9.commons.kit.CookiesKit;
 import com.github.xiaobo9.commons.kit.StringKit;
 import com.github.xiaobo9.commons.utils.Base62Utils;
 import com.github.xiaobo9.commons.utils.BrowserClient;
@@ -141,9 +142,6 @@ public class IMController extends Handler {
     private ContactsRepository contactsRes;
 
     @Autowired
-    private AgentUserContactsRepository agentUserContactsRes;
-
-    @Autowired
     private SNSAccountRepository snsAccountRepository;
 
     @Autowired
@@ -198,15 +196,7 @@ public class IMController extends Handler {
         CousultInvite invite = onlineUserService.consult(id, Constants.SYSTEM_ORGI);
         if (invite != null) {
             log.info("[point] find CousultInvite {}", invite.getId());
-            view.addObject("inviteData", invite);
-            view.addObject("orgi", invite.getOrgi());
-            view.addObject("appid", id);
-
-            if (StringUtils.isNotBlank(aiid)) {
-                view.addObject("aiid", aiid);
-            } else if (StringUtils.isNotBlank(invite.getAiid())) {
-                view.addObject("aiid", invite.getAiid());
-            }
+            inviteMessage(id, aiid, view, invite);
 
             // 记录用户行为日志
             // 每次有一个新网页加载出聊天控件，都会生成一个userHistory
@@ -267,6 +257,18 @@ public class IMController extends Handler {
             log.info("[point] invite id {}, orgi {} not found", id, Constants.SYSTEM_ORGI);
         }
         return view;
+    }
+
+    private void inviteMessage(String id, String aiid, ModelAndView view, CousultInvite invite) {
+        view.addObject("inviteData", invite);
+        view.addObject("orgi", invite.getOrgi());
+        view.addObject("appid", id);
+
+        if (StringUtils.isNotBlank(aiid)) {
+            view.addObject("aiid", aiid);
+        } else if (StringUtils.isNotBlank(invite.getAiid())) {
+            view.addObject("aiid", invite.getAiid());
+        }
     }
 
     private void buildServerUrl(HttpServletRequest request, ModelAndView view) {
@@ -454,10 +456,7 @@ public class IMController extends Handler {
             return view;
         }
 
-        // 随机生成OnlineUser的用户名，使用了浏览器指纹做唯一性KEY
-        String randomUserId = Base62Utils.genIDByKey(StringUtils.isNotBlank(imvo.getUserid()) ? imvo.getUserid() : imvo.getSessionid());
         String nickname;
-
         if (sessionMsg != null) {
             nickname = sessionMsg.get("username") + "@" + sessionMsg.get("company_name");
         } else if (session.getAttribute("Sessionusername") != null) {
@@ -465,9 +464,10 @@ public class IMController extends Handler {
             String strcname = (String) session.getAttribute("Sessioncompany_name");
             nickname = struname + "@" + strcname;
         } else {
-            nickname = "Guest_" + "@" + randomUserId;
+            // 随机生成OnlineUser的用户名，使用了浏览器指纹做唯一性KEY
+            String key = StringUtils.isNotBlank(imvo.getUserid()) ? imvo.getUserid() : imvo.getSessionid();
+            nickname = "Guest_" + "@" + Base62Utils.genIDByKey(key);
         }
-
         view.addObject("nickname", nickname);
 
         boolean consult = true;                //是否已收集用户信息
@@ -477,17 +477,12 @@ public class IMController extends Handler {
         sessionConfig.setSatisfaction(true);
 
         modelMap.addAttribute("sessionConfig", sessionConfig);
+        modelMap.addAttribute("schema", request.getScheme());
         modelMap.addAttribute("hostname", request.getServerName());
-
-        if (sslPort != null) {
-            modelMap.addAttribute("port", sslPort);
-        } else {
-            modelMap.addAttribute("port", port);
-        }
+        modelMap.addAttribute("port", sslPort != null ? sslPort : port);
 
         modelMap.addAttribute("appid", imvo.getAppid());
         modelMap.addAttribute("userid", imvo.getUserid());
-        modelMap.addAttribute("schema", request.getScheme());
         modelMap.addAttribute("sessionid", imvo.getSessionid());
         modelMap.addAttribute("isInvite", imvo.isInvite());
 
@@ -526,33 +521,22 @@ public class IMController extends Handler {
         }
 
         boolean isLeavemsg = false;
-        if (report.getAgents() == 0 ||
-                (sessionConfig.isHourcheck() &&
-                        !MainUtils.isInWorkingHours(sessionConfig.getWorkinghours()) &&
-                        invite.isLeavemessage())) {
+        boolean inWorkingHours = MainUtils.isInWorkingHours(sessionConfig.getWorkinghours());
+        if (report.getAgents() == 0 || (sessionConfig.isHourcheck() && !inWorkingHours && invite.isLeavemessage())) {
             // 没有坐席在线，进入留言
             isLeavemsg = true;
-            boolean isInWorkingHours = MainUtils.isInWorkingHours(sessionConfig.getWorkinghours());
-            modelMap.addAttribute("isInWorkingHours", isInWorkingHours);
+            modelMap.addAttribute("isInWorkingHours", inWorkingHours);
             view = request(super.pageTplResponse("/apps/im/leavemsg"));
         } else if (invite.isConsult_info()) {    //启用了信息收集，从Request获取， 或从 Cookies 里去
             // 验证 OnlineUser 信息
             // contacts用于传递信息，并不和 联系人表发生 关联，contacts信息传递给 Socket.IO，然后赋值给 AgentUser，最终赋值给 AgentService永久存储
             if (StringUtils.isNotBlank(contacts.getName())) {
                 consult = true;
-                //存入 Cookies
-                if (invite.isConsult_info_cookies()) {
-                    addCookie(response, "name", contacts.getName());
-                    addCookie(response, "phone", contacts.getPhone());
-                    addCookie(response, "email", contacts.getEmail());
-                    addCookie(response, "skypeid", contacts.getSkypeid());
-                    addCookie(response, "memo", contacts.getMemo());
-                }
+                contacts2Cookie(response, contacts, invite);
             } else {
                 //从 Cookies里尝试读取
                 if (invite.isConsult_info_cookies()) {
-                    Cookie[] cookies = request.getCookies();//这样便可以获取一个cookie数组
-                    contacts = createContacts(cookies);
+                    contacts = createContacts(request);
                 }
                 if (StringUtils.isBlank(contacts.getName())) {
                     consult = false;
@@ -560,28 +544,7 @@ public class IMController extends Handler {
                 }
             }
         } else {
-            // TODO 该contacts的识别并不准确，因为不能关联
-            // contacts = OnlineUserProxy.processContacts(invite.getOrgi(), contacts, appid, userid);
-            String uid = (String) session.getAttribute("Sessionuid");
-            String sid = (String) session.getAttribute("Sessionsid");
-            String cid = (String) session.getAttribute("Sessioncid");
-
-            if (StringUtils.isNotBlank(uid) && StringUtils.isNotBlank(sid) && StringUtils.isNotBlank(cid)) {
-                Contacts contacts1 = contactsRes.findOneByWluidAndWlsidAndWlcidAndDatastatus(uid, sid, cid, false);
-                if (contacts1 != null) {
-                    agentUserRepository.findOneByUseridAndOrgi(imvo.getUserid(), imvo.getOrgi()).ifPresent(p -> {
-                        // 关联AgentService的联系人
-                        if (StringUtils.isNotBlank(p.getAgentserviceid())) {
-                            AgentService agentService = agentServiceRepository.findById(p.getAgentserviceid()).orElseThrow(EntityNotFoundEx::new);
-                            agentService.setContactsid(contacts1.getId());
-                        }
-
-                        User user = super.getUser(request);
-                        String username = (String) session.getAttribute("Sessionusername");
-                        imService.saveAgentUserContacts(imvo, contacts1, p, user, username);
-                    });
-                }
-            }
+            saveAgentUserContacts(request, imvo, session);
         }
 
         vo2ModelMap(imvo, modelMap);
@@ -655,6 +618,58 @@ public class IMController extends Handler {
         return view;
     }
 
+    private Contacts createContacts(HttpServletRequest request) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+        Contacts contacts = new Contacts();
+        Map<String, String> map = CookiesKit.cookie2Map(request);
+        if (map.isEmpty()) {
+            return contacts;
+        }
+        contacts.setName(decode(map.get("name")));
+        contacts.setPhone(decode(map.get("phone")));
+        contacts.setEmail(decode(map.get("email")));
+        contacts.setMemo(decode(map.get("memo")));
+        contacts.setSkypeid(decode(map.get("skypeid")));
+        return contacts;
+    }
+
+    private void contacts2Cookie(HttpServletResponse response, Contacts contacts, CousultInvite invite) throws UnsupportedEncodingException {
+        //存入 Cookies
+        if (invite.isConsult_info_cookies()) {
+            addCookie(response, "name", contacts.getName());
+            addCookie(response, "phone", contacts.getPhone());
+            addCookie(response, "email", contacts.getEmail());
+            addCookie(response, "skypeid", contacts.getSkypeid());
+            addCookie(response, "memo", contacts.getMemo());
+        }
+    }
+
+    private void saveAgentUserContacts(HttpServletRequest request, IMVO imvo, HttpSession session) {
+        // TODO 该contacts的识别并不准确，因为不能关联
+        // contacts = OnlineUserProxy.processContacts(invite.getOrgi(), contacts, appid, userid);
+        String uid = (String) session.getAttribute("Sessionuid");
+        String sid = (String) session.getAttribute("Sessionsid");
+        String cid = (String) session.getAttribute("Sessioncid");
+
+        if (StringUtils.isBlank(uid) || StringUtils.isBlank(sid) || StringUtils.isBlank(cid)) {
+            return;
+        }
+        Contacts contacts = contactsRes.findOneByWluidAndWlsidAndWlcidAndDatastatus(uid, sid, cid, false);
+        if (contacts == null) {
+            return;
+        }
+        agentUserRepository.findOneByUseridAndOrgi(imvo.getUserid(), imvo.getOrgi()).ifPresent(p -> {
+            // 关联AgentService的联系人
+            if (StringUtils.isNotBlank(p.getAgentserviceid())) {
+                AgentService agentService = agentServiceRepository.findById(p.getAgentserviceid())
+                        .orElseThrow(EntityNotFoundEx::new);
+                agentService.setContactsid(contacts.getId());
+            }
+
+            String username = (String) session.getAttribute("Sessionusername");
+            imService.saveAgentUserContacts(imvo, contacts, p, super.getUser(request), username);
+        });
+    }
+
 
     private void vo2ModelMap(IMVO imvo, ModelMap map) {
         addAttribute(map, "client", imvo.getClient());
@@ -687,27 +702,6 @@ public class IMController extends Handler {
             cookie.setMaxAge(3600);
             response.addCookie(cookie);
         }
-    }
-
-    private Contacts createContacts(Cookie[] cookies) throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        Contacts contacts = new Contacts();
-        if (cookies != null) {
-            Map<String, String> map = new HashMap<>();
-            for (Cookie cookie : cookies) {
-                if (cookie == null) {
-                    continue;
-                }
-                if (StringUtils.isNotBlank(cookie.getName()) && StringUtils.isNotBlank(cookie.getValue())) {
-                    map.put(cookie.getName(), cookie.getValue());
-                }
-            }
-            contacts.setName(decode(map.get("name")));
-            contacts.setPhone(decode(map.get("phone")));
-            contacts.setEmail(decode(map.get("email")));
-            contacts.setMemo(decode(map.get("memo")));
-            contacts.setSkypeid(decode(map.get("skypeid")));
-        }
-        return contacts;
     }
 
     private String decode(String value) throws UnsupportedEncodingException, NoSuchAlgorithmException {
@@ -792,15 +786,7 @@ public class IMController extends Handler {
             view.addObject("url", url);
         }
 
-        view.addObject("inviteData", invite);
-        view.addObject("orgi", invite.getOrgi());
-        view.addObject("appid", appid);
-
-        if (StringUtils.isNotBlank(aiid)) {
-            view.addObject("aiid", aiid);
-        } else if (StringUtils.isNotBlank(invite.getAiid())) {
-            view.addObject("aiid", invite.getAiid());
-        }
+        inviteMessage(appid, aiid, view, invite);
 
         return view;
     }
@@ -808,15 +794,12 @@ public class IMController extends Handler {
 
     @RequestMapping("/leavemsg/save.html")
     @Menu(type = "admin", subtype = "user")
-    public ModelAndView leavemsgsave(@Valid String appid,
-                                     @Valid LeaveMsg msg,
-                                     @Valid String skillId) {
+    public ModelAndView leavemsgsave(@Valid String appid, @Valid LeaveMsg msg, @Valid String skillId) {
         if (StringUtils.isNotBlank(appid)) {
             snsAccountRepository.findBySnsid(appid).ifPresent(p -> {
                 CousultInvite invite = inviteRepository.findBySnsaccountidAndOrgi(appid, Constants.SYSTEM_ORGI);
                 // TODO 增加策略防止恶意刷消息
                 //  List<LeaveMsg> msgList = leaveMsgRes.findByOrgiAndUserid(invite.getOrgi(), msg.getUserid());
-                // if(msg!=null && msgList.size() == 0){
                 if (msg != null) {
                     msg.setOrgi(invite.getOrgi());
                     msg.setSkill(skillId);
@@ -834,12 +817,12 @@ public class IMController extends Handler {
     public void refuse(@Valid String orgi, @Valid String userid) {
         onlineUserService.refuseInvite(userid);
         final Date threshold = new Date(System.currentTimeMillis() - Constants.WEBIM_AGENT_INVITE_TIMEOUT);
+        PageRequest page = PageRequest.of(0, 1, Direction.DESC, "createtime");
         Page<InviteRecord> inviteRecords = inviteRecordRes.findByUseridAndOrgiAndResultAndCreatetimeGreaterThan(
                 userid,
                 orgi,
                 Enums.OnlineUserInviteStatus.DEFAULT.toString(),
-                threshold,
-                PageRequest.of(0, 1, Direction.DESC, "createtime"));
+                threshold, page);
         if (inviteRecords.getContent().size() > 0) {
             InviteRecord record = inviteRecords.getContent().get(0);
             record.setUpdatetime(new Date());

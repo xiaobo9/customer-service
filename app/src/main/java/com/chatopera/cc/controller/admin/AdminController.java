@@ -69,7 +69,7 @@ public class AdminController extends Handler {
     private OnlineUserService onlineUserService;
 
     @RequestMapping("/admin.html")
-    public ModelAndView index(ModelMap map, HttpServletRequest request) {
+    public ModelAndView index(HttpServletRequest request) {
         ModelAndView view = request(super.pageTplResponse("redirect:/"));
         User user = super.getUser(request);
         view.addObject("agentStatusReport", acdWorkMonitor.getAgentReport(user.getOrgi()));
@@ -85,33 +85,28 @@ public class AdminController extends Handler {
         map.put("systemCaches", cacheService.getSystemSizeByOrgi(Constants.SYSTEM_ORGI));
 
         map.put("agentReport", acdWorkMonitor.getAgentReport(orgi));
-        map.put("webIMReport", MainUtils.getWebIMReport(userEventRes.findByOrgiAndCreatetimeRange(super.getOrgi(request), MainUtils.getStartTime(), MainUtils.getEndTime())));
+        map.put("webIMReport", MainUtils.getWebIMReport(userEventRes.findByOrgiAndCreatetimeRange(orgi, MainUtils.getStartTime(), MainUtils.getEndTime())));
 
         map.put("agents", getAgent(request).size());
 
-        map.put("webIMInvite", MainUtils.getWebIMInviteStatus(onlineUserRes.findByOrgiAndStatus(super.getOrgi(request), Enums.OnlineUserStatusEnum.ONLINE.toString())));
+        map.put("webIMInvite", MainUtils.getWebIMInviteStatus(onlineUserRes.findByOrgiAndStatus(orgi, Enums.OnlineUserStatusEnum.ONLINE.toString())));
 
-        map.put("inviteResult", MainUtils.getWebIMInviteResult(onlineUserRes.findByOrgiAndAgentnoAndCreatetimeRange(super.getOrgi(request), super.getUser(request).getId(), MainUtils.getStartTime(), MainUtils.getEndTime())));
+        User user = super.getUser(request);
+        onlineUserService.onlineUserInfo(user, map, orgi);
 
-        map.put("agentUserCount", onlineUserRes.countByAgentForAgentUser(super.getOrgi(request), AgentUserStatusEnum.INSERVICE.toString(), super.getUser(request).getId(), MainUtils.getStartTime(), MainUtils.getEndTime()));
+        map.put("webInviteReport", MainUtils.getWebIMInviteAgg(onlineUserRes.findByOrgiAndCreatetimeRange(orgi, Enums.ChannelType.WEBIM.toString(), MainUtils.getLast30Day(), MainUtils.getEndTime())));
 
-        map.put("agentServicesCount", onlineUserRes.countByAgentForAgentUser(super.getOrgi(request), AgentUserStatusEnum.END.toString(), super.getUser(request).getId(), MainUtils.getStartTime(), MainUtils.getEndTime()));
+        map.put("agentConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForAgent(orgi, MainUtils.getLast30Day(), MainUtils.getEndTime())));
 
-        map.put("agentServicesAvg", onlineUserRes.countByAgentForAvagTime(super.getOrgi(request), AgentUserStatusEnum.END.toString(), super.getUser(request).getId(), MainUtils.getStartTime(), MainUtils.getEndTime()));
+        map.put("clentConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForClient(orgi, MainUtils.getLast30Day(), MainUtils.getEndTime(), Enums.ChannelType.WEBIM.toString())));
 
-        map.put("webInviteReport", MainUtils.getWebIMInviteAgg(onlineUserRes.findByOrgiAndCreatetimeRange(super.getOrgi(request), Enums.ChannelType.WEBIM.toString(), MainUtils.getLast30Day(), MainUtils.getEndTime())));
-
-        map.put("agentConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForAgent(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime())));
-
-        map.put("clentConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForClient(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime(), Enums.ChannelType.WEBIM.toString())));
-
-        map.put("browserConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForBrowser(super.getOrgi(request), MainUtils.getLast30Day(), MainUtils.getEndTime(), Enums.ChannelType.WEBIM.toString())));
+        map.put("browserConsultReport", MainUtils.getWebIMDataAgg(onlineUserRes.findByOrgiAndCreatetimeRangeForBrowser(orgi, MainUtils.getLast30Day(), MainUtils.getEndTime(), Enums.ChannelType.WEBIM.toString())));
     }
 
     private List<User> getAgent(HttpServletRequest request) {
         //获取当前产品or租户坐席数
         List<User> userList = userRes.findByOrgiAndAgentAndDatastatus(super.getOrgi(request), true, false);
-        return userList.isEmpty() ? new ArrayList<User>() : userList;
+        return userList.isEmpty() ? new ArrayList<>() : userList;
     }
 
     @RequestMapping("/admin/content.html")
@@ -122,8 +117,8 @@ public class AdminController extends Handler {
     }
 
     @RequestMapping("/admin/auth/infoacq")
-    @Menu(type = "admin", subtype = "infoacq", access = false, admin = true)
-    public ModelAndView infoacq(ModelMap map, HttpServletRequest request) {
+    @Menu(type = "admin", subtype = "infoacq", admin = true)
+    public ModelAndView infoacq(HttpServletRequest request) {
         String inacq = (String) request.getSession().getAttribute(Constants.CSKEFU_SYSTEM_INFOACQ);
         if (StringUtils.isNotBlank(inacq)) {
             request.getSession().removeAttribute(Constants.CSKEFU_SYSTEM_INFOACQ);
@@ -135,7 +130,7 @@ public class AdminController extends Handler {
 
     @RequestMapping("/admin/auth/event")
     @Menu(type = "admin", subtype = "authevent")
-    public ModelAndView authevent(ModelMap map, HttpServletRequest request, @Valid String title, @Valid String url, @Valid String iconstr, @Valid String icontext) {
+    public ModelAndView authevent(ModelMap map, @Valid String title, @Valid String url, @Valid String iconstr, @Valid String icontext) {
         map.addAttribute("title", title);
         map.addAttribute("url", url);
         if (StringUtils.isNotBlank(iconstr) && StringUtils.isNotBlank(icontext)) {
@@ -146,7 +141,7 @@ public class AdminController extends Handler {
 
     @RequestMapping("/admin/auth/save")
     @Menu(type = "admin", subtype = "authsave")
-    public ModelAndView authsave(ModelMap map, HttpServletRequest request, @Valid String title, @Valid SysDic dic) {
+    public ModelAndView authsave(HttpServletRequest request, @Valid SysDic dic) {
         SysDic sysDic = sysDicRes.findByCode(Constants.CSKEFU_SYSTEM_AUTH_DIC);
         boolean newdic = false;
         if (sysDic != null && StringUtils.isNotBlank(dic.getName())) {

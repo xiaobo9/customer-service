@@ -21,6 +21,7 @@ import com.chatopera.cc.basic.Constants;
 import com.chatopera.cc.basic.MainUtils;
 import com.chatopera.cc.basic.auth.AuthToken;
 import com.chatopera.cc.service.AgentProxyService;
+import com.github.xiaobo9.commons.kit.CookiesKit;
 import com.github.xiaobo9.service.LoginService;
 import com.github.xiaobo9.service.SystemConfigService;
 import com.chatopera.cc.service.UserService;
@@ -52,7 +53,6 @@ import javax.validation.constraints.NotNull;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author CSKefu
@@ -106,7 +106,7 @@ public class LoginController extends Handler {
             view.addObject("referer", referer);
         }
 
-        Cookie cookie = getCookie(request, Constants.CSKEFU_SYSTEM_COOKIES_FLAG).orElse(null);
+        Cookie cookie = CookiesKit.getCookie(request, Constants.CSKEFU_SYSTEM_COOKIES_FLAG).orElse(null);
         try {
             if (cookie != null) {
                 User user = userRepository.findById(MainUtils.decryption(cookie.getValue())).orElse(null);
@@ -249,7 +249,7 @@ public class LoginController extends Handler {
         request.getSession().removeAttribute(Constants.USER_SESSION_NAME);
         request.getSession().invalidate();
 
-        getCookie(request, Constants.CSKEFU_SYSTEM_COOKIES_FLAG)
+        CookiesKit.getCookie(request, Constants.CSKEFU_SYSTEM_COOKIES_FLAG)
                 .ifPresent(cookie -> {
                     cookie.setMaxAge(0);
                     response.addCookie(cookie);
@@ -290,19 +290,6 @@ public class LoginController extends Handler {
         user.setOrgi(super.getOrgi());
         userRepository.save(user);
         return this.processLogin(request, user, "");
-    }
-
-    private Optional<Cookie> getCookie(HttpServletRequest request, String cookieName) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return Optional.empty();
-        }
-        for (Cookie cookie : cookies) {
-            if (cookieName.equals(cookie.getName()) && StringUtils.isNotBlank(cookie.getValue())) {
-                return Optional.of(cookie);
-            }
-        }
-        return Optional.empty();
     }
 
     private Map<String, Object> getConfigModel() {

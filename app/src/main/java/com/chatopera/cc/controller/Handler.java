@@ -23,6 +23,7 @@ import com.chatopera.cc.cache.CacheService;
 import com.chatopera.cc.controller.api.QueryParams;
 import com.chatopera.cc.persistence.blob.JpaBlobHelper;
 import com.github.xiaobo9.commons.enums.DateFormatEnum;
+import com.github.xiaobo9.commons.kit.CookiesKit;
 import com.github.xiaobo9.commons.utils.Base62Utils;
 import com.github.xiaobo9.commons.utils.UUIDUtils;
 import com.github.xiaobo9.entity.Organ;
@@ -78,33 +79,30 @@ public class Handler {
     public final static int PAGE_SIZE_HA = 100;
 
     public User getUser(HttpServletRequest request) {
-        User user = (User) request.getSession(true).getAttribute(Constants.USER_SESSION_NAME);
+        HttpSession session = request.getSession(true);
+        User user = (User) session.getAttribute(Constants.USER_SESSION_NAME);
         if (user != null) {
-            user.setSessionid(UUIDUtils.removeHyphen(request.getSession().getId()));
+            user.setSessionid(UUIDUtils.removeHyphen(session.getId()));
             return user;
         }
         String authorization = request.getHeader("authorization");
-        if (StringUtils.isBlank(authorization) && request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (cookie.getName().equals("authorization")) {
-                    authorization = cookie.getValue();
-                    break;
-                }
-            }
+        if (StringUtils.isBlank(authorization)) {
+            authorization = CookiesKit.getCookie(request, "authorization")
+                    .map(Cookie::getValue)
+                    .orElse(null);
         }
         if (StringUtils.isNotBlank(authorization)) {
             user = authToken.findUserByAuth(authorization);
+            if (user != null) {
+                return user;
+            }
         }
-        if (user == null) {
-            user = newGuestUser(request);
-        }
-        return user;
+        return newGuestUser(session);
     }
 
-    protected User newGuestUser(HttpServletRequest request) {
-        User user;
-        user = new User();
-        user.setId(UUIDUtils.removeHyphen(request.getSession().getId()));
+    private User newGuestUser(HttpSession session) {
+        User user = new User();
+        user.setId(UUIDUtils.removeHyphen(session.getId()));
         user.setUsername(Constants.GUEST_USER + "_" + Base62Utils.genIDByKey(user.getId()));
         user.setOrgi(Constants.SYSTEM_ORGI);
         user.setSessionid(user.getId());

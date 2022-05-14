@@ -227,7 +227,7 @@ public class WebIMTask {
                 try {
                     logger.info("[save] put onlineUser id {}, status {}, invite status {}",
                             onlineUser.getId(), onlineUser.getStatus(), onlineUser.getInvitestatus());
-                    onlineUserService.offline(onlineUser);
+                    onlineUserService.offline(onlineUser.getId(), onlineUser.getOrgi());
                 } catch (Exception e) {
                     logger.warn("[onlineuser] error", e);
                 }
